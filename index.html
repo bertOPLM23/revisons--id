@@ -872,6 +872,111 @@ html.sho .b.ok.liquid-btn{animation-play-state:paused}
 /* accessibilité */
 @media (prefers-reduced-transparency:reduce){:root{--lq-drop-fill:var(--card);--lq-row-fill:var(--card)}#app[data-view=study] .qb{-webkit-backdrop-filter:none;backdrop-filter:none}}
 @media (prefers-reduced-motion:reduce){#app .dock .b,#app .qb .opt,#app .resume,#app #lst .item{transition:none}}
+
+/* ===================================================================================
+   Liquid Glass, étape 3 : harmonisation du reste (réglages, statistiques, feuilles, barre du haut, menus, champs)
+   Trois matières seulement :
+   · panneau de verre (fond légèrement givré, lumière en haut, liseré clair en haut à gauche, plus dense en bas à droite) ;
+   · goutte (boutons, puces, résultats) : même matière, en relief, avec l'onde au toucher ;
+   · creux (champs de saisie, plateaux de boutons, contrôle segmenté) : liseré inversé et ombre intérieure.
+   Aucune animation en continu : les reflets animés de l'accueil et des statistiques sont figés.
+   =================================================================================== */
+/* --lq-panel : verre des panneaux, plus blanc en clair (textes gris lisibles), aussi dense que les dossiers en sombre */
+:root{--lq-well:rgb(90 60 30/.1);--lq-panel:rgb(255 255 255/.86)}
+:root[data-theme="dark"]{--lq-well:rgb(0 0 0/.45);--lq-panel:var(--lq-row-fill)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--lq-well:rgb(0 0 0/.45);--lq-panel:var(--lq-row-fill)}}
+
+/* ---------- reflets animés figés (ils repeignaient la zone à chaque image) ---------- */
+.menu::before,.menu::after,
+#app[data-view=stats] .hero::before,#app[data-view=stats] .pn::before,#app[data-view=stats] .st::before,#app[data-view=stats] .er::before,
+#app[data-view=stats] .hero::after,#app[data-view=stats] .pn::after,#app[data-view=stats] .st::after,#app[data-view=stats] .er::after,
+#app[data-view=stats] .bar i::after{animation:none!important}
+/* les bandes de reflet qui défilaient n'ont plus de sens immobiles : on les retire */
+.menu::after,#app[data-view=stats] .hero::after,#app[data-view=stats] .pn::after,#app[data-view=stats] .st::after,#app[data-view=stats] .er::after,#app[data-view=stats] .bar i::after{opacity:0}
+
+/* voile coloré des statistiques : immobile, il reste à une intensité moyenne (plus basse en sombre, pour le texte) */
+#app[data-view=stats] :is(.hero,.pn,.st,.er)::before{opacity:.4}
+:root[data-theme="dark"] #app[data-view=stats] :is(.hero,.pn,.st,.er)::before{opacity:.3}
+#app[data-view=stats] .hero::before{opacity:.2}  /* le grand chiffre terracotta reste net */
+
+/* ---------- panneau de verre ---------- */
+#app :is(.pn,.st,.hero,.er,.item.row,.xtree),.shd :is(.asg,.er,.cpw),html[data-ipad="1"] .sb{
+ border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);
+ background-color:var(--lq-panel);background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 40%);background-clip:padding-box;
+ box-shadow:inset 0 1px 0 var(--lq-inner-hi),inset 0 -10px 20px -16px var(--lq-inner-lo),0 10px 24px -18px var(--lq-drop);
+}
+#app .pn.dayc{background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 40%)}
+
+/* ---------- gouttes : boutons secondaires, puces, retour, icônes, résultats de recherche ---------- */
+:is(#app,.shd) :is(.b:not(.ok):not(.dg):not(.cta):not(.rb),.menu button:not(.ok):not(.dg),.chip:not(.on)),#app #sres .opt,#app :is(.bk,.cbtn),#app .hd .tg{
+ border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);
+ background-color:var(--lq-drop-fill);background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 46%);background-clip:padding-box;
+ box-shadow:inset 0 1px 0 var(--lq-inner-hi),inset 0 -6px 12px -8px var(--lq-inner-lo),0 6px 16px -10px var(--lq-drop);
+}
+/* retour, « … » et icônes de l'en-tête restent opaques : le contenu défile dessous */
+#app :is(.bk,.cbtn),#app .hd .tg{background-color:var(--g-sol)}
+#app .hd .tg.fxb.on{border-color:color-mix(in srgb,var(--acc) 55%,var(--lq-edge-hi))}
+/* bouton d'action hors de la barre du bas (Modifier, Enregistrer…) : goutte d'accent */
+:is(#app,.shd) .b.ok:not(.cta):not(.an){
+ border:1px solid rgb(255 255 255/.32);color:var(--onp);
+ background:linear-gradient(180deg,rgb(255 255 255/.22) 0,rgb(255 255 255/.05) 16%,transparent 22%),linear-gradient(180deg,var(--acc) 0,var(--lq-btn-mid) 60%,var(--lq-btn-lo));
+ box-shadow:inset 0 1px 0 rgb(255 255 255/.5),inset 0 -4px 10px -2px rgb(0 0 0/.16),0 2px 6px -2px rgb(0 0 0/.18),0 10px 22px -12px color-mix(in srgb,var(--acc) 75%,transparent);
+ text-shadow:0 1px 1px var(--lq-tsh);
+}
+/* action dangereuse : goutte neutre, texte et bas du liseré rouges */
+:is(#app,.shd) :is(.b.dg,.menu button.dg){
+ border:1px solid;border-color:var(--lq-edge-hi) color-mix(in srgb,var(--ko) 40%,transparent) color-mix(in srgb,var(--ko) 40%,transparent) var(--lq-edge-hi);
+ background-color:color-mix(in srgb,var(--ko) 5%,var(--lq-drop-fill));background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 46%);background-clip:padding-box;
+ box-shadow:inset 0 1px 0 var(--lq-inner-hi),inset 0 -6px 12px -8px var(--lq-inner-lo),0 6px 16px -10px var(--lq-drop);color:var(--ko);
+}
+/* puce choisie (90 %, 20 par jour…) : goutte d'encre brillante */
+:is(#app,.shd) .chip.on{
+ background:linear-gradient(180deg,rgb(255 255 255/.2),transparent 45%),var(--ink);background-clip:padding-box;
+ border-color:color-mix(in srgb,var(--ink) 70%,#fff);
+ box-shadow:inset 0 1px 0 rgb(255 255 255/.3),0 6px 14px -8px var(--lq-drop);
+}
+/* barre du haut : les capsules d'icônes prennent le même liseré */
+#app :is(.tgs,.bt)::before{box-sizing:border-box;border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);
+ background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 50%);
+ box-shadow:inset 0 1px 0 var(--lq-inner-hi),0 8px 20px -14px var(--lq-drop)}
+/* barre latérale iPad : dossier ouvert = goutte teintée */
+html[data-ipad="1"] #app .sd.on{background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 50%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 24%,transparent),inset 0 1px 0 var(--lq-inner-hi)}
+
+/* onde au toucher (sans débordement : elle s'arrête au bord de l'élément) */
+:is(#app,.shd) :is(.b:not(.an):not(.cta),.menu button,.chip,.bk,.cbtn,.asr,.item.row),#app #sres .opt,#app .hd .tg,#app .tgs .tg,#app .bt .tg{position:relative;isolation:isolate}
+:is(#app,.shd) :is(.b:not(.an):not(.cta),.menu button,.chip,.bk,.cbtn,.asr,.item.row)::after,#app #sres .opt::after,#app .hd .tg::after,#app .tgs .tg::after,#app .bt .tg::after{
+ content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
+ background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),var(--lq-ripple),transparent 65%);
+ transform-origin:var(--gx,50%) var(--gy,50%);opacity:0;transform:scale(.2);
+ transition:opacity .5s ease-out,transform .55s cubic-bezier(.2,.8,.2,1);
+}
+:is(#app,.shd) .b.ok:not(.an):not(.cta)::after{background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgb(255 255 255/.22),transparent 65%)}
+:is(#app,.shd) :is(.b:not(.an):not(.cta):not(:disabled),.menu button:not(:disabled),.chip,.bk,.cbtn,.asr,.item.row):active::after,#app #sres .opt:active::after,#app .hd .tg:active::after,#app .tgs .tg:active::after,#app .bt .tg:active::after{
+ opacity:1;transform:scale(1);transition:opacity .08s linear,transform .35s cubic-bezier(.2,.8,.2,1)}
+
+/* ---------- creux : champs de saisie, plateaux de boutons, contrôle segmenté ---------- */
+:is(#app,.shd) :is(input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]),textarea,select),#app .seg,#app .menu{
+ border:1px solid;border-color:var(--lq-rim) var(--lq-edge-hi) var(--lq-edge-hi) var(--lq-rim);
+ box-shadow:inset 0 2px 6px -2px var(--lq-well),inset 0 -1px 0 var(--lq-inner-hi);
+}
+:is(#app,.shd) :is(input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]),textarea){background-color:var(--lq-row-fill);background-image:none}
+:is(#app,.shd) select{background-color:var(--lq-row-fill)}  /* l'image de fond porte la flèche du menu : on la garde */
+/* les plateaux sont posés sur des panneaux : plus besoin de leur propre flou */
+#app .menu{-webkit-backdrop-filter:none;backdrop-filter:none}
+/* lentille du contrôle segmenté : petite goutte brillante */
+#app .seg::before{background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 55%);box-shadow:inset 0 1px 0 var(--lq-inner-hi),0 4px 12px -6px var(--lq-drop)}
+/* interrupteur activé : reflet sur la piste */
+#app .row[aria-checked="true"] .swt{background-image:linear-gradient(180deg,rgb(255 255 255/.28),transparent 60%)}
+
+/* ---------- feuilles, menus déroulants, notifications ---------- */
+.shd .sh{border:1px solid;border-bottom:0;border-color:var(--lq-edge-hi) var(--lq-rim) transparent var(--lq-edge-hi);
+ box-shadow:inset 0 1px 0 var(--lq-inner-hi),0 -12px 40px -18px var(--lq-drop)}
+#app :is(.pvm,.cmenu){border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);
+ box-shadow:inset 0 1px 0 var(--lq-inner-hi),0 20px 44px -18px var(--lq-drop)}
+.ts{border:1px solid;border-color:rgb(255 255 255/.22) rgb(0 0 0/.22) rgb(0 0 0/.22) rgb(255 255 255/.22);
+ box-shadow:inset 0 1px 0 rgb(255 255 255/.18),0 14px 32px -12px rgb(0 0 0/.45)}
+
+@media (prefers-reduced-transparency:reduce){#app .menu{background-color:var(--card)}}
 </style></head>
 <body><div id="mesh" aria-hidden="true"><i></i></div><svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="lg-dock" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB" filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse"><feImage id="lg-map" x="0" y="0" width="100" height="60" preserveAspectRatio="none" result="map"/><feDisplacementMap in="SourceGraphic" in2="map" scale="28" xChannelSelector="R" yChannelSelector="B"/></filter></svg><main><div id="app"></div></main><input type="file" id="fi" accept="image/*" hidden><input type="file" id="fb" accept="application/json,.json" hidden>
 <script>
