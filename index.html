@@ -656,6 +656,124 @@ button.er{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
 @media (max-width:359px){.hd:has(.fxb) .bk span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
 /* lumière sous le doigt désactivée dans les réglages */
 html.nolt .b:not(.an)::before,html.nolt .tg::before,html.nolt .chip::before,html.nolt .bk::before,html.nolt .seg button::before,html.nolt .pc::before,html.nolt .asr::before,html.nolt .resume::before,html.nolt .item::before,html.nolt button.opt::before,html.nolt .cbtn::before{display:none}
+
+/* ===================================================================================
+   Liquid Glass, étape 1 : deux composants de test
+   .liquid-card : flashcard en révision · .liquid-btn : bouton principal « Réviser » de l'accueil
+   Règles : seuls transform / translate / scale / opacity sont animés en continu ;
+   le texte reste posé sur un verre presque opaque (contraste intact) ;
+   les reflets clairs restent en haut de l'élément, loin du texte centré.
+   Les sélecteurs doublent la classe de base (.card / .b.ok) pour passer devant le style injecté plus tard par la couleur d'accent.
+   =================================================================================== */
+:root{
+ --lq-fill:rgb(255 255 255/.74);          /* verre givré : assez opaque pour garder le texte net */
+ --lq-fill-back:color-mix(in srgb,var(--acc) 6%,rgb(255 255 255/.78));
+ --lq-edge-hi:rgb(255 255 255/.95);       /* liseré : lumière en haut à gauche… */
+ --lq-edge-lo:rgb(255 255 255/.28);       /* …qui s'éteint vers le bas */
+ --lq-halo:rgb(255 255 255/.62);          /* halo supérieur (reflet « glossy ») */
+ --lq-inner-hi:rgb(255 255 255/.7);
+ --lq-inner-lo:rgb(70 45 25/.07);         /* volume : fond de la goutte légèrement plus dense */
+ --lq-drop:rgb(80 55 35/.2);
+ --lq-blur:14px;--lq-r:30px;--lq-float:2px;
+ /* bouton : texte clair en mode clair → le bas fonce ; texte foncé en mode sombre → le bas s'éclaircit */
+ --lq-btn-mid:color-mix(in srgb,var(--acc),#000 8%);--lq-btn-lo:color-mix(in srgb,var(--acc),#000 16%);--lq-tsh:rgb(0 0 0/.12);
+}
+:root[data-theme="dark"]{
+ --lq-fill:rgb(44 42 40/.8);
+ --lq-fill-back:color-mix(in srgb,var(--acc) 7%,rgb(44 42 40/.82));
+ --lq-edge-hi:rgb(255 255 255/.34);
+ --lq-edge-lo:rgb(255 255 255/.06);
+ --lq-halo:rgb(255 255 255/.07);          /* en sombre, un halo clair éteindrait le texte : il reste très discret */
+ --lq-inner-hi:rgb(255 255 255/.16);
+ --lq-inner-lo:rgb(0 0 0/.28);
+ --lq-drop:rgb(0 0 0/.5);
+ --lq-btn-mid:color-mix(in srgb,var(--acc),#fff 5%);--lq-btn-lo:color-mix(in srgb,var(--acc),#fff 10%);--lq-tsh:rgb(255 255 255/.14);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --lq-fill:rgb(44 42 40/.8);--lq-fill-back:color-mix(in srgb,var(--acc) 7%,rgb(44 42 40/.82));
+ --lq-edge-hi:rgb(255 255 255/.34);--lq-edge-lo:rgb(255 255 255/.06);--lq-halo:rgb(255 255 255/.07);
+ --lq-inner-hi:rgb(255 255 255/.16);--lq-inner-lo:rgb(0 0 0/.28);--lq-drop:rgb(0 0 0/.5);
+ --lq-btn-mid:color-mix(in srgb,var(--acc),#fff 5%);--lq-btn-lo:color-mix(in srgb,var(--acc),#fff 10%);--lq-tsh:rgb(255 255 255/.14)}}
+/* iPad : plus grand, verre plus profond, flottement un peu plus ample */
+@media (min-width:768px){:root{--lq-blur:22px;--lq-r:40px;--lq-float:3px}}
+
+/* ---------- .liquid-card ---------- */
+.card.liquid-card{
+ border:1px solid transparent;border-radius:var(--lq-r);
+ /* fond givré dans la zone intérieure, liseré dégradé dans la zone de bordure (épaisseur du verre) */
+ background:linear-gradient(var(--lq-fill),var(--lq-fill)) padding-box,
+  linear-gradient(150deg,var(--lq-edge-hi),var(--lq-edge-lo) 38%,var(--lq-edge-lo) 70%,color-mix(in srgb,var(--lq-edge-hi) 60%,transparent)) border-box;
+ -webkit-backdrop-filter:blur(var(--lq-blur)) saturate(1.5);backdrop-filter:blur(var(--lq-blur)) saturate(1.5);
+ box-shadow:
+  inset 0 1px 0 var(--lq-inner-hi),                 /* arête supérieure qui accroche la lumière */
+  inset 0 22px 32px -26px var(--lq-inner-hi),       /* lumière qui entre par le haut */
+  inset 0 -18px 30px -24px var(--lq-inner-lo),      /* densité du liquide en bas */
+  0 1px 2px rgb(0 0 0/.04),
+  0 22px 44px -24px var(--lq-drop);                 /* l'ombre portée donne le volume */
+ transition:scale .62s var(--spring-pop),transform .62s var(--spring),border-radius .55s var(--spring);
+}
+.card.liquid-card.back{background:linear-gradient(var(--lq-fill-back),var(--lq-fill-back)) padding-box,
+  linear-gradient(150deg,var(--lq-edge-hi),var(--lq-edge-lo) 38%,var(--lq-edge-lo) 70%,color-mix(in srgb,var(--lq-edge-hi) 60%,transparent)) border-box}
+/* halo supérieur fixe (remplace le reflet d'eau de la carte) : ne recouvre que le haut */
+.card.liquid-card:not([data-sw])::before{
+ inset:0 0 auto 0;height:46%;opacity:1;
+ background:radial-gradient(120% 100% at 30% 0%,var(--lq-halo),transparent 70%);
+ -webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;
+}
+/* toucher : la goutte se déforme légèrement (asymétrique), puis reprend sa forme en ressort */
+.card.liquid-card:active{border-radius:calc(var(--lq-r) + 6px) calc(var(--lq-r) - 2px) calc(var(--lq-r) + 4px) calc(var(--lq-r) - 4px)/calc(var(--lq-r) - 2px) calc(var(--lq-r) + 6px) calc(var(--lq-r) - 4px) calc(var(--lq-r) + 4px);
+ transition:scale .09s var(--snap),transform .12s var(--snap),border-radius .2s ease-out}
+/* pendant le glissement pour noter, la carte bouge à chaque image : on coupe le flou (sinon recalculé en continu) */
+.card.liquid-card[data-sw]{-webkit-backdrop-filter:none;backdrop-filter:none}
+
+/* ---------- .liquid-btn ---------- */
+.b.ok.liquid-btn{
+ position:relative;isolation:isolate;overflow:hidden;
+ min-height:60px;border-radius:30px;                 /* iPhone : cible large pour le pouce */
+ border:1px solid rgb(255 255 255/.32);
+ color:var(--onp);
+ /* goutte colorée, plus dense vers le bas ; la bande brillante reste sur le bord supérieur, au-dessus du texte */
+ background:
+  linear-gradient(180deg,rgb(255 255 255/.22) 0,rgb(255 255 255/.05) 16%,transparent 20%),
+  linear-gradient(180deg,var(--acc) 0,var(--lq-btn-mid) 60%,var(--lq-btn-lo));
+ box-shadow:
+  inset 0 1px 0 rgb(255 255 255/.5),
+  inset 0 -4px 10px -2px rgb(0 0 0/.16),
+  inset 0 0 0 1px rgb(255 255 255/.06),
+  0 2px 6px -2px rgb(0 0 0/.18),
+  0 14px 28px -14px color-mix(in srgb,var(--acc) 75%,transparent);
+ text-shadow:0 1px 1px var(--lq-tsh);
+ will-change:translate;
+ animation:lqfloat 5.5s ease-in-out infinite alternate;  /* flottement : translate seulement (composité, sans repeinture) */
+ transition:scale .62s var(--spring-pop),transform .62s var(--spring),border-radius .55s var(--spring);
+}
+@keyframes lqfloat{from{translate:0 0}to{translate:0 calc(var(--lq-float)*-1)}}
+html.sho .b.ok.liquid-btn{animation-play-state:paused}
+/* onde au toucher : part du doigt (position posée par la « lumière sous le doigt », sinon le centre) */
+.b.ok.liquid-btn::after{
+ content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
+ background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgb(255 255 255/.22),rgb(255 255 255/.08) 45%,transparent 70%);
+ transform-origin:var(--gx,50%) var(--gy,50%);
+ opacity:0;transform:scale(.2);transition:opacity .5s ease-out,transform .55s cubic-bezier(.2,.8,.2,1);
+}
+.b.ok.liquid-btn:active::after{opacity:1;transform:scale(1.6);transition:opacity .08s linear,transform .4s cubic-bezier(.2,.8,.2,1)}
+.b.ok.liquid-btn:active{
+ border-radius:34px 26px 32px 28px/28px 34px 26px 32px;
+ transition:scale .09s var(--snap),transform .12s var(--snap),border-radius .2s ease-out;
+}
+.b.ok.liquid-btn>*{position:relative;z-index:1}
+@media (hover:hover){.b.ok.liquid-btn:hover{border-radius:32px 28px 33px 27px/27px 33px 28px 32px}}
+@media (min-width:768px){
+ .b.ok.liquid-btn{min-height:68px;border-radius:34px;font-size:19px}
+ .b.ok.liquid-btn:active{border-radius:38px 30px 36px 32px/32px 38px 30px 36px}
+}
+
+/* accessibilité et économies */
+@media (prefers-reduced-transparency:reduce){
+ .card.liquid-card{--lq-fill:var(--card);-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){:root{--lq-fill:rgb(255 255 255/.94)}:root[data-theme="dark"]{--lq-fill:rgb(44 42 40/.96)}}
+@media (prefers-reduced-motion:reduce){.b.ok.liquid-btn,.card.liquid-card{animation:none;transition:none}}
 </style></head>
 <body><div id="mesh" aria-hidden="true"><i></i></div><svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="lg-dock" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB" filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse"><feImage id="lg-map" x="0" y="0" width="100" height="60" preserveAspectRatio="none" result="map"/><feDisplacementMap in="SourceGraphic" in2="map" scale="28" xChannelSelector="R" yChannelSelector="B"/></filter></svg><main><div id="app"></div></main><input type="file" id="fi" accept="image/*" hidden><input type="file" id="fb" accept="application/json,.json" hidden>
 <script>
@@ -1646,7 +1764,7 @@ function render0(){
   if(!selm&&!fo&&!cur)h+=fixCard()+pinsHTML()+bkCard()+codeCard();
   if(!selm&&!fo&&(fcA.length||qcA.length)){
    const pr=fcP.length&&F.t?"fc":qcP.length&&Qi.t?"qcm":null,sec=[];
-   if(pr){const x=pr=="fc"?F:Qi,sb=sub(x);h+='<button class="b ok cta" data-a="allg" data-v="'+pr+'"><span>'+(pr=="fc"?"Réviser "+pl(x.t,"carte","cartes"):"Faire "+pl(x.t,"question","questions")+" de QCM")+'</span>'+(sb?'<small>'+sb+'</small>':'')+'</button>'+(cfg.srs&&x.r&&x.w?'<button class="lnk" data-a="all" data-v="'+pr+'">Choisir : nouvelles ou à revoir</button>':'')}
+   if(pr){const x=pr=="fc"?F:Qi,sb=sub(x);h+='<button class="b ok cta liquid-btn" data-a="allg" data-v="'+pr+'"><span>'+(pr=="fc"?"Réviser "+pl(x.t,"carte","cartes"):"Faire "+pl(x.t,"question","questions")+" de QCM")+'</span>'+(sb?'<small>'+sb+'</small>':'')+'</button>'+(cfg.srs&&x.r&&x.w?'<button class="lnk" data-a="all" data-v="'+pr+'">Choisir : nouvelles ou à revoir</button>':'')}
    else h+='<p class="note">'+((fcP.length||qcP.length)?(cfg.srs?"Rien à réviser aujourd\'hui. Reviens demain, ou lance une révision libre.":""):"Tous les paquets sont cachés : « Réviser tout » les ignore. Touche un paquet pour le réviser.")+'</p>';
    if(pr!="fc"&&fcP.length)sec.push('<button class="b" data-a="allg" data-v="fc">Flashcards'+(F.t?" ("+F.t+")":"")+'</button>');
    if(pr!="qcm"&&qcP.length)sec.push('<button class="b" data-a="allg" data-v="qcm">QCM'+(Qi.t?" ("+Qi.t+")":"")+'</button>');
@@ -1720,7 +1838,7 @@ function render0(){
   if(!q.length)h+='<div class="done"><h1>'+n+(n>1?' cartes maîtrisées':' carte maîtrisée')+'</h1>'+(endB(false)??'<button class="b ok" data-a="restart">Recommencer</button><button class="b" data-a="back">Retour aux paquets</button>')+'</div>';
   else{const c=deck.items[q[0]];
    const body=back?'<div class="a">'+fmt(c.a)+'</div>'+(c.ai?imgH(c.ai):''):'<div class="q">'+fmt(c.q)+'</div>'+(c.qi?imgH(c.qi):'')+(cfg.hc<6?'<span class="hint">Touche pour voir la réponse</span>':'');
-   h+='<button class="card'+(back?' back':'')+(fl?' flip':'')+'" data-a="flip"><span class="vh">'+(back?"Réponse : ":"Question : ")+'</span>'+(c.c?'<span class="hint">'+esc(c.c)+'</span>':'')+body+'<span class="vh"> Touche pour retourner la carte.</span></button>';
+   h+='<button class="card liquid-card'+(back?' back':'')+(fl?' flip':'')+'" data-a="flip"><span class="vh">'+(back?"Réponse : ":"Question : ")+'</span>'+(c.c?'<span class="hint">'+esc(c.c)+'</span>':'')+body+'<span class="vh"> Touche pour retourner la carte.</span></button>';
    fl=false;if(cfg.hc<6)h+='<p class="help" style="text-align:center;margin:0">'+(cfg.srs&&!deck.free?"Glisse la carte : à droite pour Bien, à gauche pour À revoir":"Glisse la carte : à droite si tu savais, à gauche à revoir")+'</p>';if(back)h+=cfg.srs&&!deck.free?'<div class="dock g4">'+(P=>[["À revoir","r"],["Difficile",""],["Bien","ok"],["Facile","e"]].map((x,k)=>'<button class="b rb '+x[1]+'" data-a="rate" data-v="'+(k+1)+'"><span>'+x[0]+'</span><small>'+ivTxt(P[k])+'</small></button>').join(""))(opts(c))+'</div>':'<div class="dock"><button class="b" data-a="no">À revoir</button><button class="b ok" data-a="yes">Je savais</button></div>'}
  }else{
   const n=order.length;
