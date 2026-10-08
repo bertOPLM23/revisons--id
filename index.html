@@ -1011,6 +1011,8 @@ html[data-desk="1"] #app:is([data-view="study"],[data-view="exam"]) .dock{margin
  html[data-desk="1"][data-ipad="1"] h1{font-size:28px}
  html[data-desk="1"][data-ipad="1"] main{max-width:1240px;padding:24px 28px 0}
  html[data-desk="1"][data-ipad="1"] .split{grid-template-columns:240px minmax(0,1fr);gap:24px}
+ /* panneau latéral masqué : le contenu reprend toute la largeur (sinon il tombe dans la colonne de 240 px du panneau) */
+ html[data-desk="1"][data-ipad="1"][data-sb="0"] .split{grid-template-columns:minmax(0,1fr)}
  html[data-desk="1"][data-ipad="1"] .sd{padding:7px 12px;font-size:15px}
  /* révision : carte et textes aux proportions de lecture d'un écran d'ordinateur */
  html[data-desk="1"][data-ipad="1"] .card{min-height:min(46vh,420px);padding:32px 36px}

@@ -164,7 +164,7 @@ Espace/Entrée/flèches/1-4 pour retourner et noter, Ctrl+Z pour annuler ; lettr
 ### Adaptation par appareil
 - **iPhone** (< 768 px) : mise en page téléphone. Sur 320 px, en révision, le mot « Retour » est masqué visuellement (chevron seul) quand le drapeau est présent.
 - **iPad** (≥ 768 px, `cfg.ipad`) : panneau latéral, grille, textes et boutons agrandis pour le doigt.
-- **Mac** (`html[data-desk="1"]`, ajouté le 08/10/2026) : tailles pensées pour la souris ; hors de l'accueil, colonne de lecture de 760 px ; dossiers sur 1 colonne (768–1 099 px), 2 colonnes, ou 3 (≥ 1 500 px) ; en révision/examen, boutons juste sous la carte à toutes les largeurs ; **effets allégés pour le Mac mini 2014** (aucun flou en temps réel, fond immobile, réfraction SVG de la barre du bas coupée, surfaces flottantes opaques). Les styles Mac ne s'appliquent jamais sur iPhone/iPad (vérifié par captures identiques au pixel près).
+- **Mac** (`html[data-desk="1"]`, ajouté le 08/10/2026) : tailles pensées pour la souris ; hors de l'accueil, colonne de lecture de 760 px ; dossiers sur 1 colonne (768–1 099 px), 2 colonnes, ou 3 (≥ 1 500 px) ; en révision/examen, boutons juste sous la carte à toutes les largeurs ; **effets allégés pour le Mac mini 2014** (aucun flou en temps réel, fond immobile, réfraction SVG de la barre du bas coupée, surfaces flottantes opaques). Panneau latéral masqué (`data-sb="0"`) : le contenu reprend toute la largeur (bug corrigé le 08/10/2026 : il restait coincé dans la colonne de 240 px du panneau). Les styles Mac ne s'appliquent jamais sur iPhone/iPad (vérifié par captures identiques au pixel près).
 
 ---
 
@@ -217,6 +217,7 @@ Espace/Entrée/flèches/1-4 pour retourner et noter, Ctrl+Z pour annuler ; lettr
 6. **Tester dans le navigateur avec Playwright** (Chromium dans `/opt/pw-browsers`) :
    - iPhone (390 px, et 320 px pour les petits écrans), iPad (1024 px, portrait et paysage) : `hasTouch:true, isMobile:true` ;
    - Mac : **sans** `hasTouch`/`isMobile` (sinon `data-desk` reste à `"0"`), 1440×900, 1920×1080, et des fenêtres moyennes (960 px) et étroites (700 px) ;
+   - **tous les états de mise en page** : panneau latéral affiché **et masqué** (`cfg.sb`, bouton `A.sbt`), vues liste / icônes / colonnes ;
    - clair et sombre, erreurs console, **débordement horizontal**, gestes fins via CDP (`Input.dispatchTouchEvent`), re-sélection des éléments après chaque rendu ;
    - synchro simulée en interceptant `**/rest/v1/rpc/**` (y compris des changements « venus d'un autre appareil » et des échecs réseau) ;
    - jeu de données synthétique réaliste (~100 nœuds, ~2 000 cartes, 90 jours d'historique) ;
