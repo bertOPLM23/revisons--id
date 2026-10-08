@@ -977,6 +977,59 @@ html[data-ipad="1"] #app .sd.on{background-image:linear-gradient(180deg,var(--lq
  box-shadow:inset 0 1px 0 rgb(255 255 255/.18),0 14px 32px -12px rgb(0 0 0/.45)}
 
 @media (prefers-reduced-transparency:reduce){#app .menu{background-color:var(--card)}}
+
+/* ===================================================================================
+   Mac / ordinateur (html[data-desk="1"]) : souris ou trackpad, fenêtre de taille variable, matériel parfois ancien
+   =================================================================================== */
+/* ---------- 1. effets allégés (Mac mini 2014) : pas de flou en temps réel, fond immobile ---------- */
+html[data-desk="1"] *,html[data-desk="1"] *::before,html[data-desk="1"] *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html[data-desk="1"] #mesh i{animation:none!important}
+/* sans flou, les surfaces qui passent au-dessus du contenu deviennent opaques pour rester lisibles */
+html[data-desk="1"] :is(.dock,.pvm,.cmenu),html[data-desk="1"] .shd .sh{background:var(--g-sol)}
+
+/* ---------- 2. tailles pensées pour la souris (toutes largeurs de fenêtre) ---------- */
+html[data-desk="1"] #app .dock .b{min-height:44px}
+html[data-desk="1"] #app .dock.g4 .b{padding-top:6px;padding-bottom:6px}
+html[data-desk="1"] #app .b.cta.liquid-btn{min-height:54px;font-size:17px;border-radius:28px}
+html[data-desk="1"] #app .tg{width:38px;height:38px}
+html[data-desk="1"] #app .bk{min-height:38px}
+html[data-desk="1"] #app .cbtn{width:32px;height:32px}
+html[data-desk="1"] #app :is(.chip,.seg button){min-height:34px}
+html[data-desk="1"] #app .item:not(.tile) .main{padding:10px 14px}
+html[data-desk="1"] #app .item.row{padding-top:10px;padding-bottom:10px}
+/* survol : la goutte s'éclaire légèrement sous la souris */
+html[data-desk="1"] #app :is(.dock .b,.b,.chip,.item,.resume,.qb button.opt):not(:disabled):hover{filter:brightness(1.03)}
+:root[data-theme="dark"][data-desk="1"] #app :is(.dock .b,.b,.chip,.item,.resume,.qb button.opt):not(:disabled):hover{filter:brightness(1.12)}
+
+/* révision et examen (toutes largeurs) : les boutons restent juste sous la carte au lieu d'être collés en bas de l'écran */
+html[data-desk="1"] body #app:is([data-view="study"],[data-view="exam"]){min-height:0}
+html[data-desk="1"] #app:is([data-view="study"],[data-view="exam"]) .dock{margin-top:14px}
+
+/* ---------- 3. mise en page grand écran (fenêtre de 768 px et plus) ---------- */
+@media (min-width:768px){
+ html[data-desk="1"][data-ipad="1"] body{font-size:16px}
+ html[data-desk="1"][data-ipad="1"] h1{font-size:28px}
+ html[data-desk="1"][data-ipad="1"] main{max-width:1240px;padding:24px 28px 0}
+ html[data-desk="1"][data-ipad="1"] .split{grid-template-columns:240px minmax(0,1fr);gap:24px}
+ html[data-desk="1"][data-ipad="1"] .sd{padding:7px 12px;font-size:15px}
+ /* révision : carte et textes aux proportions de lecture d'un écran d'ordinateur */
+ html[data-desk="1"][data-ipad="1"] .card{min-height:min(46vh,420px);padding:32px 36px}
+ html[data-desk="1"][data-ipad="1"] .card .q,html[data-desk="1"][data-ipad="1"] .qb .q{font-size:calc(23px*var(--fz))}
+ html[data-desk="1"][data-ipad="1"] .card .a{font-size:calc(18px*var(--fz))}
+ html[data-desk="1"][data-ipad="1"] .qb{padding:22px 24px}
+ html[data-desk="1"][data-ipad="1"] .qb .opt .ot,html[data-desk="1"][data-ipad="1"] .qb .ex p{font-size:calc(16px*var(--fz))}
+ html[data-desk="1"][data-ipad="1"] .grid.tiles{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+ /* hors de l'accueil : une colonne de lecture (lignes de texte de longueur confortable), centrée */
+ html[data-desk="1"][data-ipad="1"] #app[data-view]:not([data-view="browse"]){max-width:760px}
+ :root[data-desk="1"]{--lq-r:32px}
+}
+/* fenêtre moyenne (demi-écran) : une colonne de dossiers, pour que leur description tienne sur une ligne */
+@media (min-width:768px) and (max-width:1099px){html[data-desk="1"][data-ipad="1"] .grid:not(.tiles){grid-template-columns:minmax(0,1fr)}}
+/* très grand écran (fenêtre plein écran sur un moniteur large) : dossiers sur trois colonnes */
+@media (min-width:1500px){
+ html[data-desk="1"][data-ipad="1"] main{max-width:1400px}
+ html[data-desk="1"][data-ipad="1"] .grid:not(.tiles){grid-template-columns:repeat(3,minmax(0,1fr))}
+}
 </style></head>
 <body><div id="mesh" aria-hidden="true"><i></i></div><svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="lg-dock" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB" filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse"><feImage id="lg-map" x="0" y="0" width="100" height="60" preserveAspectRatio="none" result="map"/><feDisplacementMap in="SourceGraphic" in2="map" scale="28" xChannelSelector="R" yChannelSelector="B"/></filter></svg><main><div id="app"></div></main><input type="file" id="fi" accept="image/*" hidden><input type="file" id="fb" accept="application/json,.json" hidden>
 <script>
@@ -1924,6 +1977,8 @@ function retHTML(logs,d0){if(!cfg.srs)return"";let n=0,k=0;logs.forEach(l=>{cons
  return '<h2 class="h2">Mémorisation réelle</h2><div class="st"><div class="sth"><b>Retrouvées sur 30 jours</b><span class="pv'+cl+'">'+p+' %</span></div><div class="bar"><i style="width:'+p+'%;background:'+(cl==" g"?"var(--ok)":cl==" r"?"var(--ko)":"var(--acc)")+'"></i></div><small class="help">Cartes déjà apprises, sur '+n+' révisions. Ton objectif réglé : '+tg+' %.</small></div>'}
 const solTxt=n=>{const its=packsOf(n).flatMap(p=>p.items||[]);if(!cfg.srs||!its.length)return"";const so=its.filter(i=>i.st==2&&i.s>=21).length;return' · '+so+' solide'+(so>1?"s":"")+' sur '+its.length};
 // ---- réglages : date d'examen pour tout, taille du texte ----
+// ordinateur (Mac) : souris ou trackpad et pas d'écran tactile → html[data-desk="1"] (tailles, mise en page et effets adaptés)
+const setDesk=()=>{let d=false;try{d=matchMedia("(hover:hover) and (pointer:fine)").matches&&!(navigator.maxTouchPoints>0)}catch(e){}document.documentElement.dataset.desk=d?"1":"0"};
 const setLt=()=>{document.documentElement.classList.toggle("nolt",!!cfg.nolt)};
 const setFs=()=>{document.documentElement.dataset.fs=String(cfg.fs||0)};
 const fsHTML=()=>'<h2 class="h2">Taille du texte des révisions</h2><div class="chips">'+[[0,"Normale"],[1,"Grande"],[2,"Très grande"]].map(([v,l])=>'<button class="chip'+((cfg.fs||0)==v?" on":"")+'" data-a="fs" data-v="'+v+'">'+l+'</button>').join("")+'</div><p class="help">Questions, réponses et propositions, en révision comme en examen. Réglage propre à cet appareil.</p>';
@@ -2061,7 +2116,7 @@ function render0(){
  if(document.querySelector){const c=document.querySelector(".cr");if(c)c.scrollLeft=c.scrollWidth;const k=$("cols");if(k)k.scrollLeft=k.scrollWidth}
 }
 let rzt;if(typeof addEventListener=="function")addEventListener("resize",()=>{clearTimeout(rzt);rzt=setTimeout(()=>{if(view=="browse"&&cfg.vw=="cols")render()},150)});
-setTh();setIp();setDens();setFs();setLt();boot();document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync();else if(cfg.code&&tm){clearTimeout(tm);sync()}});
+setTh();setIp();setDens();setFs();setLt();setDesk();boot();document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync();else if(cfg.code&&tm){clearTimeout(tm);sync()}});
 </script>
 <script>
 /* Liquid Glass (style iOS 27) : transparence réglable, barre du haut, réfraction Chromium */
@@ -2097,7 +2152,7 @@ setTh();setIp();setDens();setFs();setLt();boot();document.addEventListener("visi
   calm=window.matchMedia&&matchMedia("(prefers-reduced-transparency:reduce)").matches,
   fi=document.getElementById("lg-map"),last="";
  function refract(){
-  if(!chromium||calm||!fi)return;
+  if(!chromium||calm||!fi||R.dataset.desk==="1")return;
   var d=document.querySelector(".dock");if(!d)return;
   var b=d.getBoundingClientRect(),w=Math.round(b.width),h=Math.round(b.height);
   if(!w||!h||w+"x"+h===last)return;last=w+"x"+h;
