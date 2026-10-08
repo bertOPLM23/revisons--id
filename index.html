@@ -1076,6 +1076,11 @@ html[data-desk="1"] .dock.g4 .rb .rk{display:block;position:absolute;top:5px;rig
 @media (min-width:1500px){
  html[data-ipad="1"] .sgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* ===== la page ne s'élargit jamais : une carte qui sort de l'écran pendant le glissement ne doit pas faire dézoomer l'iPhone =====
+   overflow-x:clip (Safari 16+) coupe le débordement sans créer de zone de défilement : les barres fixes du haut et du bas restent fixes */
+html,body{overflow-x:clip}
+@supports not (overflow:clip){body{overflow-x:hidden}}
 </style></head>
 <body><div id="mesh" aria-hidden="true"><i></i></div><svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="lg-dock" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB" filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse"><feImage id="lg-map" x="0" y="0" width="100" height="60" preserveAspectRatio="none" result="map"/><feDisplacementMap in="SourceGraphic" in2="map" scale="28" xChannelSelector="R" yChannelSelector="B"/></filter></svg><main><div id="app"></div></main><input type="file" id="fi" accept="image/*" hidden><input type="file" id="fb" accept="application/json,.json" hidden>
 <script>

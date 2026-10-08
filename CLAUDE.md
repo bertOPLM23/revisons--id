@@ -160,6 +160,7 @@ Espace/Entrée/flèches/1-4 pour retourner et noter, Ctrl+Z pour annuler ; lettr
   - **Flou (`backdrop-filter`) seulement sur les grands éléments uniques** : flashcard, question QCM en révision, barre du bas, feuilles. Jamais sur les listes (dossiers, propositions, boutons). Coupé pendant le glissement d'une carte.
   - Un liseré en dégradé posé en `border-box` sous un fond translucide teinte tout l'intérieur : pour les gouttes, utiliser la bordure à quatre couleurs.
 - Gérer les **safe-area insets** iOS (un bug de défilement au-delà du contenu a déjà été corrigé sur ce point).
+- **La page ne doit jamais devenir plus large que l'écran** : sinon l'iPhone dézoome toute l'app. `html,body{overflow-x:clip}` (ajouté le 08/10/2026) l'empêche ; ne pas le retirer, et ne pas le remplacer par `overflow-x:hidden` sur `html`/`body`, qui casserait les barres fixes. Cause du bug d'origine : la carte glissée sort de plus d'une largeur d'écran à droite (la page passait de 390 à 1 431 px).
 - L'icône : deux feuilles crème inclinées sur fond anthracite, deux lignes de texte et une coche terracotta.
 
 ### Adaptation par appareil
@@ -224,6 +225,7 @@ Espace/Entrée/flèches/1-4 pour retourner et noter, Ctrl+Z pour annuler ; lettr
    - synchro simulée en interceptant `**/rest/v1/rpc/**` (y compris des changements « venus d'un autre appareil » et des échecs réseau) ;
    - jeu de données synthétique réaliste (~100 nœuds, ~2 000 cartes, 90 jours d'historique) ;
    - parcours complet de toutes les fonctions avec contrôle de cohérence des données après chaque étape, puis tests aléatoires de type « monkey » (centaines de touches) ;
+   - **largeur de la page** (`document.documentElement.scrollWidth`) pendant les gestes et les animations (glissement de carte, glisser-déposer), pas seulement à l'arrêt ;
    - pièges : deux actions dans le même instant font un `history.back()` qui peut quitter la page (artefact de test) ; l'émulation tactile ne déclenche pas `:active` (tester l'appui à la souris).
 7. **Mesurer le contraste** pour toute retouche visuelle : capture normale + capture avec tout le texte transparent, puis ratio WCAG texte/fond pixel par pixel, avant/après, sur chaque écran. Aucun texte ne doit passer sous 4,5:1 ni baisser s'il y était déjà.
 8. **Contrôler visuellement par captures d'écran.** Sous Linux, les polices de repli sont plus larges que SF/Georgia sur iOS : ne pas conclure à un bug de largeur sans recouper. Pour vérifier qu'un changement n'affecte pas un appareil, comparer les captures au pixel près (animations en pause ou `reducedMotion`).
