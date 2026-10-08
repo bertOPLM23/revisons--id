@@ -1032,6 +1032,50 @@ html[data-desk="1"] #app:is([data-view="study"],[data-view="exam"]) .dock{margin
  html[data-desk="1"][data-ipad="1"] main{max-width:1400px}
  html[data-desk="1"][data-ipad="1"] .grid:not(.tiles){grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* ===================================================================================
+   Grands écrans (Mac, iPad en paysage) : chaque écran occupe la largeur disponible
+   =================================================================================== */
+.sgrid,.sgc,.stg,.stc{display:flex;flex-direction:column;gap:10px;min-width:0}
+.stc:empty{display:none}
+.rk{display:none}
+/* Mac : touche du clavier rappelée sur chaque bouton de note */
+html[data-desk="1"] .dock.g4 .rb{position:relative}
+html[data-desk="1"] .dock.g4 .rb .rk{display:block;position:absolute;top:5px;right:9px;z-index:1;font:600 11px/1 ui-monospace,Menlo,monospace;opacity:.5}
+/* fenêtre moyenne (768–1 099 px) : sur Mac, la même largeur que sur iPad */
+@media (min-width:768px){html[data-desk="1"][data-ipad="1"] #app[data-view]:not([data-view="browse"]){max-width:min(920px,100%)}}
+@media (min-width:1100px){
+ /* hors de l'accueil : toute la largeur de la fenêtre (dans la limite de la mise en page) */
+ html[data-ipad="1"] body #app[data-view]:not([data-view="browse"]):not([data-view="study"]):not([data-view="exam"]):not([data-view="exs"]){max-width:none}
+ html[data-ipad="1"] body #app[data-view]:not([data-view="browse"]):is([data-view="study"],[data-view="exam"]){max-width:min(960px,100%)}
+ html[data-ipad="1"] body #app[data-view]:not([data-view="browse"])[data-view="exs"]{max-width:min(920px,100%)}
+ /* Réglages : sections côte à côte */
+ html[data-ipad="1"] .sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 32px;align-items:start}
+ /* chaque colonne commence par son titre de section, aligné sur les autres */
+ html[data-ipad="1"] .sgrid>.sgc>.sech:first-child{margin-top:6px;padding-top:0;border-top:0}
+ /* Statistiques : compteur du jour | calendrier ; mémorisation | prévision ; dossiers sur deux colonnes */
+ html[data-ipad="1"] .stg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:14px 24px;align-items:stretch}
+ html[data-ipad="1"] .stg>.stc{grid-column:auto}
+ html[data-ipad="1"] .stg>.stc:first-of-type{grid-column:1}
+ html[data-ipad="1"] .stg>.stc:last-of-type{grid-column:2}
+ html[data-ipad="1"] .stg .hero{justify-content:center}
+ html[data-ipad="1"] .stc>.pn,html[data-ipad="1"] .stc>.st{flex:1}
+ html[data-ipad="1"] #app[data-view="stats"],html[data-ipad="1"] #app[data-view="edit"]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;align-content:start}
+ html[data-ipad="1"] #app:is([data-view="stats"],[data-view="edit"])>*:not(.st):not(.er){grid-column:1/-1}
+ /* recherche : résultats sur deux colonnes */
+ html[data-ipad="1"] #sres{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px;align-items:start}
+ html[data-ipad="1"] #sres>:not(.opt){grid-column:1/-1}
+ /* import : zone de collage plus haute */
+ html[data-ipad="1"] #app[data-view="imp"] #tx{min-height:40vh}
+ /* révision : carte plus grande */
+ html[data-ipad="1"] .card{min-height:min(58vh,600px)}
+ html[data-desk="1"][data-ipad="1"] .card .q,html[data-desk="1"][data-ipad="1"] .qb .q{font-size:calc(26px*var(--fz))}
+ html[data-desk="1"][data-ipad="1"] .card .a{font-size:calc(20px*var(--fz))}
+ html[data-desk="1"][data-ipad="1"] .qb .opt .ot,html[data-desk="1"][data-ipad="1"] .qb .ex p{font-size:calc(17px*var(--fz))}
+}
+@media (min-width:1500px){
+ html[data-ipad="1"] .sgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
 </style></head>
 <body><div id="mesh" aria-hidden="true"><i></i></div><svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="lg-dock" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB" filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse"><feImage id="lg-map" x="0" y="0" width="100" height="60" preserveAspectRatio="none" result="map"/><feDisplacementMap in="SourceGraphic" in2="map" scale="28" xChannelSelector="R" yChannelSelector="B"/></filter></svg><main><div id="app"></div></main><input type="file" id="fi" accept="image/*" hidden><input type="file" id="fb" accept="application/json,.json" hidden>
 <script>
@@ -1372,8 +1416,8 @@ function statsHTML(){
  let cells="";for(let d=st;d<st+W*7;d++){if(d>d0){cells+='<i class="fu"></i>';continue}const c=cnt(d),l=!c?0:c<10?1:c<30?2:c<60?3:4;cells+='<i class="l'+l+(d==(hmSel??d0)?" on":"")+'" data-a="hmd" data-v="'+d+'" title="'+dstr(d)+' : '+c+' révision'+(c>1?"s":"")+'"></i>'}
  let t30=0;for(let d=d0-29;d<=d0;d++)t30+=cnt(d);let k=0,d=cnt(d0)?d0:d0-1;while(cnt(d)>0){k++;d--}
  const today=cnt(d0);
- let h=crumbs()+'<h1>Statistiques</h1><div class="hero"><span class="hn">'+today+'</span><span class="hl">révision'+(today>1?"s":"")+' aujourd\'hui</span>'+(k?'<span class="hs">'+k+' jour'+(k>1?"s":"")+' d\'affilée</span>':'')+'</div><div class="pn"><div class="hm" aria-label="Révisions des '+W+' dernières semaines">'+cells+'</div><p class="hmd">'+(()=>{const x=hmSel??d0,c=cnt(x);return (x==d0?"Aujourd\'hui":dstr(x).replace(/^./,m=>m.toUpperCase()))+" : "+(c?c+" révision"+(c>1?"s":""):"aucune révision")})()+'</p><div class="lg"><span>'+t30+' révision'+(t30>1?"s":"")+' sur 30 jours'+(k?", série en cours : "+k+" jour"+(k>1?"s":""):"")+'</span><span class="lgs">Moins <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> Plus</span></div></div>';
- h+=retHTML(logs,d0)+fcHTML();
+ let h=crumbs()+'<h1>Statistiques</h1><div class="stg"><div class="hero"><span class="hn">'+today+'</span><span class="hl">révision'+(today>1?"s":"")+' aujourd\'hui</span>'+(k?'<span class="hs">'+k+' jour'+(k>1?"s":"")+' d\'affilée</span>':'')+'</div><div class="pn"><div class="hm" aria-label="Révisions des '+W+' dernières semaines">'+cells+'</div><p class="hmd">'+(()=>{const x=hmSel??d0,c=cnt(x);return (x==d0?"Aujourd\'hui":dstr(x).replace(/^./,m=>m.toUpperCase()))+" : "+(c?c+" révision"+(c>1?"s":""):"aucune révision")})()+'</p><div class="lg"><span>'+t30+' révision'+(t30>1?"s":"")+' sur 30 jours'+(k?", série en cours : "+k+" jour"+(k>1?"s":""):"")+'</span><span class="lgs">Moins <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> Plus</span></div></div>';
+ h+='<section class="stc">'+retHTML(logs,d0)+'</section><section class="stc">'+fcHTML()+'</section></div>';
  h+='<div class="seg" role="radiogroup" aria-label="Vue statistiques"><button role="radio" aria-checked="'+(statsTab=="rates")+'" class="'+(statsTab=="rates"?"on":"")+'" data-a="stab" data-v="rates">Taux de réussite</button><button role="radio" aria-checked="'+(statsTab=="hard")+'" class="'+(statsTab=="hard"?"on":"")+'" data-a="stab" data-v="hard">À revoir souvent</button></div>';
  if(statsTab=="rates"){
  const ks=kids(cur);h+='<h2 class="h2">Taux de réussite'+(cur?' dans « '+esc(G(cur).name)+' »':'')+'</h2>';
@@ -2040,19 +2084,19 @@ function render0(){
   const row=(t,sb,a,on)=>'<button class="item row" role="switch" aria-checked="'+!!on+'" data-a="'+a+'"><span class="tx"><b>'+t+'</b><small>'+sb+'</small></span><span class="swt" aria-hidden="true"></span></button>';
   // trois sections : Révision, Affichage, Données (la couleur de contraste est insérée dans #accent-slot par son script)
   const sec=(t,f)=>'<h2 class="sech'+(f?" first":"")+'">'+t+'</h2>';
-  h=crumbs()+'<h1>Réglages</h1>'
+  h=crumbs()+'<h1>Réglages</h1><div class="sgrid"><section class="sgc">'
    +sec("Révision",1)+row("Répétition espacée","Algorithme FSRS, le même que dans Anki","srs",cfg.srs)+'<p class="help">Après chaque carte, note ta réponse (À revoir, Difficile, Bien, Facile) : l\'algorithme calcule le moment où tu risques de l\'oublier et la reprogramme juste avant. Désactivée : tout le paquet est proposé à chaque révision.</p>'
    +(cfg.srs?'<h2 class="h2">Taux de mémorisation visé</h2><div class="chips">'+[.8,.85,.9,.95].map(v=>'<button class="chip'+((cfg.rt||.9)==v?" on":"")+'" data-a="rt" data-v="'+v+'">'+Math.round(v*100)+' %</button>').join("")+'</div><p class="help">90 % est la valeur d\'Anki. Plus haut, tu retiens mieux mais tu révises beaucoup plus souvent ; plus bas, moins de révisions mais plus d\'oublis.</p>':'')
    +(cfg.srs?'<h2 class="h2">Nouvelles cartes par jour</h2><div class="chips">'+[10,20,30,50,0].map(v=>'<button class="chip'+(cfg.nl==v?" on":"")+'" data-a="nl" data-v="'+v+'">'+(v||"Sans limite")+'</button>').join("")+'</div><p class="help">Cartes et questions jamais vues proposées chaque jour, pour garder une charge régulière. '+(cfg.nl?"Il en reste "+newLeft()+" aujourd\'hui, tous appareils confondus.":"")+'</p>':'')
    +(cfg.srs?goalRow():'')
    +row("Avance automatique (QCM)","Question suivante après un QCM parfait","an",!!cfg.an)+'<p class="help">Activée : quand tu coches exactement les bonnes propositions, la correction s\'affiche puis la question suivante arrive après 1,5 seconde. Touche « Suivant » pour avancer plus vite.</p>'
-   +sec("Affichage")+'<div id="accent-slot"></div>'+fsHTML()+(window.glassUI?glassUI():'')+row("Lumière sous le doigt","Reflet qui suit le doigt quand tu touches un bouton","lt",!cfg.nolt)+row("Série et objectif du jour","Sur l\'accueil : jours d\'affilée et révisions du jour","sk",!cfg.nosk)
+   +'</section><section class="sgc">'+sec("Affichage")+'<div id="accent-slot"></div>'+fsHTML()+(window.glassUI?glassUI():'')+row("Lumière sous le doigt","Reflet qui suit le doigt quand tu touches un bouton","lt",!cfg.nolt)+row("Série et objectif du jour","Sur l\'accueil : jours d\'affilée et révisions du jour","sk",!cfg.nosk)
    +row("Mise en page iPad","Colonne de dossiers et grille sur grand écran","ipad",cfg.ipad)+'<p class="help">Désactivée : la version téléphone est affichée, centrée.</p>'
    +row("Affichage compact","Lignes plus serrées pour voir plus de dossiers à la fois","dens",cfg.cp)
    +(cfg.srs?row("Prévision des révisions","Graphique des 7 prochains jours dans les statistiques","fcst",cfg.fc!==0)+'<p class="help">Désactivé : le graphique est masqué dans les statistiques.</p>':'')
-   +sec("Données")+syncUI()+'<h2 class="h2">Sauvegarde</h2>'+(rs?'<p class="help">Sauvegarde du '+esc(rs.date)+' : '+rs.np+' paquet'+(rs.np>1?"s":"")+'. Elle remplacera toutes tes données actuelles'+(cfg.code?', y compris sur tes autres appareils synchronisés':'')+'.</p><div class="menu"><button data-a="rsx">Annuler</button><button class="dg" data-a="rsok">Remplacer mes données</button></div>':'<p class="help">Un fichier JSON avec tous tes dossiers, paquets, images et ta progression. '+bkInfo()+'</p><div class="menu"><button data-a="exp">Exporter</button><button data-a="rst">Restaurer</button></div>')+(bm?'<p class="help">'+esc(bm)+'</p>':'')
+   +'</section><section class="sgc">'+sec("Données")+syncUI()+'<h2 class="h2">Sauvegarde</h2>'+(rs?'<p class="help">Sauvegarde du '+esc(rs.date)+' : '+rs.np+' paquet'+(rs.np>1?"s":"")+'. Elle remplacera toutes tes données actuelles'+(cfg.code?', y compris sur tes autres appareils synchronisés':'')+'.</p><div class="menu"><button data-a="rsx">Annuler</button><button class="dg" data-a="rsok">Remplacer mes données</button></div>':'<p class="help">Un fichier JSON avec tous tes dossiers, paquets, images et ta progression. '+bkInfo()+'</p><div class="menu"><button data-a="exp">Exporter</button><button data-a="rst">Restaurer</button></div>')+(bm?'<p class="help">'+esc(bm)+'</p>':'')
    +stoHTML()+'<h2 class="h2">Corbeille</h2><button class="item row" data-a="tr"><span class="tx"><b>Éléments supprimés</b><small>'+(n=>n?n+(n>1?" éléments":" élément")+" · conservés 30 jours":"Vide · les suppressions sont conservées 30 jours")(trashRoots().length)+'</small></span><i class="chv">'+ic("cr",16)+'</i></button>'
-   +'<div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Fermer</button></div>';
+   +'</section></div><div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Fermer</button></div>';
  }else if(view=="col"){
   h=crumbs()+'<h1>Couleur du dossier</h1><div class="pal">'+PAL.map((c,i)=>'<button class="pc" data-a="setc" data-v="'+c+'">'+ic("f",34,c)+'<span>'+PN[i]+'</span></button>').join("")+'</div><div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Annuler</button></div>';
  }else if(view=="name"){
@@ -2097,9 +2141,9 @@ function render0(){
   h=hdr()+bar(known,n)+'<div class="meta"><span>'+known+' / '+n+' maîtrisées</span><span>'+q.length+' à voir</span></div>';
   if(!q.length)h+='<div class="done"><h1>'+n+(n>1?' cartes maîtrisées':' carte maîtrisée')+'</h1>'+(endB(false)??'<button class="b ok" data-a="restart">Recommencer</button><button class="b" data-a="back">Retour aux paquets</button>')+'</div>';
   else{const c=deck.items[q[0]];
-   const body=back?'<div class="a">'+fmt(c.a)+'</div>'+(c.ai?imgH(c.ai):''):'<div class="q">'+fmt(c.q)+'</div>'+(c.qi?imgH(c.qi):'')+(cfg.hc<6?'<span class="hint">Touche pour voir la réponse</span>':'');
+   const body=back?'<div class="a">'+fmt(c.a)+'</div>'+(c.ai?imgH(c.ai):''):'<div class="q">'+fmt(c.q)+'</div>'+(c.qi?imgH(c.qi):'')+(cfg.hc<6?'<span class="hint">'+(document.documentElement.dataset.desk=="1"?"Clique ou appuie sur Espace pour voir la réponse":"Touche pour voir la réponse")+'</span>':'');
    h+='<button class="card liquid-card'+(back?' back':'')+(fl?' flip':'')+'" data-a="flip"><span class="vh">'+(back?"Réponse : ":"Question : ")+'</span>'+(c.c?'<span class="hint">'+esc(c.c)+'</span>':'')+body+'<span class="vh"> Touche pour retourner la carte.</span></button>';
-   fl=false;if(cfg.hc<6)h+='<p class="help" style="text-align:center;margin:0">'+(cfg.srs&&!deck.free?"Glisse la carte : à droite pour Bien, à gauche pour À revoir":"Glisse la carte : à droite si tu savais, à gauche à revoir")+'</p>';if(back)h+=cfg.srs&&!deck.free?'<div class="dock g4">'+(P=>[["À revoir","r"],["Difficile",""],["Bien","ok"],["Facile","e"]].map((x,k)=>'<button class="b rb '+x[1]+'" data-a="rate" data-v="'+(k+1)+'"><span>'+x[0]+'</span><small>'+ivTxt(P[k])+'</small></button>').join(""))(opts(c))+'</div>':'<div class="dock"><button class="b" data-a="no">À revoir</button><button class="b ok" data-a="yes">Je savais</button></div>'}
+   fl=false;if(cfg.hc<6)h+='<p class="help" style="text-align:center;margin:0">'+(document.documentElement.dataset.desk=="1"?(cfg.srs&&!deck.free?"Clavier : Espace pour retourner, 1 à 4 pour noter, Ctrl+Z pour annuler":"Clavier : Espace pour retourner, flèche droite si tu savais, flèche gauche à revoir"):cfg.srs&&!deck.free?"Glisse la carte : à droite pour Bien, à gauche pour À revoir":"Glisse la carte : à droite si tu savais, à gauche à revoir")+'</p>';if(back)h+=cfg.srs&&!deck.free?'<div class="dock g4">'+(P=>[["À revoir","r"],["Difficile",""],["Bien","ok"],["Facile","e"]].map((x,k)=>'<button class="b rb '+x[1]+'" data-a="rate" data-v="'+(k+1)+'"><span>'+x[0]+'</span><small>'+ivTxt(P[k])+'</small><kbd class="rk" aria-hidden="true">'+(k+1)+'</kbd></button>').join(""))(opts(c))+'</div>':'<div class="dock"><button class="b" data-a="no">À revoir</button><button class="b ok" data-a="yes">Je savais</button></div>'}
  }else{
   const n=order.length;
   h=hdr()+bar(idx,n);
