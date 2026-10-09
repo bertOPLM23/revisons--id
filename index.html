@@ -1233,6 +1233,67 @@ html[data-nx="1"] .shd .nxck i{display:flex;color:var(--acc)}
 html[data-nx="1"] .shd .nxck[aria-checked="true"] span{font-weight:600}
 @media (min-width:768px){html[data-nx="1"][data-ipad="1"] #app .nxsr{min-height:58px;font-size:17px}}
 html[data-nx="1"][data-desk="1"] #app .nxsr{min-height:46px;font-size:15px}
+/* ===================== Nouvelle apparence : recherche (vignettes) et import (habillé) ===================== */
+html[data-nx="1"] #app .nxsqt{display:flex;align-items:center;gap:10px;margin-top:6px}
+html[data-nx="1"] #app .nxsqf{flex:1;min-width:0;display:flex;align-items:center;gap:10px;min-height:46px;padding:0 10px 0 14px;border-radius:14px;color:var(--mut);
+ background:var(--lq-well);border:1px solid;border-color:var(--lq-rim) var(--lq-edge-hi) var(--lq-edge-hi) var(--lq-rim);box-shadow:inset 0 2px 5px -2px var(--lq-inner-lo)}
+html[data-nx="1"] #app .nxsqf:focus-within{box-shadow:inset 0 2px 5px -2px var(--lq-inner-lo),0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)}
+html[data-nx="1"] #app .nxsqf svg{flex:none}
+html[data-nx="1"] #app #sq{flex:1;min-width:0;margin:0;padding:10px 0;border:0;background:none;box-shadow:none;outline:0;font:inherit;font-size:16px;color:var(--ink)}
+html[data-nx="1"] #app #sq::placeholder{color:color-mix(in srgb,var(--mut) 55%,var(--ink));opacity:1}
+html[data-nx="1"] #app .nxsqx{flex:none;width:28px;height:28px;padding:0;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:none;box-shadow:none;color:var(--bg);font-size:0}
+html[data-nx="1"] #app .nxsqx::before{content:"×";width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;line-height:1;background:color-mix(in srgb,var(--mut) 55%,transparent)}
+html[data-nx="1"] #app #sq:placeholder-shown+.nxsqx{display:none}
+html[data-nx="1"] #app .nxsqa{flex:none;padding:10px 2px;border:0;background:none;box-shadow:none;color:color-mix(in srgb,var(--acc) 78%,var(--ink));font:inherit;font-size:16px;font-weight:500}
+html[data-nx="1"] #app .nxsqh{margin:16px 8px 10px;color:color-mix(in srgb,var(--mut) 72%,var(--ink))}
+html[data-nx="1"] #app[data-view=imp] p.help:not(.pv-ok):not(.pv-ko){color:color-mix(in srgb,var(--mut) 75%,var(--ink))}
+html[data-nx="1"] #app .nxsg2{display:flex;margin-top:12px;padding:3px;border-radius:14px;overflow-x:auto;scrollbar-width:none;background:var(--lq-well);border:1px solid;border-color:var(--lq-rim) var(--lq-edge-hi) var(--lq-edge-hi) var(--lq-rim)}
+html[data-nx="1"] #app .nxsg2::-webkit-scrollbar{display:none}
+html[data-nx="1"] #app .nxsg2 button{flex:1 0 auto;min-height:38px;padding:0 9px;border:0;border-radius:11px;background:none;box-shadow:none;font:inherit;font-size:14px;color:var(--ink);white-space:nowrap}
+html[data-nx="1"] #app .nxsg2 button em{font-style:normal;font-size:12px;color:color-mix(in srgb,var(--mut) 70%,var(--ink));margin-left:4px}
+html[data-nx="1"] #app .nxsg2 button.on{background:var(--lq-drop-fill);font-weight:600;box-shadow:inset 0 1px 0 var(--lq-inner-hi),0 2px 6px -2px var(--lq-drop)}
+html[data-nx="1"] #app .nxsr2{display:flex;align-items:center;justify-content:space-between;margin:8px 4px 0;font-size:14px;color:color-mix(in srgb,var(--mut) 70%,var(--ink))}
+html[data-nx="1"] #app .nxsfb{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 4px;border:0;background:none;box-shadow:none;font:inherit;font-size:14px;font-weight:600;color:color-mix(in srgb,var(--acc) 78%,var(--ink))}
+html[data-nx="1"] #app .nxsfp{margin-top:8px;padding:10px;border-radius:20px;background:var(--lq-panel);border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi)}
+html[data-nx="1"] #app .nxsfp select{margin-top:8px;width:100%}
+html[data-nx="1"] #app .nxspk{display:flex;flex-wrap:wrap;gap:8px}
+html[data-nx="1"] #app .nxspc{display:inline-flex;align-items:center;gap:7px;max-width:100%}
+html[data-nx="1"] #app .nxspc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-nx="1"] #app .nxspc em{font-style:normal;font-size:12px;font-weight:700;color:var(--acc)}
+html[data-nx="1"] #app .nxscs{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+html[data-nx="1"] #app .nxsc2{display:flex;flex-direction:column;align-items:stretch;gap:5px;width:100%;margin:0;padding:13px 16px 14px;box-sizing:border-box;text-align:left;font:inherit;color:var(--ink);border-radius:22px;
+ border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);background:linear-gradient(180deg,var(--lq-drop-gl),transparent 40%),var(--lq-row-fill);background-clip:padding-box;
+ box-shadow:inset 0 1px 0 var(--lq-inner-hi),inset 0 -8px 16px -14px var(--lq-inner-lo),0 8px 20px -16px var(--lq-drop)}
+html[data-nx="1"] #app .nxsc2:active{background-color:color-mix(in srgb,var(--ink) 5%,transparent)}
+html[data-nx="1"][data-desk="1"] #app .nxsc2:hover{filter:brightness(1.03)}
+html[data-nx="1"] #app .nxsc2 .pth{display:flex;align-items:center;gap:6px;min-width:0;font-size:12.5px;color:color-mix(in srgb,var(--mut) 80%,var(--ink))}
+html[data-nx="1"] #app .nxsc2 .pth svg{flex:none}
+html[data-nx="1"] #app .nxsc2 .pth span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-nx="1"] #app .nxsc2 b{font-weight:600;font-size:15.5px;line-height:1.35}
+html[data-nx="1"] #app .nxsc2 .ans{font-size:14px;line-height:1.42;color:color-mix(in srgb,var(--mut) 55%,var(--ink))}
+html[data-nx="1"] #app :is(.nxsc2,.nxspc,.nxsqa,.nxsfb,.nxsg2 button):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+html[data-nx="1"] #app[data-view=search] mark{background:color-mix(in srgb,var(--acc) 22%,transparent);color:inherit;border-radius:4px;padding:0 1px}
+@media (max-width:359px){html[data-nx="1"] #app .nxsg2 button{padding:0 3px;font-size:12.5px;letter-spacing:-.01em}html[data-nx="1"] #app .nxsg2 button em{margin-left:2px;font-size:11.5px}}
+@media (min-width:1100px){html[data-nx="1"] #app .nxscs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1500px){html[data-nx="1"] #app .nxscs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+html[data-nx="1"][data-desk="1"] #app .nxsqf{min-height:40px}
+/* import */
+html[data-nx="1"] #app[data-view=imp] .bar,html[data-nx="1"] #app[data-view=imp] .h1r small{display:none}
+html[data-nx="1"] #app .nxst2{display:flex;align-items:center;gap:10px;margin:12px 0 6px}
+html[data-nx="1"] #app .nxst2>span{display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:14.5px;font-weight:500;color:color-mix(in srgb,var(--mut) 75%,var(--ink))}
+html[data-nx="1"] #app .nxst2 i{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:13px;font-weight:700;border:1.5px solid color-mix(in srgb,var(--mut) 50%,transparent)}
+html[data-nx="1"] #app .nxst2 .ion{color:var(--ink)}
+html[data-nx="1"] #app .nxst2 .ion i{background:var(--acc);border-color:var(--acc);color:var(--onp)}
+html[data-nx="1"] #app .nxst2 .idn i{background:color-mix(in srgb,var(--acc) 12%,transparent);border-color:transparent;color:color-mix(in srgb,var(--acc) 65%,var(--ink))}
+html[data-nx="1"] #app .nxst2 .ln{flex:1;min-width:12px;height:2px;border-radius:1px;background:color-mix(in srgb,var(--mut) 30%,transparent)}
+html[data-nx="1"] #app[data-view=imp] :is(textarea,input#nm,#im-sel){border-radius:18px;background:var(--lq-well);border:1px solid;border-color:var(--lq-rim) var(--lq-edge-hi) var(--lq-edge-hi) var(--lq-rim);box-shadow:inset 0 2px 6px -3px var(--lq-inner-lo)}
+html[data-nx="1"] #app[data-view=imp] #pr{font-size:14px;line-height:1.5;color:color-mix(in srgb,var(--mut) 55%,var(--ink));-webkit-mask:linear-gradient(180deg,#000 72%,transparent);mask:linear-gradient(180deg,#000 72%,transparent)}
+html[data-nx="1"] #app[data-view=imp] [data-a=cp]{width:100%;margin-top:10px}
+html[data-nx="1"] #app[data-view=imp] #im-seg+p.help,html[data-nx="1"] #app[data-view=imp] p.help:has(+#nm){margin:12px 0 4px;padding:11px 14px;border-radius:16px;font-size:14.5px;color:var(--ink);
+ background:var(--lq-panel);border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi)}
+html[data-nx="1"] #app[data-view=imp] #msg:is(.pv-ok,.pv-ko):not(:empty){display:inline-block;width:fit-content;max-width:100%;box-sizing:border-box;align-self:flex-start;margin-top:10px;padding:8px 14px;border-radius:16px;font-size:14px;font-weight:600}
+html[data-nx="1"] #app[data-view=imp] #msg.pv-ok:not(:empty){color:color-mix(in srgb,var(--ok) 78%,var(--ink));background:color-mix(in srgb,var(--ok) 7%,transparent);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent)}
+html[data-nx="1"] #app[data-view=imp] #msg.pv-ko:not(:empty){color:color-mix(in srgb,var(--ko) 80%,var(--ink));background:color-mix(in srgb,var(--ko) 7%,transparent);border:1px solid color-mix(in srgb,var(--ko) 28%,transparent)}
 /* glisser-déposer en vue Icônes : la vignette fantôme doit suivre le doigt (.item.tile la remettait en position relative, le dépôt n'aboutissait pas) */
 .item.tile.ghost{position:fixed}
 /* ===================== Mise en avant des dossiers, ancienne apparence (html[data-fh="1"]:not([data-nx="1"])) : tranche colorée ===================== */
@@ -2282,6 +2343,7 @@ const nxMoreM=row=>{const vm=vmode(),act=sortMode()!="name"||ft!="all"||fq.trim(
 const nxTg=s=>{const act=sortMode()!="name"||ft!="all"||fq.trim()||fo;
  return '<span class="tgs nxtg">'+(s==2||sySt()=="err"?sydH():"")+'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button>'
   +'<button class="tg'+(PV?" on":"")+'" data-a="pv" data-v="more" aria-label="Affichage, tri et réglages" aria-haspopup="menu" aria-expanded="'+!!PV+'">'+ic("more",18)+(act?'<i class="dot"></i>':'')+'</button>'+pvHTML()+'</span>'};
+A.nxsqc=()=>{sq="";render();const i=$("sq");if(i)try{i.focus()}catch(e){}};
 A.nxt=()=>{cfg.nx=!cfg.nx;saveCfg();setNx();render()};
 A.fht=()=>{cfg.fh=!cfg.fh;saveCfg();setNx();render()};
 A.nxm=v=>{PV=null;if(typeof A[v]=="function")A[v]();else render()};
@@ -2407,14 +2469,17 @@ function render0(){
   h=crumbs()+'<h1>'+(ed.m=="new"?"Nouveau dossier":"Renommer")+'</h1><input id="nm" maxlength="60" placeholder="Nom" value="'+(ed.m=="ren"?esc(G(ed.id).name):"")+'"><p class="help" id="msg"></p><div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Annuler</button><button class="b ok" data-a="ok">Enregistrer</button></div>';
  }else if(view=="move"){
   h=crumbs()+'<h1>Déplacer '+(ed.ids.length==1?'« '+esc(G(ed.ids[0]).name)+' »':ed.ids.length+' éléments')+'</h1><button class="opt" data-a="mvto" data-v="0">'+ic("home",18)+'<span>Accueil</span>'+(same()===0?' <span class="tag">actuel</span>':'')+'</button>'+tree(0,1,ed.ids)+'<div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Annuler</button></div>';
+ }else if(view=="search"&&cfg.nx){
+  h='<div class="nxsqt"><label class="nxsqf">'+ic("search",19)+'<input id="sq" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" aria-label="Rechercher" placeholder="Dossiers, paquets, cartes, questions" value="'+esc(sq)+'"><button type="button" class="nxsqx" data-a="nxsqc" aria-label="Effacer">×</button></label><button type="button" class="nxsqa" data-a="cd" data-v="'+cur+'">Annuler</button></div><div id="sres">'+searchResultsHTML()+'</div>';
  }else if(view=="search"){
   h='<div class="hd"><button class="bk" data-a="cd" data-v="'+cur+'">'+ic("chev",22)+'<span>Retour</span></button></div>'
    +'<input id="sq" placeholder="Rechercher dans tous les dossiers…" value="'+esc(sq)+'"><div id="sres">'+searchResultsHTML()+'</div>';
  }else if(view=="imp"){
   h=crumbs()+'<div class="h1r"><h1>Nouveau paquet</h1><small style="color:var(--mut);font-size:13px;font-weight:500;white-space:nowrap;margin-top:8px">Étape '+impStep+' sur 2</small></div>'
-   +'<div class="bar"><i style="width:'+(impStep==1?"50%":"100%")+'"></i></div>';
+   +'<div class="bar"><i style="width:'+(impStep==1?"50%":"100%")+'"></i></div>'
+   +(cfg.nx?'<div class="nxst2" aria-label="Étape '+impStep+' sur 2"><span class="'+(impStep==1?"ion":"idn")+'"><i aria-hidden="true">'+(impStep==1?"1":"✓")+'</i>Copier le prompt</span><span class="ln" aria-hidden="true"></span><span class="'+(impStep==2?"ion":"")+'"><i aria-hidden="true">2</i>Coller la réponse</span></div>':'');
   if(impStep==1){h+='<p class="help">Ce prompt demande à Claude de générer, à partir de ton cours, jusqu\'à 60 flashcards et 40 QCM — sans rien inventer, sans rien simplifier. Pour un long cours, envoie-le par parties.</p>'
-   +'<textarea id="pr" readonly>'+esc(PR)+'</textarea><button class="b'+(impCp?" ok":"")+'" data-a="cp">'+(impCp?"Copié ✓":"Copier le prompt")+'</button>'
+   +'<textarea id="pr" readonly>'+esc(PR)+'</textarea><button class="b'+(impCp||cfg.nx?" ok":"")+'" data-a="cp">'+(impCp?"Copié ✓":"Copier le prompt")+'</button>'
    +'<p class="help">Colle ton cours juste après ce texte, envoie le tout à Claude, puis reviens coller sa réponse à l\'étape suivante.</p>'
    +'<div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Annuler</button><button class="b ok" data-a="impn">Suivant</button></div>'}
   else{h+='<p class="help">Il sera ajouté dans : '+where()+'</p><input id="nm" maxlength="60" placeholder="Nom du paquet"><textarea id="tx" placeholder="Colle ici le texte renvoyé par Claude"></textarea><p class="help" id="msg"></p><div class="dock"><button class="b" data-a="impb">Précédent</button><button class="b ok" data-a="add">Ajouter</button></div>'}
@@ -2950,6 +3015,35 @@ setTh();setIp();setDens();setFs();setLt();setDesk();setNx();boot();document.addE
  function cut(s,q){s=String(s||"").replace(/\*\*/g,"");var i=nm(s).indexOf(q);if(i<0)return s.slice(0,90)+(s.length>90?"…":"");var a=Math.max(0,i-28);return(a?"…":"")+s.slice(a,a+90)+(a+90<s.length?"…":"")}
  function scopeOpts(pid,d,out){kids(pid).filter(function(n){return n.k==="f"}).forEach(function(n){out.push([n.id,(d?new Array(d+1).join("\u00a0\u00a0")+"↳ ":"")+n.name]);scopeOpts(n.id,d+1,out)})}
  var pathTxt=function(n){return path(n.p).map(function(x){return x.name}).join(" › ")||"Accueil"};
+ /* nouvelle apparence : résultats en vignettes (type en contrôle segmenté, filtres repliés derrière « Filtres », mot cherché surligné) */
+ A.sfo=function(){SF.open=!SF.open;upd()};
+ function nxSR(F,P,C,Qs,q,has,act){
+  var W=SF.w,nAct=(SF.due?1:0)+(SF.hard?1:0)+(SF.scope!=="0"?1:0);
+  var hl=function(t){t=String(t==null?"":t).replace(/\*\*/g,"");if(!has)return esc(t);var map=[],s="";
+   for(var i=0;i<t.length;i++){var c=t[i].normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();for(var k=0;k<c.length;k++){s+=c[k];map.push(i)}}
+   var j=s.indexOf(q);if(j<0)return esc(t);var a=map[j],b=map[j+q.length-1]+1;return esc(t.slice(0,a))+'<mark>'+esc(t.slice(a,b))+'</mark>'+esc(t.slice(b))};
+  var ex=function(t,n){t=String(t||"").replace(/\*\*/g,"");if(t.length<=n)return t;if(!has)return t.slice(0,n)+"…";var i=nm(t).indexOf(q);if(i<0||i+q.length<n-10)return t.slice(0,n)+"…";var a=Math.max(0,i-30);return"…"+t.slice(a,a+n)+(a+n<t.length?"…":"")};
+  var row=function(t,sb,a,icn,col){return '<button type="button" class="nxsr" data-a="'+a+'"><span class="nxsi" style="--c:'+col+'" aria-hidden="true">'+ic(icn,18)+'</span><span class="nxst"><b>'+t+'</b><small>'+sb+'</small></span><span class="nxsc" aria-hidden="true">'+ic("cr",16)+'</span></button>'};
+  if(!has&&!act)return '<p class="help nxsqh">Cherche dans tous tes dossiers, ou affiche directement\u00a0:</p><div class="nxsg">'
+   +(cfg.srs?row("Cartes et questions à revoir","Prévues aujourd\'hui ou en retard","sdue","clk",NXC.ora):"")+row("Souvent ratées","Ratées 2 fois ou plus","shard","flag",NXC.red)+'</div>';
+  var all=F.length+P.length+C.length+Qs.length,cnt={all:all,f:F.length,p:P.length,c:C.length,q:Qs.length},shown=W==="all"?all:cnt[W];
+  var h='<div class="nxsg2" role="radiogroup" aria-label="Type de résultat">'+[["all","Tout"],["f","Dossiers"],["p","Paquets"],["c","Cartes"],["q","QCM"]].map(function(x){var on=W===x[0];
+   return '<button type="button" role="radio" aria-checked="'+on+'"'+(on?' class="on"':'')+' data-a="sw" data-v="'+x[0]+'">'+x[1]+(x[0]!=="all"?'<em>'+cnt[x[0]]+'</em>':'')+'</button>'}).join("")+'</div>'
+   +'<div class="nxsr2"><span>'+pl(shown,"résultat","résultats")+'</span><button type="button" class="nxsfb'+(SF.open||nAct?" on":"")+'" data-a="sfo" aria-expanded="'+!!SF.open+'">'+ic("flt",15)+'<span>Filtres'+(nAct?' · '+nAct:'')+'</span></button></div>';
+  if(SF.open){var sc=[["0","Tous les dossiers"]];scopeOpts(0,0,sc);
+   h+='<div class="nxsfp"><div class="chips">'+(cfg.srs?'<button class="chip'+(SF.due?" on":"")+'" data-a="sdue" aria-pressed="'+SF.due+'">À revoir</button>':'')+'<button class="chip'+(SF.hard?" on":"")+'" data-a="shard" aria-pressed="'+SF.hard+'">Ratées souvent</button></div>'
+    +'<select id="ss" aria-label="Chercher dans">'+sc.map(function(o){return '<option value="'+esc(o[0])+'"'+(o[0]==SF.scope?" selected":"")+'>'+esc(o[1])+'</option>'}).join("")+'</select></div>'}
+  var out="",more=function(n,t){return n>0?'<p class="help nxsqh">Et '+n+' '+t+' : précise ta recherche ou filtre par dossier.</p>':""};
+  var fp=[];if(W==="all"||W==="f")fp=fp.concat(F.slice(0,12));if(W==="all"||W==="p")fp=fp.concat(P.slice(0,12));
+  if(fp.length){out+='<div class="nxs" role="heading" aria-level="2">'+(W==="f"?"Dossiers":W==="p"?"Paquets":"Dossiers et paquets")+'</div><div class="nxspk">'+fp.map(function(n){var f=n.k==="f",d=cfg.srs?(f?cnN(n).r:cn([n]).r):0;
+    return '<button type="button" class="chip nxspc" data-a="'+(f?"cd":"go")+'" data-v="'+n.id+'" title="'+esc(pathTxt(n))+'">'+ic(f?"f":n.k,17,n.c)+'<span>'+hl(n.name)+'</span>'+(d?'<em><span class="vh">à revoir : </span>'+d+'</em>':'')+'</button>'}).join("")+'</div>'
+   +((W==="all"||W==="f")?more(F.length-12,"autres dossiers"):"")+((W==="all"||W==="p")?more(P.length-12,"autres paquets"):"")}
+  var R=[];if(W==="all"||W==="c")R=R.concat(C.slice(0,30));if(W==="all"||W==="q")R=R.concat(Qs.slice(0,30));
+  if(R.length){out+='<div class="nxs" role="heading" aria-level="2">'+(W==="c"?"Cartes":W==="q"?"Questions":"Cartes et questions")+'</div><div class="nxscs">'+R.map(function(r){
+    var sub=r.p.k==="fc"?(r.it.a?'<span class="ans">'+hl(ex(r.it.a,170))+'</span>':''):(r.snip?'<span class="ans">'+hl(r.snip)+'</span>':'');
+    return '<button type="button" class="nxsc2" data-a="cpv" data-v="'+r.p.id+'#'+r.p.items.indexOf(r.it)+'"><span class="pth">'+ic(r.p.k,14)+'<span>'+esc(pathTxt(r.p)+" › "+r.p.name)+'</span></span><b>'+hl(ex(r.it.q,150))+'</b>'+sub+'</button>'}).join("")+'</div>'
+   +((W==="all"||W==="c")?more(C.length-30,"autres cartes"):"")+((W==="all"||W==="q")?more(Qs.length-30,"autres questions"):"")}
+  return h+(out||'<p class="help nxsqh">Aucun résultat'+(has?' pour « '+esc(sq)+' »':'')+'.</p>')}
  window.searchResultsHTML=function(){
   var q=nm(sq.trim()),has=q.length>=2;
   if(SF.scope!=="0"&&(!G(SF.scope)||G(SF.scope).x))SF.scope="0";
@@ -2970,6 +3064,7 @@ setTh();setIp();setDens();setFs();setLt();setDesk();setNx();boot();document.addE
     }
    });
   }
+  if(cfg.nx)return nxSR(F,P,C,Qs,q,has,act);
   var chip=function(a,v,l){return '<button class="chip'+(SF.w===v?" on":"")+'" data-a="sw" data-v="'+v+'">'+l+'</button>'};
   var sc=[["0","Tous les dossiers"]];scopeOpts(0,0,sc);
   var bar='<div class="sch"><div class="chips" role="group" aria-label="Type de résultat">'+chip(0,"all","Tout")+chip(0,"f","Dossiers ("+F.length+")")+chip(0,"p","Paquets ("+P.length+")")+chip(0,"c","Cartes ("+C.length+")")+chip(0,"q","Questions ("+Qs.length+")")+'</div>'
