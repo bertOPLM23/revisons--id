@@ -1081,6 +1081,133 @@ html[data-desk="1"] .dock.g4 .rb .rk{display:block;position:absolute;top:5px;rig
    overflow-x:clip (Safari 16+) coupe le débordement sans créer de zone de défilement : les barres fixes du haut et du bas restent fixes */
 html,body{overflow-x:clip}
 @supports not (overflow:clip){body{overflow-x:hidden}}
+
+/* ===================== Nouvelle apparence (html[data-nx="1"], Réglages › Affichage) =====================
+   Accueil et dossiers : champ de recherche, bande « aujourd'hui », dossiers puis paquets en groupes de verre (style Réglages iOS),
+   Réviser et « + » dans la barre du bas. Aucun flou sur les listes, aucune animation continue. */
+html[data-nx="1"] #app .nxtg{position:relative}
+html[data-nx="1"] #app .nxtg .tg{position:relative}
+html[data-nx="1"] #app .nxtg .dot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--acc)}
+/* recherche : un creux, qui ouvre l'écran de recherche */
+html[data-nx="1"] #app .nxq{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin:4px 0 0;padding:0 14px;box-sizing:border-box;border-radius:14px;
+ font:inherit;font-size:16px;color:color-mix(in srgb,var(--mut) 55%,var(--ink));text-align:left;cursor:text;
+ background:var(--lq-well);border:1px solid;border-color:var(--lq-rim) var(--lq-edge-hi) var(--lq-edge-hi) var(--lq-rim);box-shadow:inset 0 2px 5px -2px var(--lq-inner-lo)}
+html[data-nx="1"] #app .nxq svg{flex:none}
+/* bande « aujourd'hui » : une seule ligne de puces (défile sur iPhone, passe à la ligne sur grand écran) */
+html[data-nx="1"] #app .nxband{display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:12px -16px 0;padding:2px 16px 6px}
+html[data-nx="1"] #app .nxband::-webkit-scrollbar{display:none}
+html[data-nx="1"] #app .nxband .nxc{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 15px;white-space:nowrap;font-size:14px;color:var(--ink)}
+html[data-nx="1"] #app .nxband .nxc b{font-weight:600}
+html[data-nx="1"] #app .nxband .nxc em{font-style:normal;font-size:12px;font-weight:700;color:var(--acc)}
+html[data-nx="1"] #app .nxband .nxc svg{flex:none;color:var(--acc)}
+html[data-nx="1"] #app .nxband .pinc svg{color:var(--mut)}
+html[data-nx="1"] #app .nxrg{flex:none;width:18px;height:18px;border-radius:50%;background:conic-gradient(var(--acc) calc(var(--p)*1%),color-mix(in srgb,var(--mut) 28%,transparent) 0);
+ -webkit-mask:radial-gradient(circle,transparent 5px,#000 5.5px);mask:radial-gradient(circle,transparent 5px,#000 5.5px)}
+@media (min-width:768px){html[data-nx="1"] #app .nxband{flex-wrap:wrap;overflow:visible;margin:12px 0 0;padding:2px 0 4px}}
+/* intitulés de groupe */
+html[data-nx="1"] #app .nxl{display:block;margin-top:6px}
+html[data-nx="1"] #app .nxs{margin:18px 8px 8px;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+html[data-nx="1"] #app .nxl>.empty{margin-top:14px}
+/* groupe de verre : un seul panneau par groupe, lignes séparées par un filet */
+html[data-nx="1"] #app .nxg:not(.tiles){display:grid;grid-template-columns:minmax(0,1fr);padding:4px;border-radius:24px;
+ border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);
+ background-color:var(--lq-panel);background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 30%);background-clip:padding-box;
+ box-shadow:inset 0 1px 0 var(--lq-inner-hi),inset 0 -10px 20px -16px var(--lq-inner-lo),0 10px 24px -18px var(--lq-drop)}
+html[data-nx="1"] #app #lst .nxg:not(.tiles) .item:not(.sel):not(.ins-a):not(.ins-b):not(.dragging),
+html[data-nx="1"] #app #lst .nxg:not(.tiles) .item{border:0;background:transparent;box-shadow:none;border-radius:18px;scale:1;transform:none}
+html[data-nx="1"] #app #lst .nxg:not(.tiles) .item:not(.dragging):has(>.main:active){border-radius:18px;scale:1;transform:none;background:color-mix(in srgb,var(--ink) 6%,transparent)}
+html[data-nx="1"] #app #lst .nxg:not(.tiles) .item.sel{background:color-mix(in srgb,var(--acc) 10%,transparent);outline:0}
+html[data-nx="1"] #app #lst .nxg:not(.tiles) .item.ins-b{box-shadow:inset 0 3px 0 -1px var(--acc)}
+html[data-nx="1"] #app #lst .nxg:not(.tiles) .item.ins-a{box-shadow:inset 0 -3px 0 -1px var(--acc)}
+html[data-nx="1"] #app #lst .nxg .item.over{outline:2px solid var(--acc);outline-offset:-2px;background:color-mix(in srgb,var(--acc) 10%,transparent)}
+html[data-nx="1"] #app #lst .nxg:not(.tiles) .item+.item::after{content:"";position:absolute;top:0;left:58px;right:14px;height:1px;background:color-mix(in srgb,var(--line) 85%,transparent);pointer-events:none}
+html[data-nx="1"] #app .nxg:not(.tiles) .main{min-height:54px;padding:6px 6px 6px 16px;gap:13px}
+html[data-nx="1"] #app .nxg:not(.tiles) .nxf .main{min-height:60px}
+html[data-nx="1"] #app .nxg .tx b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-nx="1"] #app .nxg .nxf .tx b{font-size:17px;font-weight:600}
+html[data-nx="1"] #app .nxg .item:not(.nxf) .tx b{font-size:15.5px;font-weight:500}
+html[data-nx="1"] #app .nxg:not(.tiles) .item .tx small{display:block;margin-top:1px}
+html[data-nx="1"] #app .nxg .dots{color:var(--mut);background:none;border:0;box-shadow:none}
+/* pastille « à réviser » */
+html[data-nx="1"] #app .nxp{flex:none;margin-left:auto;min-width:26px;height:24px;padding:0 8px;box-sizing:border-box;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;
+ line-height:1;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;background:var(--acc);color:var(--onp);box-shadow:inset 0 1px 0 rgb(255 255 255/.25)}
+/* tranche du dossier (mise en avant) : barre arrondie à gauche de la ligne, en haut de la vignette ; gris neutre sans couleur */
+html[data-nx="1"] #app .nxf{--fk:var(--fc,color-mix(in srgb,var(--mut) 80%,transparent))}
+html[data-nx="1"] #app .nxb{display:none}
+html[data-nx="1"][data-fh="1"] #app .nxg:not(.tiles) .nxb{display:block;position:absolute;left:6px;top:15px;bottom:15px;width:4px;border-radius:2px;background:var(--fk);pointer-events:none}
+html[data-nx="1"][data-fh="1"] #app .nxg:not(.tiles) .nxf .main{padding-left:20px}
+/* icônes (comme le Finder) : vignettes en verre, tranche en haut */
+html[data-nx="1"] #app .nxg.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+html[data-nx="1"] #app .nxg.tiles .main{min-height:122px;padding:18px 8px 12px;gap:6px}
+html[data-nx="1"] #app .nxg.tiles .main b{font-size:15px;font-weight:500}
+html[data-nx="1"] #app .nxg.tiles .nxf .main b{font-size:15.5px;font-weight:600}
+html[data-nx="1"] #app .nxg.tiles .nxp{position:absolute;top:10px;left:10px;margin:0}
+html[data-nx="1"][data-fh="1"] #app #lst .nxg.tiles .nxf:not(.sel):not(.ins-a):not(.ins-b):not(.dragging){
+ background-image:linear-gradient(180deg,var(--fk) 0 5px,transparent 5px),linear-gradient(180deg,color-mix(in srgb,var(--fk) 15%,transparent),transparent 56px),linear-gradient(180deg,var(--lq-drop-gl),transparent 40%)}
+/* colonnes (comme le Finder) : un seul panneau de verre */
+html[data-nx="1"] #app .cols{margin-top:14px;border-radius:24px;border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);
+ background-color:var(--lq-panel);background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 20%);background-clip:padding-box;
+ box-shadow:inset 0 1px 0 var(--lq-inner-hi),0 10px 24px -18px var(--lq-drop)}
+html[data-nx="1"] #app .cw{border-radius:12px}
+html[data-nx="1"] #app .cw.nxf span{font-weight:600}
+html[data-nx="1"] #app .cw em{line-height:1;min-width:22px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;background:var(--acc);color:var(--onp);font-weight:700}
+html[data-nx="1"][data-fh="1"] #app .cw.nxf{--fk:var(--fc,color-mix(in srgb,var(--mut) 80%,transparent));box-shadow:inset 4px 0 0 var(--fk)}
+/* barre du bas : Réviser (goutte terracotta, immobile) et « + » */
+html[data-nx="1"] #app .dock.nxd{max-width:560px;width:100%;box-sizing:border-box;margin-left:auto;margin-right:auto;gap:8px}
+html[data-nx="1"] #app .dock.nxd .nxrv{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;font-weight:600}
+html[data-nx="1"] #app .dock.nxd .nxrv small{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;padding:1px 8px;border-radius:10px;background:none;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,currentColor 55%,transparent)}  /* anneau plutôt qu'un fond clair : le chiffre garde le contraste du libellé */
+html[data-nx="1"] #app .dock.nxd .nxad{flex:none;width:56px;padding:0;border-radius:50%;font-size:28px;font-weight:300;line-height:1}
+html[data-nx="1"] #app .dock.nxd .nxad.wide{flex:1;width:auto;border-radius:26px;font-size:17px;font-weight:600}
+html[data-nx="1"] .nxh{margin:4px 4px 10px}
+/* iPad et grand écran */
+@media (min-width:768px){
+ html[data-nx="1"][data-ipad="1"] #app .nxq{min-height:48px;font-size:17px}
+ html[data-nx="1"][data-ipad="1"] #app .nxg:not(.tiles) .main{min-height:58px}
+ html[data-nx="1"][data-ipad="1"] #app .nxg:not(.tiles) .nxf .main{min-height:64px}
+ html[data-nx="1"][data-ipad="1"] #app .nxg .nxf .tx b{font-size:18px}
+ html[data-nx="1"][data-ipad="1"] #app .nxg .item:not(.nxf) .tx b{font-size:16.5px}
+ html[data-nx="1"] #app .nxg.tiles{grid-template-columns:repeat(auto-fill,minmax(min(170px,calc(50% - 6px)),1fr));gap:12px}
+ html[data-nx="1"] #app .nxg.tiles .main{min-height:136px}
+ html[data-nx="1"] #app .dock.nxd .nxad{width:60px}
+}
+@media (min-width:1100px){
+ html[data-nx="1"] #app .nxg:not(.tiles){grid-template-columns:repeat(2,minmax(0,1fr));column-gap:6px}
+ html[data-nx="1"] #app #lst .nxg:not(.tiles) .item+.item::after{display:none}
+ html[data-nx="1"] #app #lst .nxg:not(.tiles) .item:nth-child(n+3)::after{content:"";display:block;position:absolute;top:0;left:58px;right:14px;height:1px;background:color-mix(in srgb,var(--line) 85%,transparent);pointer-events:none}
+}
+@media (min-width:1500px){
+ html[data-nx="1"] #app .nxg:not(.tiles){grid-template-columns:repeat(3,minmax(0,1fr))}
+ html[data-nx="1"] #app #lst .nxg:not(.tiles) .item:nth-child(n+3)::after{display:none}
+ html[data-nx="1"] #app #lst .nxg:not(.tiles) .item:nth-child(n+4)::after{display:block}
+}
+/* Mac : tailles pour la souris, survol discret */
+html[data-nx="1"][data-desk="1"] #app .nxq{min-height:38px;font-size:15px}
+html[data-nx="1"][data-desk="1"] #app .nxband .nxc{min-height:36px}
+html[data-nx="1"][data-desk="1"] #app .nxg:not(.tiles) .main{min-height:44px;padding-top:4px;padding-bottom:4px}
+html[data-nx="1"][data-desk="1"] #app .nxg:not(.tiles) .nxf .main{min-height:50px}
+html[data-nx="1"][data-desk="1"] #app .nxg .nxf .tx b{font-size:16px}
+html[data-nx="1"][data-desk="1"] #app .nxg .item:not(.nxf) .tx b{font-size:15px}
+html[data-nx="1"][data-desk="1"] #app .nxg:not(.tiles) .item:hover{filter:none;background:color-mix(in srgb,var(--ink) 4%,transparent)}
+html[data-nx="1"][data-desk="1"] #app .dock.nxd .nxad{width:50px}
+html[data-nx="1"] #app :is(.nxq,.nxg .main,.nxd .b):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* affichage compact */
+html[data-nx="1"][data-dens="1"] #app .nxg:not(.tiles) .main{min-height:44px}
+html[data-nx="1"][data-dens="1"] #app .nxg:not(.tiles) .nxf .main{min-height:48px}
+html[data-nx="1"][data-dens="1"][data-fh="1"] #app .nxg:not(.tiles) .nxb{top:11px;bottom:11px}
+
+/* glisser-déposer en vue Icônes : la vignette fantôme doit suivre le doigt (.item.tile la remettait en position relative, le dépôt n'aboutissait pas) */
+.item.tile.ghost{position:fixed}
+/* ===================== Mise en avant des dossiers, ancienne apparence (html[data-fh="1"]:not([data-nx="1"])) : tranche colorée ===================== */
+html[data-fh="1"]:not([data-nx="1"]) #app #lst .item[data-drop]{--fk:var(--fc,color-mix(in srgb,var(--mut) 80%,transparent))}
+html[data-fh="1"]:not([data-nx="1"]) #app #lst .item[data-drop]:not(.sel):not(.ins-a):not(.ins-b):not(.dragging):not(.tile){
+ background:linear-gradient(90deg,var(--fk) 0 5px,transparent 5px),linear-gradient(90deg,color-mix(in srgb,var(--fk) 16%,transparent),transparent 64px),
+  linear-gradient(180deg,var(--lq-drop-gl),transparent 40%),linear-gradient(var(--lq-row-fill),var(--lq-row-fill));background-clip:padding-box}
+html[data-fh="1"]:not([data-nx="1"]) #app #lst .item[data-drop].tile:not(.sel):not(.ins-a):not(.ins-b):not(.dragging){
+ background:linear-gradient(180deg,var(--fk) 0 5px,transparent 5px),linear-gradient(180deg,color-mix(in srgb,var(--fk) 15%,transparent),transparent 56px),
+  linear-gradient(var(--lq-row-fill),var(--lq-row-fill));background-clip:padding-box}
+html[data-fh="1"]:not([data-nx="1"]) #app #lst .item[data-drop]:not(.tile) .main{padding-left:20px}
+html[data-fh="1"]:not([data-nx="1"]) #app #lst .item[data-drop] .main b{font-weight:600}
+html[data-fh="1"]:not([data-nx="1"]) #app .cw[data-drop]{--fk:var(--fc,color-mix(in srgb,var(--mut) 80%,transparent));box-shadow:inset 4px 0 0 var(--fk)}
 </style></head>
 <body><div id="mesh" aria-hidden="true"><i></i></div><svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="lg-dock" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB" filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse"><feImage id="lg-map" x="0" y="0" width="100" height="60" preserveAspectRatio="none" result="map"/><feDisplacementMap in="SourceGraphic" in2="map" scale="28" xChannelSelector="R" yChannelSelector="B"/></filter></svg><main><div id="app"></div></main><input type="file" id="fi" accept="image/*" hidden><input type="file" id="fb" accept="application/json,.json" hidden>
 <script>
@@ -1252,6 +1379,7 @@ function freeHTML(){const n=FRP&&G(FRP.id);if(!n||n.x)return"";
   if(hid)b+='<p class="help">'+pl(hid,"paquet caché n\'est","paquets cachés ne sont")+' pas inclus.</p>'}
  return asShell("Révision libre",b)}
 function asHTML(){if(!AS)return"";
+ if(AS.k=="nxr")return nxRevHTML();if(AS.k=="nxa")return nxAddHTML();
  if(AS.k=="fix")return fixHTML();if(AS.k=="rev")return revHTML();if(AS.k=="free")return freeHTML();if(AS.k=="card")return cardHTML();if(AS.k=="goal")return goalHTML();
  if(AS.k=="conf")return asShell(AS.title,'<p class="cft">'+esc(AS.text)+'</p><div class="cfb"><button type="button" class="b" data-a="asc">Annuler</button><button type="button" class="b '+(AS.danger?"dg":"ok")+'" data-a="ascf">'+esc(AS.ok)+'</button></div>');
  if(AS.k=="info"){const n=G(AS.id);return n&&!n.x?asShell(n.name,'<div class="asg">'+infoHTML(n)+'</div>'):""}
@@ -1307,20 +1435,20 @@ const ftLabel=k=>({f:"Dossiers",fc:"Flashcards",qcm:"QCM",due:"À réviser"})[k]
 function pvHTML(){if(!PV)return"";
  const row=(a,v,label,on,icon)=>'<button type="button" class="pvr" role="menuitemradio" aria-checked="'+on+'" data-a="'+a+'" data-v="'+v+'"><span class="ck">'+(on?CK:"")+'</span><span>'+label+'</span>'+(icon?ic(icon,19):"")+'</button>';
  let m;
- if(PV=="view"){const vm=vmode();m=[["grid","Icônes","vg"],["list","Liste","vl"]].concat(wide()?[["cols","Colonnes","vc"]]:[]).map(([v,l,i])=>row("vw",v,l,vm==v,i)).join("")}
+ if(PV=="more")m=nxMoreM(row);else if(PV=="view"){const vm=vmode();m=[["grid","Icônes","vg"],["list","Liste","vl"]].concat(wide()?[["cols","Colonnes","vc"]]:[]).map(([v,l,i])=>row("vw",v,l,vm==v,i)).join("")}
  else{const so=sortMode(),act=so!="name"||ft!="all"||fq.trim();
   m='<div class="pvh">Trier par</div>'+[["name","Nom"],["recent","Récent"],["due","À revoir"],["manual","Manuel"]].map(([v,l])=>row("so",v,l,so==v)).join("")
    +(so=="manual"?'<p class="pvn">Ordre manuel : maintiens une ligne puis glisse-la entre deux autres, ou utilise « Monter » et « Descendre » dans ⋯.</p>':"")
    +'<div class="pvs"></div><div class="pvh">Filtrer</div>'+[["all","Tous"],["f","Dossiers"],["fc","Flashcards"],["qcm","QCM"]].concat(cfg.srs?[["due","À réviser"]]:[]).map(([v,l])=>row("ft",v,l,ft==v)).join("")
    +row("flt","",fo?"Masquer la recherche par nom":"Rechercher par nom…",false,"search")
    +(act?'<div class="pvs"></div>'+row("rsf","","Réinitialiser tri et filtre",false,"reset"):"")}
- return '<div class="pvx" data-a="pvc"></div><div class="pvm" role="menu" aria-label="'+(PV=="view"?"Affichage":"Trier et filtrer")+'"><div class="pvsc" tabindex="-1">'+m+'</div></div>'}
+ return '<div class="pvx" data-a="pvc"></div><div class="pvm" role="menu" aria-label="'+(PV=="more"?"Affichage, tri et réglages":PV=="view"?"Affichage":"Trier et filtrer")+'"><div class="pvsc" tabindex="-1">'+m+'</div></div>'}
 // hauteur du menu = place disponible sous le bouton ; estompage en haut/en bas quand il y a de la suite
 function pvEdges(el){if(!el)return;const up=el.scrollTop>2,dn=el.scrollTop+el.clientHeight<el.scrollHeight-2;el.classList.toggle("fu",up);el.classList.toggle("fd",dn)}
 function pvFit(){const m=document.querySelector(".pvm"),sc=document.querySelector(".pvsc");if(!m||!sc)return;
  m.style.maxHeight="";const r=m.getBoundingClientRect(),vh=window.visualViewport?visualViewport.height:innerHeight;
  m.style.maxHeight=Math.max(150,Math.floor(vh-r.top-16))+"px";pvEdges(sc)}
-function tbHTML(){const vm=vmode(),vi=vm=="grid"?"vg":vm=="cols"?"vc":"vl",act=sortMode()!="name"||ft!="all"||fq.trim()||fo;
+function tbHTML(){if(NXB)return"";const vm=vmode(),vi=vm=="grid"?"vg":vm=="cols"?"vc":"vl",act=sortMode()!="name"||ft!="all"||fq.trim()||fo;
  const b=(a,v,on,label,icon,extra)=>'<button class="tg'+(on?" on":"")+'" data-a="'+a+'"'+(v?' data-v="'+v+'"':"")+' aria-label="'+label+'"'+(a=="pv"?' aria-haspopup="menu" aria-expanded="'+on+'"':"")+'>'+ic(icon,20)+(extra||"")+'</button>';
  return '<div class="bt">'+b("sel","",selm,selm?"Terminer la sélection":"Sélectionner","sl")+b("pv","view",PV=="view","Affichage",vi)+b("pv","sort",PV=="sort","Trier et filtrer","flt",act?'<i class="dot"></i>':"")+(cur?'':'<button class="tg" data-a="search" aria-label="Rechercher">'+ic("search",20)+'</button>')+pvHTML()+'</div>'}
 const hidRel=(n,root)=>{for(let x=n;x&&!x.x&&x.id!=root;x=x.p?G(x.p):null){if(x.h)return true}return false};
@@ -1338,7 +1466,7 @@ function resumeInfo(){const p=lastGet();if(!p)return null;
   return{label:(folder?esc(folder.name)+" · ":"")+(p.t=="fc"?"Flashcards":"QCM"),r:c.r,w}}
  return null}
 let TH=null;try{TH=localStorage.getItem("revis-theme")}catch(e){}
-const dark=()=>TH?TH=="dark":(typeof matchMedia=="function"&&matchMedia("(prefers-color-scheme: dark)").matches),setTh=()=>{document.documentElement.dataset.theme=dark()?"dark":"light"},tg=s=>'<span class="tgs">'+(s==2||sySt()=="err"?sydH():"")+(s?'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button>':'')+'<button class="tg" data-a="set" aria-label="Réglages">'+ic("set",18)+'</button><button class="tg" data-a="th" title="Changer de thème" aria-label="Passer en mode '+(dark()?"clair":"sombre")+'">'+ic(dark()?"sun":"moon",18)+'</button></span>';
+const dark=()=>TH?TH=="dark":(typeof matchMedia=="function"&&matchMedia("(prefers-color-scheme: dark)").matches),setTh=()=>{document.documentElement.dataset.theme=dark()?"dark":"light"},tg=s=>NXB?nxTg(s):'<span class="tgs">'+(s==2||sySt()=="err"?sydH():"")+(s?'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button>':'')+'<button class="tg" data-a="set" aria-label="Réglages">'+ic("set",18)+'</button><button class="tg" data-a="th" title="Changer de thème" aria-label="Passer en mode '+(dark()?"clair":"sombre")+'">'+ic(dark()?"sun":"moon",18)+'</button></span>';
 let colSel=null,om=false,us=null,gct,fl=false,hmSel=null,ex,xs,xt,pk,rs=null,bm="",ready=false;const IMG=new Map();let DEV=null;try{DEV=localStorage.getItem("revis-dev")}catch(e){}if(!DEV){DEV=Date.now().toString(36)+Math.random().toString(36).slice(2,6);try{localStorage.setItem("revis-dev",DEV)}catch(e){}}
 let selm=false,selset=new Set(),fq="",ft="all",fo=false,sm="",busy=false,tm,nodue,tot,S,cur=0,view="browse",ed,ty="fc",menu,pend,deck,q,back,known,order,idx,cropen=false,sq="",statsTab="rates",impStep=1,impCp=false,score,wrong,sel,val;
 let rmode="both",anp=false,ant=0,RVP=null,FRP=null,stF=false,XB={d:-1,n:{}},vprev=null,hesd=false;
@@ -1636,7 +1764,7 @@ const killIds=ids=>{const b=uid(),now=Date.now(),ds=new Map(ids.map(i=>[i,new Se
  S.nodes.forEach(n=>{if(a.has(n.id)&&!n.x){n.x=1;n.xt=now;n.xb=b;n.u=now;if(ids.includes(n.id)&&!ids.some(j=>j!=n.id&&ds.get(j).has(n.id)))n.xr=1}});
  save();clearTimeout(gct);gct=setTimeout(()=>{gc();save()},8000);return b};
 const vis=()=>{const z=fq.trim();let l=z?desc(cur).filter(n=>nm(n.name).includes(nm(z))):kidsS(cur);if(ft=="f"||ft=="fc"||ft=="qcm")l=l.filter(n=>n.k==ft);else if(ft=="due")l=l.filter(n=>dn(n)>0);return l};
-const listHTML=()=>{const l=vis();return l.length?l.map(n=>vmode()=="grid"?tile(n):item(n,fq.trim())).join(""):'<div class="empty">'+(fq.trim()||ft!="all"?"Aucun résultat.":"Rien ici pour l\'instant.<br>Ajoute un dossier ou un paquet.")+'</div>'};
+const listHTML=()=>{const l=vis();return l.length?(cfg.nx?nxList(l):l.map(n=>vmode()=="grid"?tile(n):item(n,fq.trim())).join("")):'<div class="empty">'+(fq.trim()||ft!="all"?"Aucun résultat.":"Rien ici pour l\'instant.<br>Ajoute un dossier ou un paquet.")+'</div>'};
 function searchResultsHTML(){const q=nm(sq.trim());if(q.length<2)return '<p class="help">Tape au moins 2 lettres.</p>';
  const packs=desc(0).filter(n=>n.k=="fc"||n.k=="qcm"),res=[];
  packs.forEach(p=>{p.items.forEach(it=>{if(it.im)return;const t=p.k=="fc"?it.q+" "+(it.a||""):it.q+" "+(it.o||[]).map(o=>o.t).join(" ");if(nm(t).includes(q))res.push({p,disp:it.q})})});
@@ -1668,7 +1796,7 @@ const crumbs=()=>{const t=view=="browse"?(cur?G(cur).p:null):cur;
  if(t==null)return '<div class="tb"><span></span>'+tg(2)+'</div>';
  const anc=path(cur);
  let m='<div class="crw"><button class="bk" data-a="cd" data-v="'+t+'" data-drop="'+t+'">'+ic("chev",22)+'<span>'+esc(t?G(t).name:"Accueil")+'</span></button>'
-  +(cur?'<button class="cbtn" data-a="cro" aria-label="Voir tous les niveaux" aria-expanded="'+cropen+'">'+ic("more",16)+'</button>':"");
+  +(cur?'<button class="cbtn" data-a="cro" aria-label="Voir tous les niveaux" aria-expanded="'+cropen+'">'+ic(NXB?"lay":"more",16)+'</button>':"");
  if(cropen&&cur)m+='<div class="cmenu"><button data-a="cd" data-v="0">'+ic("home",17)+'<span>Accueil</span></button>'
   +anc.slice(0,-1).map(n=>'<button data-a="cd" data-v="'+n.id+'">'+ic("f",17,n.c)+'<span>'+esc(n.name)+'</span></button>').join("")
   +'<div class="cur">'+ic("f",17,G(cur).c)+'<span>'+esc(G(cur).name)+'</span></div></div>';
@@ -1978,16 +2106,16 @@ const vmode=()=>cfg.vw=="cols"?(wide()?"cols":"list"):cfg.vw=="grid"?"grid":"lis
 const segHTML=()=>'<div class="seg" role="radiogroup" aria-label="Affichage">'+[["list","Liste","vl"],["grid","Icônes","vg"]].concat(wide()?[["cols","Colonnes","vc"]]:[]).map(([v,l,i])=>{const on=vmode()==v;return '<button role="radio" aria-checked="'+on+'" class="'+(on?"on":"")+'" data-a="vw" data-v="'+v+'">'+ic(i,17)+'<span>'+l+'</span></button>'}).join("")+'</div>';
 function tile(n){const f=n.k=="f",c=f?kids(n.id).length:n.items.length,s=selm&&selset.has(n.id),hd=hidRel(n,cur),cc=cnN(n),w=Math.min(cc.w,newLeft());
  const du=!cfg.srs?"":cc.r?'<small class="du">'+cc.r+' à revoir</small>':w?'<small class="dw">'+w+' nouvelle'+(w>1?"s":"")+'</small>':'';
- return '<div class="item tile'+(s?" sel":"")+(hd?" hid":"")+'" data-id="'+n.id+'"'+(f?' data-drop="'+n.id+'"':'')+'><button class="main" data-a="'+(selm?"pick":f?"cd":"go")+'" data-v="'+n.id+'">'+(selm?'<span class="cb'+(s?" on":"")+'">'+(s?CK:"")+'</span>':"")+'<span class="tic">'+ic(f?"f":n.k,f?52:40,n.c)+'</span><b>'+esc(n.name)+(hd?eyeI(13):"")+(n.pn?pinI(13):"")+'</b><small>'+(f?c+" élément"+(c>1?"s":""):cq(c,n.k))+'</small>'+du+'</button>'+(selm?"":'<button class="dots" data-a="mn" data-v="'+n.id+'" aria-label="Options">⋯</button>')+'</div>'}
+ return '<div class="item tile'+(s?" sel":"")+(hd?" hid":"")+'" data-id="'+n.id+'"'+(f?' data-drop="'+n.id+'"':'')+nxFc(n)+'><button class="main" data-a="'+(selm?"pick":f?"cd":"go")+'" data-v="'+n.id+'">'+(selm?'<span class="cb'+(s?" on":"")+'">'+(s?CK:"")+'</span>':"")+'<span class="tic">'+ic(f?"f":n.k,f?52:40,n.c)+'</span><b>'+esc(n.name)+(hd?eyeI(13):"")+(n.pn?pinI(13):"")+'</b><small>'+(f?c+" élément"+(c>1?"s":""):cq(c,n.k))+'</small>'+du+'</button>'+(selm?"":'<button class="dots" data-a="mn" data-v="'+n.id+'" aria-label="Options">⋯</button>')+'</div>'}
 function colsHTML(){const pth=[0,...path(cur).map(n=>n.id)],sel=colSel&&G(colSel)&&!G(colSel).x&&G(colSel).p==cur?G(colSel):null;
- const row=(n,on)=>{const f=n.k=="f",d=cfg.srs?dn(n):0;return '<button class="cw'+(on?" on":"")+(n.h?" hid":"")+'" data-a="'+(f?"cd":"cps")+'" data-v="'+n.id+'"'+(f?' data-drop="'+n.id+'"':'')+'>'+ic(f?"f":n.k,19,n.c)+'<span>'+esc(n.name)+'</span>'+(n.h?eyeI(14):'')+(n.pn?pinI(13):'')+(d?'<em>'+d+'</em>':'')+(f?'<i class="chv">'+ic("cr",15)+'</i>':'')+'</button>'};
+ const row=(n,on)=>{const f=n.k=="f",d=cfg.srs?dn(n):0;return '<button class="cw'+(f?" nxf":"")+(on?" on":"")+(n.h?" hid":"")+'" data-a="'+(f?"cd":"cps")+'" data-v="'+n.id+'"'+nxFc(n)+(f?' data-drop="'+n.id+'"':'')+'>'+ic(f?"f":n.k,19,n.c)+'<span>'+esc(n.name)+'</span>'+(n.h?eyeI(14):'')+(n.pn?pinI(13):'')+(d?'<em>'+d+'</em>':'')+(f?'<i class="chv">'+ic("cr",15)+'</i>':'')+'</button>'};
  let h='<div class="cols" id="cols">'+pth.map((p,j)=>{const ks=kidsS(p),nx=j+1<pth.length?pth[j+1]:(sel?sel.id:null);return '<div class="col">'+(ks.length?ks.map(n=>row(n,n.id==nx)).join(""):'<p class="cemp">Dossier vide</p>')+'</div>'}).join("");
  if(sel){const c=cn([sel]),w=Math.min(c.w,newLeft()),t=sel.items.length,a=[];if(cfg.srs){if(c.r)a.push(c.r+" à revoir");if(w)a.push(w+" nouvelle"+(w>1?"s":""))}
   h+='<div class="col cpv"><span class="tic">'+ic(sel.k,48)+'</span><b>'+esc(sel.name)+'</b><small class="help">'+cq(t,sel.k)+(sel.last?", "+esc(sel.last):"")+'</small>'+(a.length?'<small class="du">'+a.join(", ")+'</small>':'')
    +'<div class="pvb"><button class="b ok" data-a="go" data-v="'+sel.id+'">Réviser</button><button class="b" data-a="edit" data-v="'+sel.id+'">Modifier</button><button class="b" data-a="ren" data-v="'+sel.id+'">Renommer</button><button class="b" data-a="mv" data-v="'+sel.id+'">Déplacer</button><button class="b" data-a="hide" data-v="'+sel.id+'">'+(sel.h?"Afficher":"Cacher")+'</button><button class="b" data-a="mn" data-v="'+sel.id+'">Plus…</button><button class="b dg" data-a="del" data-v="'+sel.id+'">Supprimer</button></div></div>'}
  return h+'</div>'}
 function item(n,pth){const f=n.k=="f",c=f?kids(n.id).length:n.items.length,s=selm&&selset.has(n.id),hd=hidRel(n,cur),hc=f&&!hd?hidCnt(n):0;
- return '<div class="item'+(s?" sel":"")+(hd?" hid":"")+'" data-id="'+n.id+'"'+(f?' data-drop="'+n.id+'"':'')+'><button class="main" data-a="'+(selm?"pick":f?"cd":"go")+'" data-v="'+n.id+'">'+(selm?'<span class="cb'+(s?" on":"")+'">'+(s?CK:"")+'</span>':"")+'<span class="ic">'+ic(f?"f":n.k,22,n.c)+'</span><span class="tx"><b>'+esc(n.name)+(hd?eyeI(14):"")+(n.pn?pinI(14):"")+'</b><small>'+(pth?esc(path(n.p).map(x=>x.name).join(" › ")||"Accueil")+", ":"")+(f?c+" élément"+(c>1?"s":""):cq(c,n.k)+(n.last?", "+n.last:""))+dueTxt(n)+(hc?", "+hc+" caché"+(hc>1?"s":""):"")+'</small></span></button>'+(selm?"":'<button class="dots" data-a="mn" data-v="'+n.id+'" aria-label="Options">⋯</button>')+'</div>'}
+ return '<div class="item'+(s?" sel":"")+(hd?" hid":"")+'" data-id="'+n.id+'"'+(f?' data-drop="'+n.id+'"':'')+nxFc(n)+'><button class="main" data-a="'+(selm?"pick":f?"cd":"go")+'" data-v="'+n.id+'">'+(selm?'<span class="cb'+(s?" on":"")+'">'+(s?CK:"")+'</span>':"")+'<span class="ic">'+ic(f?"f":n.k,22,n.c)+'</span><span class="tx"><b>'+esc(n.name)+(hd?eyeI(14):"")+(n.pn?pinI(14):"")+'</b><small>'+(pth?esc(path(n.p).map(x=>x.name).join(" › ")||"Accueil")+", ":"")+(f?c+" élément"+(c>1?"s":""):cq(c,n.k)+(n.last?", "+n.last:""))+dueTxt(n)+(hc?", "+hc+" caché"+(hc>1?"s":""):"")+'</small></span></button>'+(selm?"":'<button class="dots" data-a="mn" data-v="'+n.id+'" aria-label="Options">⋯</button>')+'</div>'}
 // ---- accueil : examen en cours, objectifs d'examen, retard, code de synchro ----
 // ---- série (jours d'affilée) et objectif du jour, sur l'accueil ; rest = cartes et questions encore prévues aujourd'hui ----
 function dayCard(rest){if(cfg.nosk)return"";const L=S.nodes.filter(n=>n.k=="log"&&!n.x),c=d=>L.reduce((s,l)=>s+((l.h||{})[d]||0),0),d0=day(),t=c(d0),pl=(n,a,b)=>n+" "+(n>1?b:a);
@@ -2057,15 +2185,83 @@ function stoHTML(){const n=S.nodes.reduce((a,x)=>a+((x.k=="fc"||x.k=="qcm")&&!x.
 function stoFill(){try{if(!navigator.storage||!navigator.storage.estimate)return;Promise.all([navigator.storage.estimate(),navigator.storage.persisted?navigator.storage.persisted():Promise.resolve(null)]).then(([e,p])=>{const el=$("sti");if(!el||el.dataset.f)return;el.dataset.f="1";
  const go=x=>x>=1073741824?(x/1073741824).toLocaleString("fr",{maximumFractionDigits:1})+" Go":Math.round(x/1048576)+" Mo";
  el.textContent+=(e&&e.quota?" Espace disponible pour l\'app : "+go(Math.max(0,e.quota-(e.usage||0)))+".":"")+(p===true?" Protégées contre l\'effacement automatique.":"")}).catch(()=>{})}catch(e){}}
+// ---- nouvelle apparence (cfg.nx, Réglages › Affichage) : accueil épuré, dossiers puis paquets en groupes, Réviser et « + » en bas ;
+//      mise en avant des dossiers (cfg.fh) : tranche de la couleur du dossier. Réglages propres à l'appareil. ----
+let NXB=false;  // vrai pendant le rendu de l'écran des dossiers en nouvelle apparence (tg et tbHTML en dépendent)
+const setNx=()=>{const d=document.documentElement.dataset;d.nx=cfg.nx?"1":"0";d.fh=cfg.fh?"1":"0"};
+const nxInfo=()=>{const ds=desc(cur),fcA=ds.filter(n=>n.k=="fc"),qcA=ds.filter(n=>n.k=="qcm"),fcP=fcA.filter(n=>!hidRel(n,cur)),qcP=qcA.filter(n=>!hidRel(n,cur)),
+ inf=ps=>{const c=cn(ps),w=Math.min(c.w,newLeft());return{r:c.r,w,t:cfg.srs?c.r+w:ps.reduce((s,n)=>s+n.items.length,0)}};
+ return{fcA,qcA,fcP,qcP,F:inf(fcP),Q:inf(qcP),nHid:fcA.length+qcA.length-fcP.length-qcP.length}};
+const nxPill=d=>d?'<span class="nxp"><span class="vh">À réviser : </span>'+d+'</span>':"";
+const nxFc=n=>n.k=="f"&&n.c?' style="--fc:'+esc(n.c)+'"':"";
+function nxItem(n,pth){const f=n.k=="f",s=selm&&selset.has(n.id),hd=hidRel(n,cur),d=cfg.srs?dn(n):0;
+ return '<div class="item nxi'+(f?" nxf":"")+(s?" sel":"")+(hd?" hid":"")+'" data-id="'+n.id+'"'+(f?' data-drop="'+n.id+'"':'')+nxFc(n)+'>'+(f?'<i class="nxb" aria-hidden="true"></i>':'')
+  +'<button class="main" data-a="'+(selm?"pick":f?"cd":"go")+'" data-v="'+n.id+'">'+(selm?'<span class="cb'+(s?" on":"")+'">'+(s?CK:"")+'</span>':"")
+  +'<span class="ic">'+ic(f?"f":n.k,f?24:21,n.c)+'</span><span class="tx"><b>'+esc(n.name)+(hd?eyeI(14):"")+(n.pn?pinI(14):"")+'</b>'
+  +(pth?'<small>'+esc(path(n.p).map(x=>x.name).join(" › ")||"Accueil")+'</small>':'')+'</span>'+nxPill(d)+'</button>'
+  +(selm?"":'<button class="dots" data-a="mn" data-v="'+n.id+'" aria-label="Options">⋯</button>')+'</div>'}
+function nxTile(n){const f=n.k=="f",s=selm&&selset.has(n.id),hd=hidRel(n,cur),d=cfg.srs&&!selm?dn(n):0;
+ return '<div class="item tile nxi'+(f?" nxf":"")+(s?" sel":"")+(hd?" hid":"")+'" data-id="'+n.id+'"'+(f?' data-drop="'+n.id+'"':'')+nxFc(n)+'>'+(f?'<i class="nxb" aria-hidden="true"></i>':'')
+  +'<button class="main" data-a="'+(selm?"pick":f?"cd":"go")+'" data-v="'+n.id+'">'+(selm?'<span class="cb'+(s?" on":"")+'">'+(s?CK:"")+'</span>':"")
+  +'<span class="tic">'+ic(f?"f":n.k,f?46:36,n.c)+'</span><b>'+esc(n.name)+(hd?eyeI(13):"")+(n.pn?pinI(13):"")+'</b>'+nxPill(d)+'</button>'
+  +(selm?"":'<button class="dots" data-a="mn" data-v="'+n.id+'" aria-label="Options">⋯</button>')+'</div>'}
+const nxList=l=>{const g=vmode()=="grid",r=n=>g?nxTile(n):nxItem(n,fq.trim()),grp=(t,a)=>a.length?'<div class="nxs" role="heading" aria-level="2">'+t+'</div><div class="nxg'+(g?" tiles":"")+'">'+a.map(r).join("")+'</div>':"";
+ return grp("Dossiers",l.filter(n=>n.k=="f"))+grp("Paquets",l.filter(n=>n.k!="f"))};
+// bande « aujourd'hui » : série et objectif, reprendre, à corriger, épinglés (remplace les encadrés de l'accueil)
+function nxBand(rest){const c=[];
+ if(!cfg.nosk){const L=S.nodes.filter(n=>n.k=="log"&&!n.x),cc=d=>L.reduce((s,l)=>s+((l.h||{})[d]||0),0),d0=day(),t=cc(d0);let k=0,d=t?d0:d0-1;while(cc(d)>0){k++;d--}
+  if(k||t||rest){const tt=t+rest,g=cfg.srs&&tt;
+   c.push('<button type="button" class="chip nxc" data-a="stats">'+(g?'<i class="nxrg" style="--p:'+Math.round(t*100/tt)+'" aria-hidden="true"></i>':ic("flame",16))
+    +'<span><b>'+(k?k+(k>1?" jours":" jour")+" d\'affilée":"Commence ta série")+'</b>'+(g?' · '+t+'/'+tt+'<span class="vh"> révisions faites aujourd\'hui</span>':t?' · '+t+(t>1?" révisions":" révision"):"")+'</span></button>')}}
+ const ri=resumeInfo();if(ri)c.push('<button type="button" class="chip nxc" data-a="resume">'+ic("play",15)+'<span>Reprendre <b>'+ri.label+'</b></span></button>');
+ const fx=fxList().length;if(fx)c.push('<button type="button" class="chip nxc" data-a="fxl">'+ic("flag",15)+'<span><b>'+fx+'</b> à corriger</span></button>');
+ S.nodes.filter(n=>n.pn&&!n.x&&(n.k=="f"||isPack(n))).sort((a,b)=>a.name.localeCompare(b.name,"fr",{numeric:true})).forEach(n=>{const f=n.k=="f",d=cfg.srs?dn(n):0;
+  c.push('<button type="button" class="chip nxc pinc" data-a="'+(f?"cd":"go")+'" data-v="'+n.id+'">'+ic(f?"f":n.k,16,n.c)+'<span>'+esc(n.name)+'</span>'+(d?'<em>'+d+'</em>':'')+'</button>')});
+ return c.length?'<div class="nxband" role="group" aria-label="Aujourd\'hui">'+c.join("")+'</div>':""}
+function nxBody(o){let h="";const due=cfg.srs?(o.fcP.length?o.F.t:0)+(o.qcP.length?o.Q.t:0):0;
+ if(!cur&&!selm)h+='<button type="button" class="nxq" data-a="nxq">'+ic("search",19)+'<span>Rechercher dans tes cours</span></button>';
+ if(!selm&&!fo){if(!cur)h+=nxBand(due);h+=exCard()+goalCards()+cuCard();if(!cur)h+=bkCard()+codeCard()}
+ h+=vmode()=="cols"&&!selm&&!fo&&!fq.trim()&&ft=="all"?colsHTML():'<div class="nxl" id="lst">'+listHTML()+'</div>';
+ if(selm)return h+selDock();
+ const hp=o.fcA.length||o.qcA.length;
+ return h+'<div class="dock nxd">'+(hp?'<button type="button" class="b ok nxrv" data-a="nxr">'+ic("play",19)+'<span>Réviser</span>'+(due?'<small><span class="vh">, </span>'+due+'<span class="vh"> à faire</span></small>':'')+'</button>':'')
+  +'<button type="button" class="b nxad'+(hp?'':' ok wide')+'" data-a="nxa" aria-label="Ajouter un dossier ou un paquet">'+(hp?'<span aria-hidden="true">+</span>':'+ Ajouter')+'</button></div>'}
+// feuille « Réviser » : flashcards, QCM, mode examen (portée : le dossier ouvert)
+function nxRevHTML(){const o=nxInfo(),r=[],any=o.fcP.length||o.qcP.length;
+ if(o.fcP.length){r.push(asR("allg","fc","Flashcards"+(o.F.t?" · "+o.F.t:""),"fc"));if(cfg.srs&&o.F.r&&o.F.w)r.push(asR("all","fc","Flashcards : choisir nouvelles ou à revoir","lay"))}
+ if(o.qcP.length){r.push(asR("allg","qcm","QCM"+(o.Q.t?" · "+o.Q.t:""),"qcm"));if(cfg.srs&&o.Q.r&&o.Q.w)r.push(asR("all","qcm","QCM : choisir nouvelles ou à revoir","lay"))}
+ const x=o.qcA.length?'<div class="asg">'+asR("exs",null,"Mode examen","clk")+'</div>':"";
+ const p=t=>'<p class="help nxh">'+t+'</p>';
+ return asShell(cur&&G(cur)?"Réviser « "+G(cur).name+" »":"Réviser",(cfg.srs&&any&&!o.F.t&&!o.Q.t?p("Rien à réviser aujourd\'hui. Reviens demain, ou relance une révision ci-dessous."):"")
+  +(r.length?'<div class="asg">'+r.join("")+'</div>':"")+x
+  +(!any?p("Tous les paquets sont cachés : « Réviser tout » les ignore. Touche un paquet pour le réviser."):o.nHid?p(o.nHid+(o.nHid>1?" paquets cachés ne sont":" paquet caché n\'est")+" pas inclus dans « Réviser tout » ni dans le mode examen."):""))}
+const nxAddHTML=()=>asShell("Ajouter",'<div class="asg">'+asR("nf",null,"Nouveau dossier","f")+asR("imp",null,"Nouveau paquet (importer un cours)","fc")+'</div>');
+// menu « ⋯ » de la barre du haut : affichage (comme le Finder), tri, sélection, réglages, thème
+const nxMoreM=row=>{const vm=vmode(),act=sortMode()!="name"||ft!="all"||fq.trim()||fo;
+ return '<div class="pvh">Affichage</div>'+[["grid","Icônes","vg"],["list","Liste","vl"]].concat(wide()?[["cols","Colonnes","vc"]]:[]).map(([v,l,i])=>row("vw",v,l,vm==v,i)).join("")
+  +'<div class="pvs"></div>'+row("pv","sort",act?"Trier et filtrer (actif)":"Trier et filtrer…",false,"flt")+row("nxm","sel","Sélectionner",false,"sl")
+  +'<div class="pvs"></div>'+row("nxm","set","Réglages",false,"set")+row("nxm","th",dark()?"Mode clair":"Mode sombre",false,dark()?"sun":"moon")};
+const nxTg=s=>{const act=sortMode()!="name"||ft!="all"||fq.trim()||fo;
+ return '<span class="tgs nxtg">'+(s==2||sySt()=="err"?sydH():"")+'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button>'
+  +'<button class="tg'+(PV?" on":"")+'" data-a="pv" data-v="more" aria-label="Affichage, tri et réglages" aria-haspopup="menu" aria-expanded="'+!!PV+'">'+ic("more",18)+(act?'<i class="dot"></i>':'')+'</button>'+pvHTML()+'</span>'};
+A.nxt=()=>{cfg.nx=!cfg.nx;saveCfg();setNx();render()};
+A.fht=()=>{cfg.fh=!cfg.fh;saveCfg();setNx();render()};
+A.nxm=v=>{PV=null;if(typeof A[v]=="function")A[v]();else render()};
+A.nxq=()=>{A.search();const i=$("sq");if(i)try{i.focus()}catch(e){}};
+A.nxa=()=>{AS={k:"nxa"};asRender()};
+// une seule possibilité (flashcards seulement, sans choix nouvelles/à revoir) : la révision part directement
+A.nxr=()=>{const o=nxInfo();if(o.fcP.length&&!o.qcA.length&&!(cfg.srs&&o.F.r&&o.F.w))return A.allg("fc");AS={k:"nxr"};asRender()};
 function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}}
 function render0(){
  if(!booted)return;
+ NXB=view=="browse"&&!!cfg.nx;
  if(view!="browse")PV=null;
  const pvOld=document.querySelector(".pvsc"),pvTop=pvOld?pvOld.scrollTop:0;
  let h="";
  if(view=="browse"){
   const ds=desc(cur),fcA=ds.filter(n=>n.k=="fc"),qcA=ds.filter(n=>n.k=="qcm"),fcP=fcA.filter(n=>!hidRel(n,cur)),qcP=qcA.filter(n=>!hidRel(n,cur)),nHid=fcA.length+qcA.length-fcP.length-qcP.length,inf=ps=>{const c=cn(ps),w=Math.min(c.w,newLeft());return{r:c.r,w,t:cfg.srs?c.r+w:ps.reduce((s,n)=>s+n.items.length,0)}},F=inf(fcP),Qi=inf(qcP),pl=(n,a,b)=>n+" "+(n>1?b:a),sub=x=>cfg.srs?[x.r?x.r+" à revoir":"",x.w?pl(x.w,"nouvelle","nouvelles"):""].filter(Boolean).join(", puis "):"";
   h=crumbs()+'<div class="h1r"><h1>'+(cur?esc(G(cur).name):"Mes révisions")+'</h1>'+tbHTML()+'</div>'+filterBar();
+  if(cfg.nx)h+=nxBody(nxInfo());else{
   if(!selm&&!fo&&!cur)h+=dayCard(cfg.srs?(fcP.length?F.t:0)+(qcP.length?Qi.t:0):0);
   if(!selm&&!fo&&!cur){const ri=resumeInfo();if(ri){const dd=cfg.srs?[ri.r?ri.r+" à revoir":"",ri.w?ri.w+" nouvelle"+(ri.w>1?"s":""):""].filter(Boolean).join(", "):"";
    h+='<button class="resume" data-a="resume"><small class="lbl">REPRENDRE</small><b>'+ri.label+'</b>'+(dd?'<small class="rdue">'+dd+'</small>':'')+'</button>'}}
@@ -2081,7 +2277,7 @@ function render0(){
    if(sec.length)h+='<div class="menu">'+sec.join("")+'</div>';
    if(nHid&&(fcP.length||qcP.length))h+='<p class="hidn">'+nHid+(nHid>1?" paquets cachés ne sont":" paquet caché n\'est")+' pas inclus dans « Réviser tout » ni dans le mode examen.</p>'}
   h+=vmode()=="cols"&&!selm&&!fo&&!fq.trim()&&ft=="all"?colsHTML():'<div class="grid'+(vmode()=="grid"?" tiles":"")+'" id="lst">'+listHTML()+'</div>';
-  h+=selm?selDock():'<div class="dock"><button class="b" data-a="nf">+ Dossier</button><button class="b'+(ds.some(n=>n.k!="f")?"":" ok")+'" data-a="imp">+ Paquet</button></div>';
+  h+=selm?selDock():'<div class="dock"><button class="b" data-a="nf">+ Dossier</button><button class="b'+(ds.some(n=>n.k!="f")?"":" ok")+'" data-a="imp">+ Paquet</button></div>';}
   h='<div class="split"><aside class="sb"><button class="sd'+(cur?"":" on")+'" data-a="cd" data-drop="0" data-v="0">'+ic("home",16)+'<span>Accueil</span></button>'+side(0,0)+'</aside><section class="ct">'+h+'</section></div>';
  }else if(view=="trash"){
   h=trashHTML();
@@ -2095,7 +2291,7 @@ function render0(){
    +(cfg.srs?'<h2 class="h2">Nouvelles cartes par jour</h2><div class="chips">'+[10,20,30,50,0].map(v=>'<button class="chip'+(cfg.nl==v?" on":"")+'" data-a="nl" data-v="'+v+'">'+(v||"Sans limite")+'</button>').join("")+'</div><p class="help">Cartes et questions jamais vues proposées chaque jour, pour garder une charge régulière. '+(cfg.nl?"Il en reste "+newLeft()+" aujourd\'hui, tous appareils confondus.":"")+'</p>':'')
    +(cfg.srs?goalRow():'')
    +row("Avance automatique (QCM)","Question suivante après un QCM parfait","an",!!cfg.an)+'<p class="help">Activée : quand tu coches exactement les bonnes propositions, la correction s\'affiche puis la question suivante arrive après 1,5 seconde. Touche « Suivant » pour avancer plus vite.</p>'
-   +'</section><section class="sgc">'+sec("Affichage")+'<div id="accent-slot"></div>'+fsHTML()+(window.glassUI?glassUI():'')+row("Lumière sous le doigt","Reflet qui suit le doigt quand tu touches un bouton","lt",!cfg.nolt)+row("Série et objectif du jour","Sur l\'accueil : jours d\'affilée et révisions du jour","sk",!cfg.nosk)
+   +'</section><section class="sgc">'+sec("Affichage")+row("Nouvelle apparence","Accueil épuré : tes dossiers d\'abord, Réviser en bas de l\'écran","nxt",cfg.nx)+row("Mise en avant des dossiers","Tranche de la couleur du dossier sur chaque dossier","fht",cfg.fh)+'<p class="help">Ces deux réglages sont propres à cet appareil : active-les aussi sur tes autres appareils.</p><div id="accent-slot"></div>'+fsHTML()+(window.glassUI?glassUI():'')+row("Lumière sous le doigt","Reflet qui suit le doigt quand tu touches un bouton","lt",!cfg.nolt)+row("Série et objectif du jour","Sur l\'accueil : jours d\'affilée et révisions du jour","sk",!cfg.nosk)
    +row("Mise en page iPad","Colonne de dossiers et grille sur grand écran","ipad",cfg.ipad)+'<p class="help">Désactivée : la version téléphone est affichée, centrée.</p>'
    +row("Affichage compact","Lignes plus serrées pour voir plus de dossiers à la fois","dens",cfg.cp)
    +(cfg.srs?row("Prévision des révisions","Graphique des 7 prochains jours dans les statistiques","fcst",cfg.fc!==0)+'<p class="help">Désactivé : le graphique est masqué dans les statistiques.</p>':'')
@@ -2167,7 +2363,7 @@ function render0(){
  if(document.querySelector){const c=document.querySelector(".cr");if(c)c.scrollLeft=c.scrollWidth;const k=$("cols");if(k)k.scrollLeft=k.scrollWidth}
 }
 let rzt;if(typeof addEventListener=="function")addEventListener("resize",()=>{clearTimeout(rzt);rzt=setTimeout(()=>{if(view=="browse"&&cfg.vw=="cols")render()},150)});
-setTh();setIp();setDens();setFs();setLt();setDesk();boot();document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync();else if(cfg.code&&tm){clearTimeout(tm);sync()}});
+setTh();setIp();setDens();setFs();setLt();setDesk();setNx();boot();document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync();else if(cfg.code&&tm){clearTimeout(tm);sync()}});
 </script>
 <script>
 /* Liquid Glass (style iOS 27) : transparence réglable, barre du haut, réfraction Chromium */
