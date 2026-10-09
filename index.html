@@ -1106,7 +1106,7 @@ html[data-nx="1"] #app .nxrg{flex:none;width:18px;height:18px;border-radius:50%;
 @media (min-width:768px){html[data-nx="1"] #app .nxband{flex-wrap:wrap;overflow:visible;margin:12px 0 0;padding:2px 0 4px}}
 /* intitulés de groupe */
 html[data-nx="1"] #app .nxl{display:block;margin-top:6px}
-html[data-nx="1"] #app .nxs{margin:18px 8px 8px;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+html[data-nx="1"] #app .nxs{margin:18px 8px 8px;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--mut) 78%,var(--ink))}
 html[data-nx="1"] #app .nxl>.empty{margin-top:14px}
 /* groupe de verre : un seul panneau par groupe, lignes séparées par un filet */
 html[data-nx="1"] #app .nxg:not(.tiles){display:grid;grid-template-columns:minmax(0,1fr);padding:4px;border-radius:24px;
@@ -1195,6 +1195,44 @@ html[data-nx="1"][data-dens="1"] #app .nxg:not(.tiles) .main{min-height:44px}
 html[data-nx="1"][data-dens="1"] #app .nxg:not(.tiles) .nxf .main{min-height:48px}
 html[data-nx="1"][data-dens="1"][data-fh="1"] #app .nxg:not(.tiles) .nxb{top:11px;bottom:11px}
 
+/* ===================== Nouvelle apparence : Réglages (groupes, style Réglages iOS) ===================== */
+html[data-nx="1"] #app[data-view=set]{padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+html[data-nx="1"] #app .nxset{margin-top:4px}
+html[data-nx="1"] #app .nxsgt{margin:20px 8px 8px;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--mut) 78%,var(--ink))}
+html[data-nx="1"] #app .nxset .sgc>.nxsgt:first-child{margin-top:8px}
+html[data-nx="1"] #app .nxsg{display:flex;flex-direction:column;padding:4px;border-radius:24px;border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);
+ background-color:var(--lq-panel);background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 30%);background-clip:padding-box;
+ box-shadow:inset 0 1px 0 var(--lq-inner-hi),inset 0 -10px 20px -16px var(--lq-inner-lo),0 10px 24px -18px var(--lq-drop)}
+html[data-nx="1"] #app .nxsr{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:54px;margin:0;padding:7px 10px;box-sizing:border-box;border:0;border-radius:18px;background:none;box-shadow:none;
+ font:inherit;font-size:16px;color:var(--ink);text-align:left}
+html[data-nx="1"] #app .nxsr+.nxsr::before,html[data-nx="1"] #app .nxsh+.nxsr::before{content:"";position:absolute;top:0;left:54px;right:12px;height:1px;background:color-mix(in srgb,var(--line) 85%,transparent);pointer-events:none}
+html[data-nx="1"] #app button.nxsv:active{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+html[data-nx="1"][data-desk="1"] #app button.nxsv:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+html[data-nx="1"] #app .nxsi{flex:none;width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--c);box-shadow:inset 0 1px 0 rgb(255 255 255/.3),inset 0 -2px 4px rgb(0 0 0/.12)}
+html[data-nx="1"] #app .nxsi svg{stroke-width:1.9}
+html[data-nx="1"] #app .nxst{flex:1;min-width:0}
+html[data-nx="1"] #app .nxst b{display:block;font-weight:500}
+html[data-nx="1"] #app .nxst small{display:block;margin-top:1px;font-size:13px;line-height:1.35;color:var(--mut)}
+html[data-nx="1"] #app .nxsval{flex:none;display:flex;align-items:center;gap:6px;max-width:45%;color:var(--mut);font-size:15.5px;text-align:right}
+html[data-nx="1"] #app .nxsdot{width:12px;height:12px;border-radius:50%;background:var(--acc)}
+html[data-nx="1"] #app .nxsc{flex:none;display:flex;color:color-mix(in srgb,var(--mut) 75%,transparent)}
+html[data-nx="1"] #app .nxsq{flex:none;width:30px;height:30px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:none;box-shadow:none;
+ font:italic 600 15px Georgia,serif;color:var(--mut);border:1.5px solid color-mix(in srgb,var(--mut) 55%,transparent)}
+html[data-nx="1"] #app .nxsq.on{color:var(--acc);border-color:var(--acc)}
+html[data-nx="1"] #app .nxsw{flex:none;display:flex;padding:6px 0;margin:-6px 0;border:0;background:none;box-shadow:none;border-radius:999px}
+html[data-nx="1"] #app .nxsh{margin:0 10px 8px 54px;padding:10px 12px;border-radius:14px;font-size:13.5px;line-height:1.45;color:color-mix(in srgb,var(--mut) 55%,var(--ink));background:var(--lq-well)}
+html[data-nx="1"] #app :is(.nxsr,.nxsq,.nxsw):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* sous-pages */
+html[data-nx="1"] #app .nxspg{margin-top:8px}
+html[data-nx="1"] #app .nxspg>.h2:first-child{display:none}
+html[data-nx="1"] #app .nxspg #contrast-settings{margin-top:4px}
+html[data-nx="1"] #app .nxspg #contrast-settings>h2,html[data-nx="1"] #app .nxspg #contrast-settings>p{display:none}
+/* feuilles de choix */
+html[data-nx="1"] .shd .nxck{justify-content:space-between}
+html[data-nx="1"] .shd .nxck i{display:flex;color:var(--acc)}
+html[data-nx="1"] .shd .nxck[aria-checked="true"] span{font-weight:600}
+@media (min-width:768px){html[data-nx="1"][data-ipad="1"] #app .nxsr{min-height:58px;font-size:17px}}
+html[data-nx="1"][data-desk="1"] #app .nxsr{min-height:46px;font-size:15px}
 /* glisser-déposer en vue Icônes : la vignette fantôme doit suivre le doigt (.item.tile la remettait en position relative, le dépôt n'aboutissait pas) */
 .item.tile.ghost{position:fixed}
 /* ===================== Mise en avant des dossiers, ancienne apparence (html[data-fh="1"]:not([data-nx="1"])) : tranche colorée ===================== */
@@ -1379,7 +1417,7 @@ function freeHTML(){const n=FRP&&G(FRP.id);if(!n||n.x)return"";
   if(hid)b+='<p class="help">'+pl(hid,"paquet caché n\'est","paquets cachés ne sont")+' pas inclus.</p>'}
  return asShell("Révision libre",b)}
 function asHTML(){if(!AS)return"";
- if(AS.k=="nxr")return nxRevHTML();if(AS.k=="nxa")return nxAddHTML();
+ if(AS.k=="nxr")return nxRevHTML();if(AS.k=="nxv")return nxValHTML();if(AS.k=="nxa")return nxAddHTML();
  if(AS.k=="fix")return fixHTML();if(AS.k=="rev")return revHTML();if(AS.k=="free")return freeHTML();if(AS.k=="card")return cardHTML();if(AS.k=="goal")return goalHTML();
  if(AS.k=="conf")return asShell(AS.title,'<p class="cft">'+esc(AS.text)+'</p><div class="cfb"><button type="button" class="b" data-a="asc">Annuler</button><button type="button" class="b '+(AS.danger?"dg":"ok")+'" data-a="ascf">'+esc(AS.ok)+'</button></div>');
  if(AS.k=="info"){const n=G(AS.id);return n&&!n.x?asShell(n.name,'<div class="asg">'+infoHTML(n)+'</div>'):""}
@@ -1466,7 +1504,7 @@ function resumeInfo(){const p=lastGet();if(!p)return null;
   return{label:(folder?esc(folder.name)+" · ":"")+(p.t=="fc"?"Flashcards":"QCM"),r:c.r,w}}
  return null}
 let TH=null;try{TH=localStorage.getItem("revis-theme")}catch(e){}
-const dark=()=>TH?TH=="dark":(typeof matchMedia=="function"&&matchMedia("(prefers-color-scheme: dark)").matches),setTh=()=>{document.documentElement.dataset.theme=dark()?"dark":"light"},tg=s=>NXB?nxTg(s):'<span class="tgs">'+(s==2||sySt()=="err"?sydH():"")+(s?'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button>':'')+'<button class="tg" data-a="set" aria-label="Réglages">'+ic("set",18)+'</button><button class="tg" data-a="th" title="Changer de thème" aria-label="Passer en mode '+(dark()?"clair":"sombre")+'">'+ic(dark()?"sun":"moon",18)+'</button></span>';
+const dark=()=>TH?TH=="dark":(typeof matchMedia=="function"&&matchMedia("(prefers-color-scheme: dark)").matches),setTh=()=>{document.documentElement.dataset.theme=dark()?"dark":"light"},tg=s=>NXB?nxTg(s):NXS?nxTgS():'<span class="tgs">'+(s==2||sySt()=="err"?sydH():"")+(s?'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button>':'')+'<button class="tg" data-a="set" aria-label="Réglages">'+ic("set",18)+'</button><button class="tg" data-a="th" title="Changer de thème" aria-label="Passer en mode '+(dark()?"clair":"sombre")+'">'+ic(dark()?"sun":"moon",18)+'</button></span>';
 let colSel=null,om=false,us=null,gct,fl=false,hmSel=null,ex,xs,xt,pk,rs=null,bm="",ready=false;const IMG=new Map();let DEV=null;try{DEV=localStorage.getItem("revis-dev")}catch(e){}if(!DEV){DEV=Date.now().toString(36)+Math.random().toString(36).slice(2,6);try{localStorage.setItem("revis-dev",DEV)}catch(e){}}
 let selm=false,selset=new Set(),fq="",ft="all",fo=false,sm="",busy=false,tm,nodue,tot,S,cur=0,view="browse",ed,ty="fc",menu,pend,deck,q,back,known,order,idx,cropen=false,sq="",statsTab="rates",impStep=1,impCp=false,score,wrong,sel,val;
 let rmode="both",anp=false,ant=0,RVP=null,FRP=null,stF=false,XB={d:-1,n:{}},vprev=null,hesd=false;
@@ -1989,7 +2027,7 @@ const A={
 };
 // ---- navigation : historique du navigateur (bouton retour, geste retour) ----
 let hs=[],hpop=false,hign=0;
-const lk=()=>view=="browse"?"b:"+cur:view=="stats"?"st:"+cur:view=="edit"?"e:"+(ed&&ed.id):view=="study"?"s":view=="exam"?"x":view;
+const lk=()=>view=="browse"?"b:"+cur:view=="stats"?"st:"+cur:view=="edit"?"e:"+(ed&&ed.id):view=="study"?"s":view=="exam"?"x":view=="set"&&SETP?"set:"+SETP:view;
 function hsync(){if(typeof history=="undefined"||!history.pushState)return;const k=lk(),st={k,c:cur};
  try{if(!hs.length){hs=[k];history.replaceState(st,"");return}
  if(hpop){hpop=false;if(hs[hs.length-1]!==k){hs[hs.length-1]=k;history.replaceState(st,"")}return}
@@ -2001,7 +2039,7 @@ function restore(s){const i=s.k.indexOf(":"),p=i<0?s.k:s.k.slice(0,i),v=i<0?"":s
  menu=pend=null;om=false;dr=null;
  if(p=="b")return A.cd(G(v)&&!G(v).x?v:0);
  cur=G(s.c)&&!G(s.c).x?s.c:0;
- if(p=="st"){view="stats";hmSel=null}else if(p=="set")view="set";else if(p=="trash")view="trash";
+ if(p=="st"){view="stats";hmSel=null}else if(p=="set"){view="set";SETP=v||null}else if(p=="trash")view="trash";
  else if(p=="e"&&G(v))(ed={id:v},view="edit");
  else if(p=="s"&&deck)view="study";
  else if(p=="x"&&ex&&deck){view="exam";if(!ex.done){clearInterval(xt);xt=setInterval(tick,500)}}
@@ -2251,10 +2289,73 @@ A.nxq=()=>{A.search();const i=$("sq");if(i)try{i.focus()}catch(e){}};
 A.nxa=()=>{AS={k:"nxa"};asRender()};
 // une seule possibilité (flashcards seulement, sans choix nouvelles/à revoir) : la révision part directement
 A.nxr=()=>{const o=nxInfo();if(o.fcP.length&&!o.qcA.length&&!(cfg.srs&&o.F.r&&o.F.w))return A.allg("fc");AS={k:"nxr"};asRender()};
+// ---- nouvelle apparence : Réglages en groupes (style Réglages iOS). Aides repliées derrière ⓘ (NXH), choix dans une feuille (AS.k="nxv"),
+//      sous-pages Synchronisation, Sauvegarde et Couleur de contraste (SETP, dans l'historique : le geste retour revient aux Réglages) ----
+let SETP=null,NXS=false;const NXH=new Set();
+const nxTgS=()=>'<span class="tgs">'+(sySt()=="err"?sydH():"")+'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button><button class="tg" data-a="th" title="Changer de thème" aria-label="Passer en mode '+(dark()?"clair":"sombre")+'">'+ic(dark()?"sun":"moon",18)+'</button></span>';
+const NXC={red:"#d9694a",ora:"#e09a2b",yel:"#c9a227",grn:"#4aa36a",tea:"#2fa3a3",blu:"#4a86e0",vio:"#8a6fd6",pnk:"#d867a6",gry:"#8e8b82"};
+const NXHELP={
+ srs:"Après chaque carte, note ta réponse (À revoir, Difficile, Bien, Facile) : l\'algorithme calcule le moment où tu risques de l\'oublier et la reprogramme juste avant. Désactivée : tout le paquet est proposé à chaque révision.",
+ an:"Activée : quand tu coches exactement les bonnes propositions, la correction s\'affiche puis la question suivante arrive après 1,5 seconde. Touche « Suivant » pour avancer plus vite.",
+ nx:"Accueil épuré : tes dossiers d\'abord, Réviser en bas de l\'écran, Réglages en groupes. Réglage propre à cet appareil : active-le aussi sur tes autres appareils.",
+ fh:"Tranche de la couleur du dossier sur chaque dossier, en liste, en icônes et en colonnes (grise pour un dossier sans couleur). Réglage propre à cet appareil.",
+ ipad:"Désactivée : la version téléphone est affichée, centrée.",
+ fcst:"Désactivé : le graphique est masqué dans les statistiques."};
+const bkUI=()=>(rs?'<p class="help">Sauvegarde du '+esc(rs.date)+' : '+rs.np+' paquet'+(rs.np>1?"s":"")+'. Elle remplacera toutes tes données actuelles'+(cfg.code?', y compris sur tes autres appareils synchronisés':'')+'.</p><div class="menu"><button data-a="rsx">Annuler</button><button class="dg" data-a="rsok">Remplacer mes données</button></div>':'<p class="help">Un fichier JSON avec tous tes dossiers, paquets, images et ta progression. '+bkInfo()+'</p><div class="menu"><button data-a="exp">Exporter</button><button data-a="rst">Restaurer</button></div>')+(bm?'<p class="help">'+esc(bm)+'</p>':'');
+function nxSetHTML(){const sp=rs?"bk":SETP,C=NXC;
+ const I=(n,c)=>'<span class="nxsi" style="--c:'+c+'" aria-hidden="true">'+ic(n,18)+'</span>';
+ if(sp){const T={sync:"Synchronisation",bk:"Sauvegarde",acc:"Couleur de contraste"}[sp]||"Réglages";
+  const top='<div class="tb"><div class="crw"><button class="bk" data-a="nxsp" data-v="">'+ic("chev",22)+'<span>Réglages</span></button></div>'+nxTgS()+'</div>';
+  return top+'<h1>'+T+'</h1><div class="nxspg">'+(sp=="sync"?syncUI():sp=="bk"?bkUI():'<p class="help">Choisis une teinte pour les accents, repères et éléments actifs. Elle s\'adapte au thème clair ou sombre pour rester lisible.</p><div id="accent-slot"></div>')+'</div>'}
+ const chv='<span class="nxsc" aria-hidden="true">'+ic("cr",16)+'</span>';
+ const tog=(t,sb,a,on,icn,c,hk)=>{const o=hk&&NXH.has(hk);return '<div class="nxsr">'+I(icn,c)+'<span class="nxst"><b>'+t+'</b>'+(sb?'<small>'+sb+'</small>':'')+'</span>'
+  +(hk?'<button type="button" class="nxsq'+(o?" on":"")+'" data-a="nxh" data-v="'+hk+'" aria-label="Aide : '+t+'" aria-expanded="'+o+'">i</button>':'')
+  +'<button type="button" class="row nxsw" role="switch" aria-checked="'+!!on+'" aria-label="'+t+'" data-a="'+a+'"><span class="swt" aria-hidden="true"></span></button></div>'+(o?'<p class="nxsh">'+NXHELP[hk]+'</p>':'')};
+ const val=(t,sb,v,a,dv,icn,c,sid)=>'<button type="button" class="nxsr nxsv" data-a="'+a+'"'+(dv!=null?' data-v="'+dv+'"':'')+'>'+I(icn,c)+'<span class="nxst"><b>'+t+'</b>'+(sb?'<small'+(sid?' id="'+sid+'"':'')+'>'+sb+'</small>':'')+'</span>'+(v?'<span class="nxsval">'+v+'</span>':'')+chv+'</button>';
+ const grp=(t,rows)=>'<h2 class="nxsgt">'+t+'</h2><div class="nxsg">'+rows.join("")+'</div>';
+ const o=optN(),xa=xdAct(o),GLv=cfg.gl!=null?cfg.gl:1;
+ let an="";try{an=(localStorage.getItem("revis-accent")||"").toLowerCase()}catch(e){}
+ const anm={"#b5573a":"Terracotta","#2f6fb0":"Bleu","#527a56":"Sauge","#8056a6":"Prune","#277d79":"Pétrole","#a76c17":"Miel"}[an]||(an?"Personnalisée":"Terracotta");
+ const nt=trashRoots().length;
+ const rev=grp("Révision",[tog("Répétition espacée","Algorithme FSRS, le même que dans Anki","srs",cfg.srs,"sp",C.red,"srs")]
+  .concat(cfg.srs?[val("Taux de mémorisation visé","",Math.round((cfg.rt||.9)*100)+" %","nxv","rt","st",C.ora),
+   val("Nouvelles cartes par jour",cfg.nl?"Encore "+newLeft()+" aujourd\'hui, tous appareils confondus":"",cfg.nl?String(cfg.nl):"Sans limite","nxv","nl","lay",C.yel),
+   val("Date d\'examen",xa?"Pour tout ce que tu révises":"Tu peux aussi en mettre une par dossier, depuis son menu ⋯",xa?dstr(o.xd):"Aucune","xd","0","cal",C.vio)]:[])
+  .concat([tog("Avance automatique (QCM)","Question suivante après un QCM parfait","an",!!cfg.an,"play",C.grn,"an")]));
+ const home=grp("Accueil et statistiques",[tog("Série et objectif du jour","Sur l\'accueil : jours d\'affilée et révisions du jour","sk",!cfg.nosk,"flame",C.red),
+  tog("Mise en page iPad","Colonne de dossiers et grille sur grand écran","ipad",cfg.ipad,"vg",C.blu,"ipad"),
+  tog("Affichage compact","Lignes plus serrées pour voir plus de dossiers","dens",cfg.cp,"vl",C.gry)]
+  .concat(cfg.srs?[tog("Prévision des révisions","Graphique des 7 prochains jours","fcst",cfg.fc!==0,"st",C.vio,"fcst")]:[]));
+ const app=grp("Apparence",[tog("Nouvelle apparence","Accueil épuré et Réglages en groupes","nxt",cfg.nx,"sun",C.blu,"nx"),
+  tog("Mise en avant des dossiers","Tranche de la couleur du dossier","fht",cfg.fh,"f",C.tea,"fh"),
+  val("Couleur de contraste","",'<i class="nxsdot" aria-hidden="true"></i>'+anm,"nxsp","acc","palette",C.pnk),
+  val("Taille du texte des révisions","",["Normale","Grande","Très grande"][cfg.fs||0],"nxv","fs","edit",C.gry),
+  val("Transparence du verre","",Math.round(GLv*100)+" %","nxv","gl","lay",C.blu),
+  tog("Lumière sous le doigt","Reflet qui suit le doigt quand tu touches un bouton","lt",!cfg.nolt,"sp",C.ora)]);
+ const sto=stoHTML(),stoTx=sto.slice(sto.indexOf('id="sti">')+9,sto.lastIndexOf("</p>"));
+ const data=grp("Données",[val("Synchronisation",cfg.code?"Entre tes appareils, avec ton code":"Retrouve tes paquets sur tes autres appareils",!cfg.code?"Désactivée":sySt()=="err"?"Échec":"Activée","nxsp","sync","cloud",C.tea),
+  val("Sauvegarde",esc(bkInfo()),"","nxsp","bk","down",C.grn),
+  '<div class="nxsr">'+I("info",C.gry)+'<span class="nxst"><b>Stockage sur cet appareil</b><small id="sti">'+stoTx+'</small></span></div>',
+  val("Corbeille","Conservés 30 jours",nt?nt+(nt>1?" éléments":" élément"):"Vide","tr",null,"trash",C.gry)]);
+ return crumbs()+'<h1>Réglages</h1><div class="sgrid nxset"><section class="sgc">'+rev+home+'</section><section class="sgc">'+app+'</section><section class="sgc">'+data+'</section></div><div id="contrast-settings" hidden></div>'}  // le sélecteur de couleur vit dans sa sous-page : cet emplacement vide empêche son script de l'ajouter ici
+// feuille de choix d'une valeur
+function nxValHTML(){const w=AS.w,r=(a,v,l,on)=>'<button type="button" class="asr nxck" role="menuitemradio" aria-checked="'+on+'" data-a="'+a+'" data-v="'+v+'"><span>'+l+'</span>'+(on?'<i aria-hidden="true">'+CK+'</i>':'')+'</button>',
+ p=t=>'<p class="help nxh">'+t+'</p>';
+ if(w=="rt")return asShell("Taux de mémorisation visé",'<div class="asg">'+[.8,.85,.9,.95].map(v=>r("rt",v,Math.round(v*100)+" %",(cfg.rt||.9)==v)).join("")+'</div>'+p("90 % est la valeur d\'Anki. Plus haut, tu retiens mieux mais tu révises beaucoup plus souvent ; plus bas, moins de révisions mais plus d\'oublis."));
+ if(w=="nl")return asShell("Nouvelles cartes par jour",'<div class="asg">'+[10,20,30,50,0].map(v=>r("nl",v,v||"Sans limite",cfg.nl==v)).join("")+'</div>'+p("Cartes et questions jamais vues proposées chaque jour, pour garder une charge régulière. "+(cfg.nl?"Il en reste "+newLeft()+" aujourd\'hui, tous appareils confondus.":"")));
+ if(w=="fs")return asShell("Taille du texte des révisions",'<div class="asg">'+[[0,"Normale"],[1,"Grande"],[2,"Très grande"]].map(([v,l])=>r("fs",v,l,(cfg.fs||0)==v)).join("")+'</div>'+p("Questions, réponses et propositions, en révision comme en examen. Réglage propre à cet appareil."));
+ if(w=="gl"&&window.glassUI)return asShell("Transparence du verre",glassUI().replace('<h2 class="h2">Liquid Glass</h2>',''));
+ return ""}
+A.nxv=v=>{AS={k:"nxv",w:v};asRender()};
+A.nxh=k=>{if(NXH.has(k))NXH.delete(k);else NXH.add(k);render()};
+A.nxsp=v=>{SETP=v||null;render();scrollTo(0,0)};
+{const o=A.set;A.set=function(){SETP=null;return o.apply(this,arguments)}}
+// curseur du verre (feuille) : la valeur affichée sur la ligne suit dès qu'on lâche le curseur
+if(typeof addEventListener=="function")document.addEventListener("change",e=>{if(e.target&&e.target.id=="gl"&&NXS&&view=="set")render()});
 function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}}
 function render0(){
  if(!booted)return;
- NXB=view=="browse"&&!!cfg.nx;
+ NXB=view=="browse"&&!!cfg.nx;NXS=view=="set"&&!!cfg.nx;
  if(view!="browse")PV=null;
  const pvOld=document.querySelector(".pvsc"),pvTop=pvOld?pvOld.scrollTop:0;
  let h="";
@@ -2281,6 +2382,8 @@ function render0(){
   h='<div class="split"><aside class="sb"><button class="sd'+(cur?"":" on")+'" data-a="cd" data-drop="0" data-v="0">'+ic("home",16)+'<span>Accueil</span></button>'+side(0,0)+'</aside><section class="ct">'+h+'</section></div>';
  }else if(view=="trash"){
   h=trashHTML();
+ }else if(view=="set"&&cfg.nx){
+  h=nxSetHTML();
  }else if(view=="set"){
   const row=(t,sb,a,on)=>'<button class="item row" role="switch" aria-checked="'+!!on+'" data-a="'+a+'"><span class="tx"><b>'+t+'</b><small>'+sb+'</small></span><span class="swt" aria-hidden="true"></span></button>';
   // trois sections : Révision, Affichage, Données (la couleur de contraste est insérée dans #accent-slot par son script)
@@ -2295,7 +2398,7 @@ function render0(){
    +row("Mise en page iPad","Colonne de dossiers et grille sur grand écran","ipad",cfg.ipad)+'<p class="help">Désactivée : la version téléphone est affichée, centrée.</p>'
    +row("Affichage compact","Lignes plus serrées pour voir plus de dossiers à la fois","dens",cfg.cp)
    +(cfg.srs?row("Prévision des révisions","Graphique des 7 prochains jours dans les statistiques","fcst",cfg.fc!==0)+'<p class="help">Désactivé : le graphique est masqué dans les statistiques.</p>':'')
-   +'</section><section class="sgc">'+sec("Données")+syncUI()+'<h2 class="h2">Sauvegarde</h2>'+(rs?'<p class="help">Sauvegarde du '+esc(rs.date)+' : '+rs.np+' paquet'+(rs.np>1?"s":"")+'. Elle remplacera toutes tes données actuelles'+(cfg.code?', y compris sur tes autres appareils synchronisés':'')+'.</p><div class="menu"><button data-a="rsx">Annuler</button><button class="dg" data-a="rsok">Remplacer mes données</button></div>':'<p class="help">Un fichier JSON avec tous tes dossiers, paquets, images et ta progression. '+bkInfo()+'</p><div class="menu"><button data-a="exp">Exporter</button><button data-a="rst">Restaurer</button></div>')+(bm?'<p class="help">'+esc(bm)+'</p>':'')
+   +'</section><section class="sgc">'+sec("Données")+syncUI()+'<h2 class="h2">Sauvegarde</h2>'+bkUI()
    +stoHTML()+'<h2 class="h2">Corbeille</h2><button class="item row" data-a="tr"><span class="tx"><b>Éléments supprimés</b><small>'+(n=>n?n+(n>1?" éléments":" élément")+" · conservés 30 jours":"Vide · les suppressions sont conservées 30 jours")(trashRoots().length)+'</small></span><i class="chv">'+ic("cr",16)+'</i></button>'
    +'</section></div><div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Fermer</button></div>';
  }else if(view=="col"){
@@ -3163,7 +3266,7 @@ setTh();setIp();setDens();setFs();setLt();setDesk();setNx();boot();document.addE
  }
  function addSettings(){
   if(!app)return;
-  var h1=app.querySelector("h1");if(!h1||h1.textContent.trim()!=="Réglages"||document.getElementById("contrast-settings"))return;
+  var h1=app.querySelector("h1");if(!h1||(h1.textContent.trim()!=="Réglages"&&!document.getElementById("accent-slot"))||document.getElementById("contrast-settings"))return;
   var box=document.createElement("section");box.id="contrast-settings";box.className="pn";box.setAttribute("aria-labelledby","contrast-title");
   box.innerHTML='<h2 id="contrast-title">Couleur de contraste</h2><p>Choisis une teinte pour les accents, repères et éléments actifs. Elle s’adapte au thème clair ou sombre pour rester lisible.</p><div class="contrast-swatches" role="group" aria-label="Couleurs proposées">'+PALETTE.map(function(x){return'<button type="button" class="contrast-swatch" data-color="'+x[0]+'" aria-label="'+x[1]+'" title="'+x[1]+'" aria-pressed="false"><i style="background:'+x[0]+'"></i><span>'+x[1]+'</span></button>'}).join("")+'<label class="contrast-swatch contrast-custom"><i class="custom-dot"></i><span>Personnalisée</span><input type="color" aria-label="Choisir une couleur personnalisée" value="'+(saved||"#b5573a")+'"></label></div>';
   var preview=document.createElement("div");preview.className="accent-preview";preview.setAttribute("aria-label","Aperçu de la couleur choisie");preview.innerHTML='<span class="preview-caption">APERÇU</span><div class="preview-answer"><span class="preview-check" aria-hidden="true">✓</span><span>Bonne réponse</span></div><span class="preview-action">Réviser maintenant</span>';box.appendChild(preview);
