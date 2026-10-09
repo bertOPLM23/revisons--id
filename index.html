@@ -1310,6 +1310,52 @@ html[data-nx="1"] #app .nxtrx{flex:none;width:38px;height:38px;padding:0;border:
 html[data-nx="1"] #app .nxtre{justify-content:center;font-weight:600;color:color-mix(in srgb,var(--ko) 82%,var(--ink))}
 html[data-nx="1"] #app :is(.nxtra,.nxtrx,.nxtre,.nxmvr):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 html[data-nx="1"] #app .pc.cur{border-color:var(--acc);box-shadow:inset 0 0 0 1.5px var(--acc),0 0 0 3px color-mix(in srgb,var(--acc) 20%,transparent)}
+/* ===================== Nouvelle apparence : écran de révision (épuré) ===================== */
+html[data-nx="1"] #app[data-view=study]>:is(.bar,.meta){display:none}
+html[data-nx="1"] #app .nxrh{display:flex;align-items:center;gap:10px;min-height:52px}
+html[data-nx="1"] #app .nxrbk{flex:none;width:44px;height:44px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink);
+ background:linear-gradient(180deg,var(--lq-drop-gl),transparent 60%),var(--lq-drop-fill);border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);box-shadow:inset 0 1px 0 var(--lq-inner-hi),0 6px 14px -8px var(--lq-drop)}
+html[data-nx="1"] #app .nxrc{flex:1;min-width:0;text-align:center;order:1}
+html[data-nx="1"] #app .nxrc b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;font-weight:600;color:var(--ink)}
+html[data-nx="1"] #app .nxrc small{display:block;margin-top:1px;font-size:12.5px;color:color-mix(in srgb,var(--mut) 72%,var(--ink));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-nx="1"] #app .nxrfx{display:inline-flex;vertical-align:-1px;margin-right:5px;color:color-mix(in srgb,var(--ko) 82%,var(--ink))}
+html[data-nx="1"] #app .nxrp{height:4px;max-width:170px;margin:6px auto 0;border-radius:2px;overflow:hidden;background:color-mix(in srgb,var(--mut) 22%,transparent)}
+html[data-nx="1"] #app .nxrp i{display:block;height:100%;border-radius:2px;background:var(--acc)}
+html[data-nx="1"] #app .nxrh .nxrbk{order:0}html[data-nx="1"] #app .nxrh .ud{order:2}html[data-nx="1"] #app .nxrh .nxtg{order:3}
+html[data-nx="1"] #app .nxrh .ud:disabled{display:none}
+html[data-nx="1"] #app .pvm .nxpdg{color:color-mix(in srgb,var(--ko) 82%,var(--ink))}
+html[data-nx="1"] #app .nxrh .ud{flex:none}
+html[data-nx="1"] #app .nxrh .nxrbk:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* carte */
+html[data-nx="1"] #app[data-view=study] .card{min-height:min(60vh,560px);align-items:center;text-align:center;padding-top:52px;padding-bottom:40px;margin-top:6px}
+html[data-nx="1"] #app[data-view=study] .card .nxcat{position:absolute;top:18px;left:16px;right:16px;margin:0;text-align:center;color:color-mix(in srgb,var(--mut) 55%,var(--ink))}
+html[data-nx="1"] #app[data-view=study] .card .q{font-size:calc(24px*var(--fz));line-height:1.3}
+html[data-nx="1"] #app[data-view=study] .card .a{font-size:calc(18px*var(--fz));line-height:1.5}
+html[data-nx="1"] #app .card .nxrq{display:block;align-self:stretch;margin:0 4px 4px;padding-bottom:14px;font-size:calc(14.5px*var(--fz));line-height:1.4;color:color-mix(in srgb,var(--mut) 62%,var(--ink));border-bottom:1px solid color-mix(in srgb,var(--line) 85%,transparent)}
+@media (min-width:768px){
+ html[data-nx="1"][data-ipad="1"] #app[data-view=study] .card{min-height:min(64vh,640px)}
+ html[data-nx="1"][data-ipad="1"] #app[data-view=study] .card .q{font-size:calc(30px*var(--fz))}
+ html[data-nx="1"][data-ipad="1"] #app[data-view=study] .card .a{font-size:calc(23px*var(--fz))}
+ html[data-nx="1"][data-ipad="1"] #app .card .nxrq{font-size:calc(17px*var(--fz))}
+}
+html[data-nx="1"][data-desk="1"][data-ipad="1"] #app[data-view=study] .card .a{font-size:calc(20px*var(--fz))}
+html[data-nx="1"][data-desk="1"] #app[data-view=study] .card{min-height:min(56vh,520px)}
+/* QCM et examen : question posée sur le fond, propositions dans un panneau */
+html[data-nx="1"] #app:is([data-view=study],[data-view=exam]) .qb{padding:0;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-nx="1"] #app:is([data-view=study],[data-view=exam]) .qb::before,html[data-nx="1"] #app:is([data-view=study],[data-view=exam]) .qb::after{display:none}
+html[data-nx="1"] #app .nxqq{margin:6px 0 10px;padding:18px 20px 14px;border-radius:24px;border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);
+ background-color:var(--lq-panel);background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 30%);background-clip:padding-box;box-shadow:inset 0 1px 0 var(--lq-inner-hi),0 10px 24px -18px var(--lq-drop)}
+html[data-nx="1"] #app .nxqq>.q{font-size:calc(22px*var(--fz));line-height:1.3}
+html[data-nx="1"] #app .nxqq>.hint{margin:8px 0 0;color:color-mix(in srgb,var(--mut) 60%,var(--ink))}
+html[data-nx="1"] #app .nxog{display:flex;flex-direction:column;gap:2px;padding:4px;border-radius:24px;border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);
+ background-color:var(--lq-panel);background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 30%);background-clip:padding-box;box-shadow:inset 0 1px 0 var(--lq-inner-hi),inset 0 -10px 20px -16px var(--lq-inner-lo),0 10px 24px -18px var(--lq-drop)}
+html[data-nx="1"] #app .nxog .opt{margin:0;border-radius:18px;min-height:56px}
+html[data-nx="1"] #app .nxog{background-color:rgb(255 255 255/.93)}
+:root[data-theme="dark"][data-nx="1"] #app .nxog{background-color:rgb(34 32 30/.92)}  /* propositions : fond au moins aussi contrasté que les anciennes gouttes */
+html[data-nx="1"] #app .nxog .opt:not(.s):not(.hit):not(.ko):not(.miss){background:transparent;border-color:transparent;box-shadow:none}
+html[data-nx="1"] #app .nxog .opt>b{flex:none;width:27px;height:27px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:color-mix(in srgb,var(--mut) 45%,var(--ink));background:color-mix(in srgb,var(--ink) 5%,transparent)}
+html[data-nx="1"] #app .nxog+.res,html[data-nx="1"] #app .nxog~.ex{margin-top:12px}
+@media (min-width:768px){html[data-nx="1"][data-ipad="1"] #app .nxqq>.q{font-size:calc(28px*var(--fz))}html[data-nx="1"][data-ipad="1"] #app .nxog .opt{min-height:62px}}
 /* glisser-déposer en vue Icônes : la vignette fantôme doit suivre le doigt (.item.tile la remettait en position relative, le dépôt n'aboutissait pas) */
 .item.tile.ghost{position:fixed}
 /* ===================== Mise en avant des dossiers, ancienne apparence (html[data-fh="1"]:not([data-nx="1"])) : tranche colorée ===================== */
@@ -1906,7 +1952,7 @@ function fixCard(){if(cur)return"";const L=fxList();if(!L.length)return"";const 
 function fixHTML(){const L=fxList();if(!L.length)return"";
  return asShell("À corriger",'<p class="cft">« Modifier » ouvre la carte : elle sort de la liste dès que tu enregistres. « Retirer » la sort sans la modifier.</p>'+L.map(({p,i,j})=>'<div class="er"><p>'+fmt(lbl(i,p))+'</p><small class="help">'+esc(p.name)+'</small><div class="fxa"><button type="button" class="b sm" data-a="fxo" data-v="'+p.id+'#'+j+'">Retirer</button><button type="button" class="b sm ok" data-a="fxe" data-v="'+p.id+'#'+j+'">Modifier</button></div></div>').join(""))}
 const delX=()=>view=="exam"&&ex&&!ex.done&&deck&&deck.items.length?delB(false):"";
-const hdr=()=>'<div class="hd"><button class="bk" data-a="back">'+ic("chev",22)+'<span>Retour</span></button><span class="dn">'+esc(deck.name)+'</span>'+edH()+fxH()+delH()+'</div>';
+const hdr=()=>cfg.nx?nxHdr():'<div class="hd"><button class="bk" data-a="back">'+ic("chev",22)+'<span>Retour</span></button><span class="dn">'+esc(deck.name)+'</span>'+edH()+fxH()+delH()+'</div>';
 const crumbs=()=>{const t=view=="browse"?(cur?G(cur).p:null):cur;
  if(t==null)return '<div class="tb"><span></span>'+tg(2)+'</div>';
  const anc=path(cur);
@@ -2353,6 +2399,7 @@ function nxRevHTML(){const o=nxInfo(),r=[],any=o.fcP.length||o.qcP.length;
 const nxAddHTML=()=>asShell("Ajouter",'<div class="asg">'+asR("nf",null,"Nouveau dossier","f")+asR("imp",null,"Nouveau paquet (importer un cours)","fc")+'</div>');
 // menu « ⋯ » de la barre du haut : affichage (comme le Finder), tri, sélection, réglages, thème
 const nxMoreM=row=>{const vm=vmode(),act=sortMode()!="name"||ft!="all"||fq.trim()||fo;
+ if(view=="study"){const it=curIt();return (edH()?row("nxm","qed","Modifier",false,"edit"):"")+(it?row("nxm","fx",fxL(it.fx),false,"flag"):"")+(delH()?'<div class="pvs"></div>'+row("nxm","qdel",deck.k=="fc"?"Supprimer cette carte":"Supprimer cette question",false,"trash").replace('class="pvr"','class="pvr nxpdg"'):"")}
  if(view!="browse")return (view!="set"?row("nxm","set","Réglages",false,"set"):"")+row("nxm","th",dark()?"Mode clair":"Mode sombre",false,dark()?"sun":"moon");
  return '<div class="pvh">Affichage</div>'+[["grid","Icônes","vg"],["list","Liste","vl"]].concat(wide()?[["cols","Colonnes","vc"]]:[]).map(([v,l,i])=>row("vw",v,l,vm==v,i)).join("")
   +'<div class="pvs"></div>'+row("pv","sort",act?"Trier et filtrer (actif)":"Trier et filtrer…",false,"flt")+row("nxm","sel","Sélectionner",false,"sl")
@@ -2363,7 +2410,7 @@ const nxTg=s=>{const act=sortMode()!="name"||ft!="all"||fq.trim()||fo;
 A.nxsqc=()=>{sq="";render();const i=$("sq");if(i)try{i.focus()}catch(e){}};
 A.nxt=()=>{cfg.nx=!cfg.nx;saveCfg();setNx();render()};
 A.fht=()=>{cfg.fh=!cfg.fh;saveCfg();setNx();render()};
-A.nxm=v=>{PV=null;if(typeof A[v]=="function")A[v]();else render()};
+A.nxm=v=>{PV=null;if(typeof A[v]=="function")A[v]();else render();if(document.querySelector(".pvm"))render()};
 A.nxq=()=>{A.search();const i=$("sq");if(i)try{i.focus()}catch(e){}};
 A.nxa=()=>{AS={k:"nxa"};asRender()};
 // une seule possibilité (flashcards seulement, sans choix nouvelles/à revoir) : la révision part directement
@@ -2444,6 +2491,15 @@ function nxTrashHTML(){const rs=trashRoots(),now=Date.now(),pl=(k,a,b)=>k+" "+(k
   return '<div class="nxsr"><span class="nxmvi">'+ic(f?"f":n.k,21,n.c)+'</span><span class="nxst"><b>'+esc(n.name)+'</b><small>'+sub+' · supprimé '+(ago?"il y a "+ago+" j":"aujourd\'hui")+' · expire dans '+left+' j</small></span>'
    +'<button type="button" class="nxtra" data-a="trr" data-v="'+n.id+'">Restaurer</button><button type="button" class="nxtrx" data-a="trp" data-v="'+n.id+'" aria-label="Supprimer définitivement « '+esc(n.name)+' »">'+ic("trash",17)+'</button></div>'}).join("")
   +'<button type="button" class="nxsr nxtre" data-a="tre">Vider la corbeille</button></div>'}
+// ---- nouvelle apparence : écran de révision (maquette 1 « épuré ») : en-tête = retour, titre, progression, ⋯ (Modifier, À corriger, Supprimer) ;
+//      carte agrandie et centrée, question rappelée au verso ; propositions de QCM dans un panneau ----
+function nxHdr(){const fc=deck.k=="fc",it=nodue?null:curIt();let sub="",p=0;
+ if(!nodue){if(fc){const n=tot;sub=known+" / "+n+(n>1?" maîtrisées":" maîtrisée")+" · "+q.length+" à voir";p=n?known/n:0}
+  else{const n=order.length;if(idx<n){sub="Question "+(idx+1)+" sur "+n+" · "+score+" juste"+(score>1?"s":"");p=n?idx/n:0}else p=1}}
+ return '<div class="hd nxrh"><button class="nxrbk" data-a="back" aria-label="Retour">'+ic("chev",21)+'</button><div class="nxrc"><b>'+(it&&it.fx?'<span class="nxrfx" title="Marquée à corriger">'+ic("flag",13)+'<span class="vh">Marquée à corriger, </span></span>':'')+esc(deck.name)+'</b>'
+  +(sub?'<small>'+sub+'</small><div class="nxrp" aria-hidden="true"><i style="width:'+Math.round(p*100)+'%"></i></div>':'')+'</div>'
+  +(it?'<span class="tgs nxtg"><button class="tg'+(PV=="more"?" on":"")+'" data-a="pv" data-v="more" aria-label="Modifier, marquer à corriger ou supprimer" aria-haspopup="menu" aria-expanded="'+(PV=="more")+'">'+ic("more",18)+'</button>'+(PV=="more"?pvHTML():"")+'</span>':'')+'</div>'}
+const nxOpts=h=>cfg.nx?'<div class="nxog">'+h+'</div>':h;
 function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}}
 function render0(){
  if(!booted)return;
@@ -2530,10 +2586,10 @@ function render0(){
   const n=deck.items.length;
   if(!ex.done){const it=deck.items[ex.i],r=Math.max(0,Math.ceil((ex.end-Date.now())/1000));
    h='<div class="hd"><button class="b sm'+(pend=="xq"?" dg":"")+'" data-a="xq">'+(pend=="xq"?"Abandonner ?":"Arrêter")+'</button><span id="tmr" class="tmr'+(r<=60?" lo":"")+'" role="timer">'+mmss(r)+'</span><span>'+(ex.i+1)+' / '+n+'</span>'+fxH()+delX()+'</div>'+bar(ex.i+1,n)
-    +'<div class="qb"><div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+'<p class="hint">Coche les propositions vraies.</p>'+optsH(it,ex.s[ex.i],false,"xo")+'</div>'
+    +'<div class="qb">'+(cfg.nx?'<div class="nxqq">':'')+'<div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+'<p class="hint">Coche les propositions vraies.</p>'+(cfg.nx?'</div>':'')+nxOpts(optsH(it,ex.s[ex.i],false,"xo"))+'</div>'
     +'<div class="dock"><button class="b" data-a="xpv"'+(ex.i?"":" disabled")+'>Précédent</button><button class="b ok" data-a="'+(ex.i+1<n?"xnx":"xfin")+'">'+(ex.i+1<n?"Suivant":"Terminer")+'</button></div>'}
   else{h='<div class="hd"><button class="bk" data-a="back">'+ic("chev",22)+'<span>Retour</span></button><span class="dn">Examen</span>'+tg()+'</div><div class="done"><h1>Score : '+ex.sc+' / '+n+'</h1><p class="help">'+Math.round(ex.sc/n*100)+' % de questions justes, en '+mmss(Math.round(ex.dt/1000))+(ex.to?". Temps écoulé : les questions sans réponse comptent comme fausses.":".")+'</p>'+(ex.bad.length?'<button class="b ok" data-a="xredo">Refaire mes erreurs ('+ex.bad.length+')</button>':'')+'<button class="b" data-a="back">Retour aux paquets</button></div>';
-   if(ex.bad.length){h+='<h2 class="h2">Correction de tes erreurs</h2>';ex.bad.forEach(j=>{const it=deck.items[j];h+='<div class="qb"><div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+optsH(it,ex.s[j],true,null)+exH(it)+'</div>'})}}
+   if(ex.bad.length){h+='<h2 class="h2">Correction de tes erreurs</h2>';ex.bad.forEach(j=>{const it=deck.items[j];h+='<div class="qb"><div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+nxOpts(optsH(it,ex.s[j],true,null))+exH(it)+'</div>'})}}
  }else if(nodue){
   const d0=day(),nx=Math.min(1e9,...deck.items.filter(i=>i.d!=null&&i.d>d0).map(i=>i.d)),dd=nx-d0,lim=deck.items.some(isNew)&&!newLeft(),gol=!lim&&moreAvail(),cuh=cfg.srs&&!rvLeft()&&deck.items.some(i=>isRev(i)&&i.st!=1&&i.st!=3);
   h=hdr()+'<div class="done"><h1>Rien à réviser aujourd\'hui</h1><p class="help">'+(lim?"Tu as atteint ta limite de nouvelles cartes pour aujourd\'hui. ":gol?"Objectif de nouvelles cartes atteint pour aujourd\'hui. ":"")+(cuh?"Ta part du rattrapage étalé est faite : la suite est prévue demain. ":dd<1e8?'Prochaine révision '+(dd<=1?"demain":"dans "+dd+" jours")+'.':'')+'</p>'+(gol?'<button class="b ok" data-a="more">'+MORE+' nouvelles de plus</button>':'')+'<button class="b" data-a="stf">Réviser quand même</button><button class="b" data-a="back">Retour</button></div>';
@@ -2542,18 +2598,18 @@ function render0(){
   h=hdr()+bar(known,n)+'<div class="meta"><span>'+known+' / '+n+' maîtrisées</span><span>'+q.length+' à voir</span></div>';
   if(!q.length)h+='<div class="done"><h1>'+n+(n>1?' cartes maîtrisées':' carte maîtrisée')+'</h1>'+(endB(false)??'<button class="b ok" data-a="restart">Recommencer</button><button class="b" data-a="back">Retour aux paquets</button>')+'</div>';
   else{const c=deck.items[q[0]];
-   const body=back?'<div class="a">'+fmt(c.a)+'</div>'+(c.ai?imgH(c.ai):''):'<div class="q">'+fmt(c.q)+'</div>'+(c.qi?imgH(c.qi):'')+(cfg.hc<6?'<span class="hint">'+(document.documentElement.dataset.desk=="1"?"Clique ou appuie sur Espace pour voir la réponse":"Touche pour voir la réponse")+'</span>':'');
-   h+='<button class="card liquid-card'+(back?' back':'')+(fl?' flip':'')+'" data-a="flip"><span class="vh">'+(back?"Réponse : ":"Question : ")+'</span>'+(c.c?'<span class="hint">'+esc(c.c)+'</span>':'')+body+'<span class="vh"> Touche pour retourner la carte.</span></button>';
+   const body=back?(cfg.nx?'<span class="nxrq">'+fmt(c.q)+'</span>':'')+'<div class="a">'+fmt(c.a)+'</div>'+(c.ai?imgH(c.ai):''):'<div class="q">'+fmt(c.q)+'</div>'+(c.qi?imgH(c.qi):'')+(cfg.hc<6?'<span class="hint">'+(document.documentElement.dataset.desk=="1"?"Clique ou appuie sur Espace pour voir la réponse":"Touche pour voir la réponse")+'</span>':'');
+   h+='<button class="card liquid-card'+(back?' back':'')+(fl?' flip':'')+'" data-a="flip"><span class="vh">'+(back?"Réponse : ":"Question : ")+'</span>'+(c.c?'<span class="hint'+(cfg.nx?' nxcat':'')+'">'+esc(c.c)+'</span>':'')+body+'<span class="vh"> Touche pour retourner la carte.</span></button>';
    fl=false;if(cfg.hc<6)h+='<p class="help" style="text-align:center;margin:0">'+(document.documentElement.dataset.desk=="1"?(cfg.srs&&!deck.free?"Clavier : Espace pour retourner, 1 à 4 pour noter, Ctrl+Z pour annuler":"Clavier : Espace pour retourner, flèche droite si tu savais, flèche gauche à revoir"):cfg.srs&&!deck.free?"Glisse la carte : à droite pour Bien, à gauche pour À revoir":"Glisse la carte : à droite si tu savais, à gauche à revoir")+'</p>';if(back)h+=cfg.srs&&!deck.free?'<div class="dock g4">'+(P=>[["À revoir","r"],["Difficile",""],["Bien","ok"],["Facile","e"]].map((x,k)=>'<button class="b rb '+x[1]+'" data-a="rate" data-v="'+(k+1)+'"><span>'+x[0]+'</span><small>'+ivTxt(P[k])+'</small><kbd class="rk" aria-hidden="true">'+(k+1)+'</kbd></button>').join(""))(opts(c))+'</div>':'<div class="dock"><button class="b" data-a="no">À revoir</button><button class="b ok" data-a="yes">Je savais</button></div>'}
  }else{
   const n=order.length;
   h=hdr()+bar(idx,n);
   if(idx>=n)h+='<div class="done"><h1>Score : '+score+' / '+n+'</h1><p class="help">Une question est juste quand toutes ses propositions sont bien cochées.</p>'+(wrong.length?'<button class="b ok" data-a="redo">Refaire mes erreurs ('+wrong.length+')</button>':'')+(endB(!!wrong.length)??'<button class="b" data-a="restart">Recommencer</button><button class="b" data-a="back">Retour aux paquets</button>')+'</div>';
   else{const it=deck.items[order[idx]];
-   h+='<div class="meta"><span>Question '+(idx+1)+' / '+n+'</span><span>'+score+' juste'+(score>1?"s":"")+'</span></div><div class="qb"><div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+'<p class="hint">Coche les propositions vraies.</p>';
+   h+='<div class="meta"><span>Question '+(idx+1)+' / '+n+'</span><span>'+score+' juste'+(score>1?"s":"")+'</span></div><div class="qb">'+(cfg.nx?'<div class="nxqq">':'')+'<div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+'<p class="hint">Coche les propositions vraies.</p>'+(cfg.nx?'</div>':'');
    const bad=val?it.o.filter((o,i)=>!!sel[i]!==!!o.k).length:0;
    if(val)h+='<p class="res '+(bad?"r":"g")+'" role="status"><span class="state-icon" aria-hidden="true">'+(bad?"!":"✓")+'</span><span>'+(bad?bad+(bad>1?" erreurs":" erreur"):"Tout juste")+'</span>'+(!bad&&vprev?(hesd?'<span class="hz">Noté comme difficile</span>':'<button type="button" class="lnk hz" data-a="hes">J\'ai hésité</button>'):'')+'</p>';
-   h+=optsH(it,sel,val,"opt");
+   h+=nxOpts(optsH(it,sel,val,"opt"));
    if(val)h+=exH(it);
    h+='</div><div class="dock"><button class="b ok'+(val&&anp?" an":"")+'" data-a="'+(val?"next":"val")+'">'+(val?(idx+1>=n?"Voir le score":"Suivant"):"Valider")+'</button></div>'}
  }
