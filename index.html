@@ -1356,6 +1356,41 @@ html[data-nx="1"] #app .nxog .opt:not(.s):not(.hit):not(.ko):not(.miss){backgrou
 html[data-nx="1"] #app .nxog .opt>b{flex:none;width:27px;height:27px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:color-mix(in srgb,var(--mut) 45%,var(--ink));background:color-mix(in srgb,var(--ink) 5%,transparent)}
 html[data-nx="1"] #app .nxog+.res,html[data-nx="1"] #app .nxog~.ex{margin-top:12px}
 @media (min-width:768px){html[data-nx="1"][data-ipad="1"] #app .nxqq>.q{font-size:calc(28px*var(--fz))}html[data-nx="1"][data-ipad="1"] #app .nxog .opt{min-height:62px}}
+/* ===================== Nouvelle apparence : Statistiques (tableau de bord) ===================== */
+html[data-nx="1"] #app .nxkp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+html[data-nx="1"] #app .nxk{position:relative;padding:13px 14px 14px 16px;border-radius:22px;border:1px solid;border-color:var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi);
+ background-color:var(--lq-panel);background-image:linear-gradient(180deg,var(--lq-drop-gl),transparent 40%);background-clip:padding-box;box-shadow:inset 0 1px 0 var(--lq-inner-hi),inset 0 -8px 16px -14px var(--lq-inner-lo),0 8px 20px -16px var(--lq-drop)}
+html[data-nx="1"] #app .nxk small{display:flex;align-items:center;gap:6px;min-height:22px;font-size:12.5px;font-weight:600;color:color-mix(in srgb,var(--mut) 65%,var(--ink))}
+html[data-nx="1"] #app .nxk small>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-nx="1"] #app .nxk small svg{flex:none;color:color-mix(in srgb,var(--acc) 85%,var(--ink))}
+html[data-nx="1"] #app .nxk b{display:block;margin-top:6px;font:500 calc(30px*var(--fz,1))/1.1 Georgia,"Times New Roman",serif;color:var(--ink);font-variant-numeric:tabular-nums}
+html[data-nx="1"] #app .nxk b em{margin-left:5px;font:600 13.5px system-ui,-apple-system,"Segoe UI",sans-serif;font-style:normal;color:color-mix(in srgb,var(--mut) 65%,var(--ink))}
+html[data-nx="1"] #app .nxkv.g{color:color-mix(in srgb,var(--ok) 85%,var(--ink))}html[data-nx="1"] #app .nxkv.r{color:color-mix(in srgb,var(--ko) 85%,var(--ink))}
+html[data-nx="1"] #app .nxkq{width:24px;height:24px;font-size:13px;margin:-2px -2px -2px 0}
+html[data-nx="1"] #app .nxkh{margin:10px 2px 0}
+html[data-nx="1"] #app .nxs2{display:grid;grid-template-columns:minmax(0,1fr);gap:0 14px;align-items:start}
+html[data-nx="1"] #app .nxs2 .pn{margin:0}
+html[data-nx="1"] #app .nxseg{margin-top:22px}
+html[data-nx="1"] #app .nxrl{padding:4px}
+html[data-nx="1"] #app .nxrr{position:relative;display:flex;flex-direction:column;gap:7px;padding:12px 14px;border-radius:18px}
+html[data-nx="1"] #app .nxrr+.nxrr::before{content:"";position:absolute;top:0;left:14px;right:14px;height:1px;background:color-mix(in srgb,var(--line) 85%,transparent)}
+html[data-nx="1"] #app .nxrt{display:flex;align-items:center;gap:10px;min-width:0}
+html[data-nx="1"] #app .nxrt .ic{display:flex;flex:none;color:var(--mut)}
+html[data-nx="1"] #app .nxrt b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:15.5px;color:var(--ink)}
+html[data-nx="1"] #app .nxpc{flex:none;padding:3px 10px;border-radius:999px;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;background:var(--lq-well);color:var(--ink)}
+:root:not([data-theme="dark"])[data-nx="1"] #app .nxpc{background:rgb(255 255 255/.75);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--line) 80%,transparent)}
+html[data-nx="1"] #app .nxpc.g{color:color-mix(in srgb,var(--ok) 80%,var(--ink))}html[data-nx="1"] #app .nxpc.r{color:color-mix(in srgb,var(--ko) 80%,var(--ink))}
+html[data-nx="1"] #app .nxrb{height:6px;border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--mut) 18%,transparent)}
+html[data-nx="1"] #app .nxrb i{display:block;height:100%;border-radius:3px}
+html[data-nx="1"] #app .nxrr small{font-size:12.5px;line-height:1.35;color:color-mix(in srgb,var(--mut) 70%,var(--ink))}
+html[data-nx="1"] #app .nxhl{margin-top:12px}
+html[data-nx="1"] #app .nxhr .nxst b{font-weight:500;white-space:normal}
+@media (max-width:359px){html[data-nx="1"] #app .nxk{padding:12px 10px 12px 12px}html[data-nx="1"] #app .nxk small{font-size:11.5px;gap:4px}html[data-nx="1"] #app .nxk small svg{display:none}html[data-nx="1"] #app .nxk b{font-size:calc(26px*var(--fz,1))}}
+@media (min-width:700px){html[data-nx="1"] #app .nxkp{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (min-width:1100px){html[data-nx="1"] #app .nxs2{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+ html[data-nx="1"] #app .nxrl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}
+ html[data-nx="1"] #app .nxrl .nxrr:nth-child(2)::before{display:none}}
+@media (min-width:768px){html[data-nx="1"][data-ipad="1"] #app .nxk b{font-size:calc(34px*var(--fz,1))}}
 /* glisser-déposer en vue Icônes : la vignette fantôme doit suivre le doigt (.item.tile la remettait en position relative, le dépôt n'aboutissait pas) */
 .item.tile.ghost{position:fixed}
 /* ===================== Mise en avant des dossiers, ancienne apparence (html[data-fh="1"]:not([data-nx="1"])) : tranche colorée ===================== */
@@ -1710,6 +1745,7 @@ function statsHTML(){
  let cells="";for(let d=st;d<st+W*7;d++){if(d>d0){cells+='<i class="fu"></i>';continue}const c=cnt(d),l=!c?0:c<10?1:c<30?2:c<60?3:4;cells+='<i class="l'+l+(d==(hmSel??d0)?" on":"")+'" data-a="hmd" data-v="'+d+'" title="'+dstr(d)+' : '+c+' révision'+(c>1?"s":"")+'"></i>'}
  let t30=0;for(let d=d0-29;d<=d0;d++)t30+=cnt(d);let k=0,d=cnt(d0)?d0:d0-1;while(cnt(d)>0){k++;d--}
  const today=cnt(d0);
+ if(cfg.nx)return nxStats(logs,d0,cells,t30,k,today);
  let h=crumbs()+'<h1>Statistiques</h1><div class="stg"><div class="hero"><span class="hn">'+today+'</span><span class="hl">révision'+(today>1?"s":"")+' aujourd\'hui</span>'+(k?'<span class="hs">'+k+' jour'+(k>1?"s":"")+' d\'affilée</span>':'')+'</div><div class="pn"><div class="hm" aria-label="Révisions des '+W+' dernières semaines">'+cells+'</div><p class="hmd">'+(()=>{const x=hmSel??d0,c=cnt(x);return (x==d0?"Aujourd\'hui":dstr(x).replace(/^./,m=>m.toUpperCase()))+" : "+(c?c+" révision"+(c>1?"s":""):"aucune révision")})()+'</p><div class="lg"><span>'+t30+' révision'+(t30>1?"s":"")+' sur 30 jours'+(k?", série en cours : "+k+" jour"+(k>1?"s":""):"")+'</span><span class="lgs">Moins <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> Plus</span></div></div>';
  h+='<section class="stc">'+retHTML(logs,d0)+'</section><section class="stc">'+fcHTML()+'</section></div>';
  h+='<div class="seg" role="radiogroup" aria-label="Vue statistiques"><button role="radio" aria-checked="'+(statsTab=="rates")+'" class="'+(statsTab=="rates"?"on":"")+'" data-a="stab" data-v="rates">Taux de réussite</button><button role="radio" aria-checked="'+(statsTab=="hard")+'" class="'+(statsTab=="hard"?"on":"")+'" data-a="stab" data-v="hard">À revoir souvent</button></div>';
@@ -2500,6 +2536,36 @@ function nxHdr(){const fc=deck.k=="fc",it=nodue?null:curIt();let sub="",p=0;
   +(sub?'<small>'+sub+'</small><div class="nxrp" aria-hidden="true"><i style="width:'+Math.round(p*100)+'%"></i></div>':'')+'</div>'
   +(it?'<span class="tgs nxtg"><button class="tg'+(PV=="more"?" on":"")+'" data-a="pv" data-v="more" aria-label="Modifier, marquer à corriger ou supprimer" aria-haspopup="menu" aria-expanded="'+(PV=="more")+'">'+ic("more",18)+'</button>'+(PV=="more"?pvHTML():"")+'</span>':'')+'</div>'}
 const nxOpts=h=>cfg.nx?'<div class="nxog">'+h+'</div>':h;
+// ---- nouvelle apparence : Statistiques (maquette 1 « tableau de bord ») : 4 tuiles chiffrées, activité et prévision, taux de réussite en panneau ----
+function nxStats(logs,d0,cells,t30,k,today){const pl=(n,a,b)=>n+" "+(n>1?b:a);
+ let rn=0,rk=0;logs.forEach(l=>{const r=l.r||{};for(let d=d0-29;d<=d0;d++){const a=r[d];if(a){rn+=a[0];rk+=a[1]}}});
+ const tg=Math.round((cfg.rt||.9)*100),rp=rn>=20?Math.round(rk/rn*100):null,rcl=rp==null?"":rp>=tg?" g":rp<tg-10?" r":"";
+ const fcOn=cfg.fc!==0&&cfg.srs;let fct=0;if(fcOn)allPacks().forEach(p=>(p.items||[]).forEach(i=>{if(i.d!=null&&i.d-d0<7)fct++}));
+ const K=(icn,l,v,u,x)=>'<div class="nxk"><small>'+ic(icn,14)+'<span>'+l+'</span>'+(x||"")+'</small><b>'+v+(u?'<em>'+u+'</em>':'')+'</b></div>';
+ const ro=NXH.has("ret");
+ let h=crumbs()+'<h1>Statistiques</h1><div class="nxkp">'+K("flame","Aujourd\'hui",today,today>1?"révisions":"révision")+K("clk","Série",k,k>1?"jours":"jour")
+  +(cfg.srs?K("st","Mémorisation",rp==null?"–":'<span class="nxkv'+rcl+'">'+rp+' %</span>',"",'<button type="button" class="nxsq nxkq'+(ro?" on":"")+'" data-a="nxh" data-v="ret" aria-label="Aide : mémorisation réelle" aria-expanded="'+ro+'">i</button>'):"")
+  +(fcOn?K("cal","7 prochains jours",fct,"à revoir"):"")+'</div>';
+ if(ro&&cfg.srs)h+='<p class="nxsh nxkh">'+(rp==null?"Mesure en cours : "+pl(rn,"révision","révisions")+" de cartes déjà apprises "+(rn>1?"comptées":"comptée")+" depuis la mise à jour. Le pourcentage s\'affiche à partir de 20.":"Cartes déjà apprises retrouvées sur les 30 derniers jours, sur "+rn+" révisions. Ton objectif réglé : "+tg+" %.")+'</p>';
+ const x=hmSel??d0,c=(()=>{let s=0;logs.forEach(l=>{s+=(l.h||{})[x]||0});return s})();
+ const act='<div class="nxs" role="heading" aria-level="2">Activité</div><div class="pn"><div class="hm" aria-label="Révisions des dernières semaines">'+cells+'</div><p class="hmd">'+(x==d0?"Aujourd\'hui":dstr(x).replace(/^./,m=>m.toUpperCase()))+" : "+(c?pl(c,"révision","révisions"):"aucune révision")+'</p><div class="lg"><span>'+pl(t30,"révision","révisions")+' sur 30 jours'+(k?", série en cours : "+pl(k,"jour","jours"):"")+'</span><span class="lgs">Moins <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> Plus</span></div></div>';
+ const fc=fcHTML().replace('<h2 class="h2">À revoir ces 7 prochains jours</h2>','');
+ h+='<div class="nxs2"><div>'+act+'</div>'+(fc?'<div><div class="nxs" role="heading" aria-level="2">Prévision</div>'+fc+'</div>':'')+'</div>';
+ h+='<div class="seg nxseg" role="radiogroup" aria-label="Vue statistiques"><button role="radio" aria-checked="'+(statsTab=="rates")+'" class="'+(statsTab=="rates"?"on":"")+'" data-a="stab" data-v="rates">Taux de réussite</button><button role="radio" aria-checked="'+(statsTab=="hard")+'" class="'+(statsTab=="hard"?"on":"")+'" data-a="stab" data-v="hard">À revoir souvent</button></div>';
+ if(statsTab=="rates"){const ks=kids(cur);
+  h+='<div class="nxs" role="heading" aria-level="2">'+(cur?'Par dossier, dans « '+esc(G(cur).name)+' »':'Par dossier')+'</div>';
+  if(!ks.length)return h+'<p class="help nxsqh">Rien ici pour l\'instant.</p>';
+  h+='<div class="nxsg nxrl">'+ks.map(n=>{const a=packsOf(n).reduce((a,p)=>{p.items.forEach(i=>{a.n+=i.n||0;a.m+=i.m||0});return a},{n:0,m:0}),p=a.n?Math.round((a.n-a.m)/a.n*100):null,cl=p==null?"":p>=80?" g":p<50?" r":"";
+   return '<div class="nxrr"><div class="nxrt"><span class="ic">'+ic(n.k=="f"?"f":n.k,18,n.c)+'</span><b>'+esc(n.name)+'</b><span class="nxpc'+cl+'">'+(p==null?"–":p+" %")+'</span></div>'
+    +(p==null?'<small>Pas encore révisé</small>':'<div class="nxrb"><i style="width:'+p+'%;background:'+(p>=80?"var(--ok)":p<50?"var(--ko)":"var(--acc)")+'"></i></div><small>'+pl(a.n,"réponse","réponses")+', '+pl(a.m,"erreur","erreurs")+solTxt(n)+'</small>')+'</div>'}).join("")+'</div>';
+  if(cfg.srs)h+='<p class="help nxsqh">Solide : retenue pour au moins 3 semaines selon FSRS.</p>'}
+ else{const hl=hardList(),nf=hl.filter(x=>x.p.k=="fc").length,nq=hl.length-nf;
+  h+='<div class="nxs" role="heading" aria-level="2">Ce que tu rates souvent</div>';
+  if(!hl.length)h+='<p class="help nxsqh">Rien pour l\'instant. Une carte ou une question apparaît ici dès que tu l\'as ratée deux fois.</p>';
+  else{h+='<div class="menu">'+(nf?'<button class="b" data-a="hard" data-v="fc">Réviser ces cartes ('+nf+')</button>':'')+(nq?'<button class="b" data-a="hard" data-v="qcm">Refaire ces QCM ('+nq+')</button>':'')+'</div>';
+   h+='<div class="nxsg nxhl">'+hl.slice(0,12).map(({i,p})=>'<button type="button" class="nxsr nxhr" data-a="cpv" data-v="'+p.id+'#'+p.items.indexOf(i)+'"><span class="nxst"><b>'+fmt(lbl(i,p))+'</b><small>Ratée '+i.m+' fois sur '+i.n+', '+esc(p.name)+'</small></span><span class="nxsc" aria-hidden="true">'+ic("cr",15)+'</span></button>').join("")+'</div>';
+   if(hl.length>12)h+='<p class="help nxsqh">Et '+(hl.length-12)+' autre'+(hl.length-12>1?"s":"")+'.</p>'}}
+ return h}
 function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}}
 function render0(){
  if(!booted)return;
