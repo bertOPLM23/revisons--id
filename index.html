@@ -1294,6 +1294,22 @@ html[data-nx="1"] #app[data-view=imp] #im-seg+p.help,html[data-nx="1"] #app[data
 html[data-nx="1"] #app[data-view=imp] #msg:is(.pv-ok,.pv-ko):not(:empty){display:inline-block;width:fit-content;max-width:100%;box-sizing:border-box;align-self:flex-start;margin-top:10px;padding:8px 14px;border-radius:16px;font-size:14px;font-weight:600}
 html[data-nx="1"] #app[data-view=imp] #msg.pv-ok:not(:empty){color:color-mix(in srgb,var(--ok) 78%,var(--ink));background:color-mix(in srgb,var(--ok) 7%,transparent);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent)}
 html[data-nx="1"] #app[data-view=imp] #msg.pv-ko:not(:empty){color:color-mix(in srgb,var(--ko) 80%,var(--ink));background:color-mix(in srgb,var(--ko) 7%,transparent);border:1px solid color-mix(in srgb,var(--ko) 28%,transparent)}
+/* ===================== Nouvelle apparence : harmonisation des écrans secondaires ===================== */
+html[data-nx="1"] #app:is([data-view=move],[data-view=col],[data-view=trash],[data-view=stats]){padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+html[data-nx="1"] #app .nxmv,html[data-nx="1"] #app .nxtr{margin-top:14px}
+html[data-nx="1"] #app .nxmvr{padding-left:calc(14px + var(--d)*18px);min-height:50px}
+html[data-nx="1"] #app .nxmv .nxsr+.nxsr::before{left:calc(48px + var(--d)*18px)}
+html[data-nx="1"] #app .nxmvi{display:flex;flex:none;color:var(--mut)}
+html[data-nx="1"] #app .nxtag{flex:none;font-size:12.5px;color:color-mix(in srgb,var(--mut) 72%,var(--ink));padding:3px 9px;border-radius:999px;background:var(--lq-well)}
+html[data-nx="1"] #app .nxmv .nxb{display:none}
+html[data-nx="1"][data-fh="1"] #app .nxmv .nxb{display:block;position:absolute;left:24px;top:14px;bottom:14px;width:4px;border-radius:2px;background:var(--fc,color-mix(in srgb,var(--mut) 80%,transparent));pointer-events:none}
+html[data-nx="1"][data-fh="1"] #app .nxmv .nxmvr[style*="--d:1"]{padding-left:38px}
+html[data-nx="1"] #app .nxtr .nxsr{padding-right:8px}
+html[data-nx="1"] #app .nxtra{flex:none;min-height:40px;padding:0 6px;border:0;background:none;box-shadow:none;font:inherit;font-size:15px;font-weight:600;color:color-mix(in srgb,var(--acc) 78%,var(--ink))}
+html[data-nx="1"] #app .nxtrx{flex:none;width:38px;height:38px;padding:0;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:none;color:color-mix(in srgb,var(--ko) 82%,var(--ink));background:color-mix(in srgb,var(--ko) 9%,transparent)}
+html[data-nx="1"] #app .nxtre{justify-content:center;font-weight:600;color:color-mix(in srgb,var(--ko) 82%,var(--ink))}
+html[data-nx="1"] #app :is(.nxtra,.nxtrx,.nxtre,.nxmvr):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+html[data-nx="1"] #app .pc.cur{border-color:var(--acc);box-shadow:inset 0 0 0 1.5px var(--acc),0 0 0 3px color-mix(in srgb,var(--acc) 20%,transparent)}
 /* glisser-déposer en vue Icônes : la vignette fantôme doit suivre le doigt (.item.tile la remettait en position relative, le dépôt n'aboutissait pas) */
 .item.tile.ghost{position:fixed}
 /* ===================== Mise en avant des dossiers, ancienne apparence (html[data-fh="1"]:not([data-nx="1"])) : tranche colorée ===================== */
@@ -1565,7 +1581,7 @@ function resumeInfo(){const p=lastGet();if(!p)return null;
   return{label:(folder?esc(folder.name)+" · ":"")+(p.t=="fc"?"Flashcards":"QCM"),r:c.r,w}}
  return null}
 let TH=null;try{TH=localStorage.getItem("revis-theme")}catch(e){}
-const dark=()=>TH?TH=="dark":(typeof matchMedia=="function"&&matchMedia("(prefers-color-scheme: dark)").matches),setTh=()=>{document.documentElement.dataset.theme=dark()?"dark":"light"},tg=s=>NXB?nxTg(s):NXS?nxTgS():'<span class="tgs">'+(s==2||sySt()=="err"?sydH():"")+(s?'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button>':'')+'<button class="tg" data-a="set" aria-label="Réglages">'+ic("set",18)+'</button><button class="tg" data-a="th" title="Changer de thème" aria-label="Passer en mode '+(dark()?"clair":"sombre")+'">'+ic(dark()?"sun":"moon",18)+'</button></span>';
+const dark=()=>TH?TH=="dark":(typeof matchMedia=="function"&&matchMedia("(prefers-color-scheme: dark)").matches),setTh=()=>{document.documentElement.dataset.theme=dark()?"dark":"light"},tg=s=>NXB?nxTg(s):cfg.nx?nxTgS(s):'<span class="tgs">'+(s==2||sySt()=="err"?sydH():"")+(s?'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button>':'')+'<button class="tg" data-a="set" aria-label="Réglages">'+ic("set",18)+'</button><button class="tg" data-a="th" title="Changer de thème" aria-label="Passer en mode '+(dark()?"clair":"sombre")+'">'+ic(dark()?"sun":"moon",18)+'</button></span>';
 let colSel=null,om=false,us=null,gct,fl=false,hmSel=null,ex,xs,xt,pk,rs=null,bm="",ready=false;const IMG=new Map();let DEV=null;try{DEV=localStorage.getItem("revis-dev")}catch(e){}if(!DEV){DEV=Date.now().toString(36)+Math.random().toString(36).slice(2,6);try{localStorage.setItem("revis-dev",DEV)}catch(e){}}
 let selm=false,selset=new Set(),fq="",ft="all",fo=false,sm="",busy=false,tm,nodue,tot,S,cur=0,view="browse",ed,ty="fc",menu,pend,deck,q,back,known,order,idx,cropen=false,sq="",statsTab="rates",impStep=1,impCp=false,score,wrong,sel,val;
 let rmode="both",anp=false,ant=0,RVP=null,FRP=null,stF=false,XB={d:-1,n:{}},vprev=null,hesd=false;
@@ -2337,6 +2353,7 @@ function nxRevHTML(){const o=nxInfo(),r=[],any=o.fcP.length||o.qcP.length;
 const nxAddHTML=()=>asShell("Ajouter",'<div class="asg">'+asR("nf",null,"Nouveau dossier","f")+asR("imp",null,"Nouveau paquet (importer un cours)","fc")+'</div>');
 // menu « ⋯ » de la barre du haut : affichage (comme le Finder), tri, sélection, réglages, thème
 const nxMoreM=row=>{const vm=vmode(),act=sortMode()!="name"||ft!="all"||fq.trim()||fo;
+ if(view!="browse")return (view!="set"?row("nxm","set","Réglages",false,"set"):"")+row("nxm","th",dark()?"Mode clair":"Mode sombre",false,dark()?"sun":"moon");
  return '<div class="pvh">Affichage</div>'+[["grid","Icônes","vg"],["list","Liste","vl"]].concat(wide()?[["cols","Colonnes","vc"]]:[]).map(([v,l,i])=>row("vw",v,l,vm==v,i)).join("")
   +'<div class="pvs"></div>'+row("pv","sort",act?"Trier et filtrer (actif)":"Trier et filtrer…",false,"flt")+row("nxm","sel","Sélectionner",false,"sl")
   +'<div class="pvs"></div>'+row("nxm","set","Réglages",false,"set")+row("nxm","th",dark()?"Mode clair":"Mode sombre",false,dark()?"sun":"moon")};
@@ -2354,7 +2371,7 @@ A.nxr=()=>{const o=nxInfo();if(o.fcP.length&&!o.qcA.length&&!(cfg.srs&&o.F.r&&o.
 // ---- nouvelle apparence : Réglages en groupes (style Réglages iOS). Aides repliées derrière ⓘ (NXH), choix dans une feuille (AS.k="nxv"),
 //      sous-pages Synchronisation, Sauvegarde et Couleur de contraste (SETP, dans l'historique : le geste retour revient aux Réglages) ----
 let SETP=null,NXS=false;const NXH=new Set();
-const nxTgS=()=>'<span class="tgs">'+(sySt()=="err"?sydH():"")+'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button><button class="tg" data-a="th" title="Changer de thème" aria-label="Passer en mode '+(dark()?"clair":"sombre")+'">'+ic(dark()?"sun":"moon",18)+'</button></span>';
+const nxTgS=s=>'<span class="tgs nxtg">'+(s==2||sySt()=="err"?sydH():"")+'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button><button class="tg'+(PV=="more"?" on":"")+'" data-a="pv" data-v="more" aria-label="Réglages et thème" aria-haspopup="menu" aria-expanded="'+(PV=="more")+'">'+ic("more",18)+'</button>'+(PV=="more"?pvHTML():"")+'</span>';
 const NXC={red:"#d9694a",ora:"#e09a2b",yel:"#c9a227",grn:"#4aa36a",tea:"#2fa3a3",blu:"#4a86e0",vio:"#8a6fd6",pnk:"#d867a6",gry:"#8e8b82"};
 const NXHELP={
  srs:"Après chaque carte, note ta réponse (À revoir, Difficile, Bien, Facile) : l\'algorithme calcule le moment où tu risques de l\'oublier et la reprogramme juste avant. Désactivée : tout le paquet est proposé à chaque révision.",
@@ -2414,11 +2431,24 @@ A.nxsp=v=>{SETP=v||null;render();scrollTo(0,0)};
 {const o=A.set;A.set=function(){SETP=null;return o.apply(this,arguments)}}
 // curseur du verre (feuille) : la valeur affichée sur la ligne suit dès qu'on lâche le curseur
 if(typeof addEventListener=="function")document.addEventListener("change",e=>{if(e.target&&e.target.id=="gl"&&NXS&&view=="set")render()});
+// ---- nouvelle apparence : harmonisation des écrans secondaires (barre du haut Statistiques + ⋯ partout, Déplacer et Corbeille en panneau) ----
+let PVV=null;
+const nxTree=(p,d,ex)=>kids(p).filter(n=>n.k=="f"&&!ex.includes(n.id)).map(n=>'<button type="button" class="nxsr nxmvr" style="--d:'+d+'"'+nxFc(n)+' data-a="mvto" data-v="'+n.id+'">'+(d==1?'<i class="nxb" aria-hidden="true"></i>':'')
+ +'<span class="nxmvi">'+ic("f",19,n.c)+'</span><span class="nxst"><b>'+esc(n.name)+'</b></span>'+(n.id==same()?'<span class="nxtag">actuel</span>':'<span class="nxsc" aria-hidden="true">'+ic("cr",15)+'</span>')+'</button>'+nxTree(n.id,d+1,ex)).join("");
+const nxMoveHTML=()=>'<div class="nxsg nxmv"><button type="button" class="nxsr nxmvr" style="--d:0" data-a="mvto" data-v="0"><span class="nxmvi">'+ic("home",19)+'</span><span class="nxst"><b>Accueil</b></span>'+(same()===0?'<span class="nxtag">actuel</span>':'<span class="nxsc" aria-hidden="true">'+ic("cr",15)+'</span>')+'</button>'+nxTree(0,1,ed.ids)+'</div>';
+function nxTrashHTML(){const rs=trashRoots(),now=Date.now(),pl=(k,a,b)=>k+" "+(k>1?b:a);
+ let h='<div class="tb"><div class="crw"><button class="bk" data-a="set">'+ic("chev",22)+'<span>Réglages</span></button></div>'+tg(1)+'</div><h1>Corbeille</h1><p class="help nxsqh">Les dossiers et paquets supprimés sont conservés 30 jours, puis effacés définitivement.</p>';
+ if(!rs.length)return h+'<div class="empty">La corbeille est vide.</div>';
+ return h+'<div class="nxsg nxtr">'+rs.map(n=>{const f=n.k=="f",left=Math.max(0,Math.ceil((n.xt+TR_MS-now)/864e5)),ago=Math.floor((now-n.xt)/864e5),inner=f?tdesc(n.id,n.xb).length:(n.items||[]).length,
+  sub=f?pl(inner,"élément","éléments"):pl(inner,n.k=="fc"?"carte":"question",n.k=="fc"?"cartes":"questions");
+  return '<div class="nxsr"><span class="nxmvi">'+ic(f?"f":n.k,21,n.c)+'</span><span class="nxst"><b>'+esc(n.name)+'</b><small>'+sub+' · supprimé '+(ago?"il y a "+ago+" j":"aujourd\'hui")+' · expire dans '+left+' j</small></span>'
+   +'<button type="button" class="nxtra" data-a="trr" data-v="'+n.id+'">Restaurer</button><button type="button" class="nxtrx" data-a="trp" data-v="'+n.id+'" aria-label="Supprimer définitivement « '+esc(n.name)+' »">'+ic("trash",17)+'</button></div>'}).join("")
+  +'<button type="button" class="nxsr nxtre" data-a="tre">Vider la corbeille</button></div>'}
 function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}}
 function render0(){
  if(!booted)return;
  NXB=view=="browse"&&!!cfg.nx;NXS=view=="set"&&!!cfg.nx;
- if(view!="browse")PV=null;
+ if(view!="browse"&&!(cfg.nx&&PV=="more"&&view===PVV))PV=null;PVV=view;
  const pvOld=document.querySelector(".pvsc"),pvTop=pvOld?pvOld.scrollTop:0;
  let h="";
  if(view=="browse"){
@@ -2443,7 +2473,7 @@ function render0(){
   h+=selm?selDock():'<div class="dock"><button class="b" data-a="nf">+ Dossier</button><button class="b'+(ds.some(n=>n.k!="f")?"":" ok")+'" data-a="imp">+ Paquet</button></div>';}
   h='<div class="split"><aside class="sb"><button class="sd'+(cur?"":" on")+'" data-a="cd" data-drop="0" data-v="0">'+ic("home",16)+'<span>Accueil</span></button>'+side(0,0)+'</aside><section class="ct">'+h+'</section></div>';
  }else if(view=="trash"){
-  h=trashHTML();
+  h=cfg.nx?nxTrashHTML():trashHTML();
  }else if(view=="set"&&cfg.nx){
   h=nxSetHTML();
  }else if(view=="set"){
@@ -2467,6 +2497,8 @@ function render0(){
   h=crumbs()+'<h1>Couleur du dossier</h1><div class="pal">'+PAL.map((c,i)=>'<button class="pc" data-a="setc" data-v="'+c+'">'+ic("f",34,c)+'<span>'+PN[i]+'</span></button>').join("")+'</div><div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Annuler</button></div>';
  }else if(view=="name"){
   h=crumbs()+'<h1>'+(ed.m=="new"?"Nouveau dossier":"Renommer")+'</h1><input id="nm" maxlength="60" placeholder="Nom" value="'+(ed.m=="ren"?esc(G(ed.id).name):"")+'"><p class="help" id="msg"></p><div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Annuler</button><button class="b ok" data-a="ok">Enregistrer</button></div>';
+ }else if(view=="move"&&cfg.nx){
+  h=crumbs()+'<h1>Déplacer '+(ed.ids.length==1?'« '+esc(G(ed.ids[0]).name)+' »':ed.ids.length+' éléments')+'</h1>'+nxMoveHTML();
  }else if(view=="move"){
   h=crumbs()+'<h1>Déplacer '+(ed.ids.length==1?'« '+esc(G(ed.ids[0]).name)+' »':ed.ids.length+' éléments')+'</h1><button class="opt" data-a="mvto" data-v="0">'+ic("home",18)+'<span>Accueil</span>'+(same()===0?' <span class="tag">actuel</span>':'')+'</button>'+tree(0,1,ed.ids)+'<div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Annuler</button></div>';
  }else if(view=="search"&&cfg.nx){
@@ -2525,6 +2557,7 @@ function render0(){
    if(val)h+=exH(it);
    h+='</div><div class="dock"><button class="b ok'+(val&&anp?" an":"")+'" data-a="'+(val?"next":"val")+'">'+(val?(idx+1>=n?"Voir le score":"Suivant"):"Valider")+'</button></div>'}
  }
+ if(cfg.nx&&/^(col|stats)$/.test(view))h=h.replace(/<div class="dock"><button class="b" data-a="cd" data-v="[^"]*">(Annuler|Fermer)<\/button><\/div>/,"");
  const ap=$("app");if(ap.dataset)ap.dataset.view=view;ap.innerHTML=h;hsync();asRender();{const sc=document.querySelector(".pvsc");if(sc){pvFit();sc.scrollTop=pvTop;pvEdges(sc)}}
  if(view=="set")stoFill();
  if(document.querySelector&&val){const e=document.querySelector(".opt.ko,.opt.miss"),r=e||document.querySelector(".res");if(r&&r.scrollIntoView)r.scrollIntoView({block:e?"center":"nearest",behavior:"smooth"})}
