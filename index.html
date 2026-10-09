@@ -1391,6 +1391,11 @@ html[data-nx="1"] #app .nxhr .nxst b{font-weight:500;white-space:normal}
  html[data-nx="1"] #app .nxrl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}
  html[data-nx="1"] #app .nxrl .nxrr:nth-child(2)::before{display:none}}
 @media (min-width:768px){html[data-nx="1"][data-ipad="1"] #app .nxk b{font-size:calc(34px*var(--fz,1))}}
+/* nouvelle apparence : dossier en haut à gauche des flashcards */
+html[data-nx="1"] #app[data-view=study] .card>.nxfd{position:absolute;top:17px;left:18px;right:18px;display:flex;align-items:center;gap:7px;margin:0;font-size:12.5px;line-height:1.3;font-weight:600;text-align:left;color:color-mix(in srgb,var(--mut) 50%,var(--ink));pointer-events:none}
+html[data-nx="1"] #app[data-view=study] .card>.nxfd .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+html[data-nx="1"] #app[data-view=study] .card>.nxfd .dt{flex:none;width:8px;height:8px;border-radius:50%;background:var(--fc,color-mix(in srgb,var(--mut) 80%,transparent))}
+html[data-nx="1"] #app[data-view=study] .card>.nxfd .cat{flex:none;max-width:38%;margin-left:auto;padding-left:10px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* glisser-déposer en vue Icônes : la vignette fantôme doit suivre le doigt (.item.tile la remettait en position relative, le dépôt n'aboutissait pas) */
 .item.tile.ghost{position:fixed}
 /* ===================== Mise en avant des dossiers, ancienne apparence (html[data-fh="1"]:not([data-nx="1"])) : tranche colorée ===================== */
@@ -2566,6 +2571,9 @@ function nxStats(logs,d0,cells,t30,k,today){const pl=(n,a,b)=>n+" "+(n>1?b:a);
    h+='<div class="nxsg nxhl">'+hl.slice(0,12).map(({i,p})=>'<button type="button" class="nxsr nxhr" data-a="cpv" data-v="'+p.id+'#'+p.items.indexOf(i)+'"><span class="nxst"><b>'+fmt(lbl(i,p))+'</b><small>Ratée '+i.m+' fois sur '+i.n+', '+esc(p.name)+'</small></span><span class="nxsc" aria-hidden="true">'+ic("cr",15)+'</span></button>').join("")+'</div>';
    if(hl.length>12)h+='<p class="help nxsqh">Et '+(hl.length-12)+' autre'+(hl.length-12>1?"s":"")+'.</p>'}}
  return h}
+/* nouvelle apparence : dossier de la carte en haut à gauche (point de couleur + nom), catégorie à droite */
+function nxFd(c){const own=deck.virt&&deck.own?deck.own.get(c):deck,f=own&&own.p?G(own.p):null,col=f&&f.c?f.c:"";
+ return '<span class="nxfd"'+(col?' style="--fc:'+esc(col)+'"':'')+'><i class="dt" aria-hidden="true"></i><span class="vh">Dossier : </span><span class="fn">'+esc(f?f.name:"Accueil")+'</span>'+(c.c?'<span class="vh">, catégorie : </span><span class="cat">'+esc(c.c)+'</span>':'')+'</span><span class="vh">. </span>'}
 function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}}
 function render0(){
  if(!booted)return;
@@ -2665,7 +2673,7 @@ function render0(){
   if(!q.length)h+='<div class="done"><h1>'+n+(n>1?' cartes maîtrisées':' carte maîtrisée')+'</h1>'+(endB(false)??'<button class="b ok" data-a="restart">Recommencer</button><button class="b" data-a="back">Retour aux paquets</button>')+'</div>';
   else{const c=deck.items[q[0]];
    const body=back?(cfg.nx?'<span class="nxrq">'+fmt(c.q)+'</span>':'')+'<div class="a">'+fmt(c.a)+'</div>'+(c.ai?imgH(c.ai):''):'<div class="q">'+fmt(c.q)+'</div>'+(c.qi?imgH(c.qi):'')+(cfg.hc<6?'<span class="hint">'+(document.documentElement.dataset.desk=="1"?"Clique ou appuie sur Espace pour voir la réponse":"Touche pour voir la réponse")+'</span>':'');
-   h+='<button class="card liquid-card'+(back?' back':'')+(fl?' flip':'')+'" data-a="flip"><span class="vh">'+(back?"Réponse : ":"Question : ")+'</span>'+(c.c?'<span class="hint'+(cfg.nx?' nxcat':'')+'">'+esc(c.c)+'</span>':'')+body+'<span class="vh"> Touche pour retourner la carte.</span></button>';
+   h+='<button class="card liquid-card'+(back?' back':'')+(fl?' flip':'')+'" data-a="flip"><span class="vh">'+(back?"Réponse : ":"Question : ")+'</span>'+(cfg.nx?nxFd(c):c.c?'<span class="hint">'+esc(c.c)+'</span>':'')+body+'<span class="vh"> Touche pour retourner la carte.</span></button>';
    fl=false;if(cfg.hc<6)h+='<p class="help" style="text-align:center;margin:0">'+(document.documentElement.dataset.desk=="1"?(cfg.srs&&!deck.free?"Clavier : Espace pour retourner, 1 à 4 pour noter, Ctrl+Z pour annuler":"Clavier : Espace pour retourner, flèche droite si tu savais, flèche gauche à revoir"):cfg.srs&&!deck.free?"Glisse la carte : à droite pour Bien, à gauche pour À revoir":"Glisse la carte : à droite si tu savais, à gauche à revoir")+'</p>';if(back)h+=cfg.srs&&!deck.free?'<div class="dock g4">'+(P=>[["À revoir","r"],["Difficile",""],["Bien","ok"],["Facile","e"]].map((x,k)=>'<button class="b rb '+x[1]+'" data-a="rate" data-v="'+(k+1)+'"><span>'+x[0]+'</span><small>'+ivTxt(P[k])+'</small><kbd class="rk" aria-hidden="true">'+(k+1)+'</kbd></button>').join(""))(opts(c))+'</div>':'<div class="dock"><button class="b" data-a="no">À revoir</button><button class="b ok" data-a="yes">Je savais</button></div>'}
  }else{
   const n=order.length;
