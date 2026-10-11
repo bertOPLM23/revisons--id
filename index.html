@@ -75,8 +75,8 @@ textarea{min-height:140px}
 .card[data-sw="r"]{border-color:var(--ok);box-shadow:inset 0 0 0 2px var(--ok)}
 .card[data-sw="l"]{border-color:var(--ko);box-shadow:inset 0 0 0 2px var(--ko)}
 .card[data-sw]::after{position:absolute;top:14px;font-weight:600;font-size:14px;padding:4px 10px;border-radius:8px;background:var(--card)}
-.card[data-sw="r"]::after{content:"Je savais";right:14px;color:var(--ok)}
-.card[data-sw="l"]::after{content:"À revoir";left:14px;color:var(--ko)}
+.card[data-sw="r"]::after{content:"Je savais";left:14px;color:var(--ok)}
+.card[data-sw="l"]::after{content:"À revoir";right:14px;color:var(--ko)}
 .sb,.sd{display:none}.split{display:flex;flex-direction:column;flex:1}.ct{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0}
 .grid{display:flex;flex-direction:column;gap:10px}
 @media (min-width:768px){
@@ -1080,6 +1080,9 @@ html[data-desk="1"] .dock.g4 .rb .rk{display:block;position:absolute;top:5px;rig
 /* ===== la page ne s'élargit jamais : une carte qui sort de l'écran pendant le glissement ne doit pas faire dézoomer l'iPhone =====
    overflow-x:clip (Safari 16+) coupe le débordement sans créer de zone de défilement : les barres fixes du haut et du bas restent fixes */
 html,body{overflow-x:clip}
+/* pas de rectangle sombre au toucher (surbrillance iOS par défaut), pas de rebond de toute la page quand il n'y a rien à faire défiler */
+html{-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+body{overscroll-behavior:none}
 @supports not (overflow:clip){body{overflow-x:hidden}}
 
 /* ===================== Nouvelle apparence (html[data-nx="1"], Réglages › Affichage) =====================
@@ -1196,7 +1199,7 @@ html[data-nx="1"][data-dens="1"] #app .nxg:not(.tiles) .nxf .main{min-height:48p
 html[data-nx="1"][data-dens="1"][data-fh="1"] #app .nxg:not(.tiles) .nxb{top:11px;bottom:11px}
 
 /* ===================== Nouvelle apparence : Réglages (groupes, style Réglages iOS) ===================== */
-html[data-nx="1"] #app[data-view=set]{padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+html[data-nx="1"] #app[data-view=set]{padding-bottom:calc(40px + env(safe-area-inset-bottom));box-sizing:border-box}
 html[data-nx="1"] #app .nxset{margin-top:4px}
 html[data-nx="1"] #app .nxsgt{margin:20px 8px 8px;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--mut) 78%,var(--ink))}
 html[data-nx="1"] #app .nxset .sgc>.nxsgt:first-child{margin-top:8px}
@@ -1295,7 +1298,7 @@ html[data-nx="1"] #app[data-view=imp] #msg:is(.pv-ok,.pv-ko):not(:empty){display
 html[data-nx="1"] #app[data-view=imp] #msg.pv-ok:not(:empty){color:color-mix(in srgb,var(--ok) 78%,var(--ink));background:color-mix(in srgb,var(--ok) 7%,transparent);border:1px solid color-mix(in srgb,var(--ok) 30%,transparent)}
 html[data-nx="1"] #app[data-view=imp] #msg.pv-ko:not(:empty){color:color-mix(in srgb,var(--ko) 80%,var(--ink));background:color-mix(in srgb,var(--ko) 7%,transparent);border:1px solid color-mix(in srgb,var(--ko) 28%,transparent)}
 /* ===================== Nouvelle apparence : harmonisation des écrans secondaires ===================== */
-html[data-nx="1"] #app:is([data-view=move],[data-view=col],[data-view=trash],[data-view=stats]){padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+html[data-nx="1"] #app:is([data-view=move],[data-view=col],[data-view=trash],[data-view=stats]){padding-bottom:calc(40px + env(safe-area-inset-bottom));box-sizing:border-box}
 html[data-nx="1"] #app .nxmv,html[data-nx="1"] #app .nxtr{margin-top:14px}
 html[data-nx="1"] #app .nxmvr{padding-left:calc(14px + var(--d)*18px);min-height:50px}
 html[data-nx="1"] #app .nxmv .nxsr+.nxsr::before{left:calc(48px + var(--d)*18px)}
@@ -1582,7 +1585,7 @@ function freeHTML(){const n=FRP&&G(FRP.id);if(!n||n.x)return"";
 function asHTML(){if(!AS)return"";
  if(AS.k=="nxr")return nxRevHTML();if(AS.k=="nxv")return nxValHTML();if(AS.k=="nxa")return nxAddHTML();
  if(AS.k=="fix")return fixHTML();if(AS.k=="rev")return revHTML();if(AS.k=="free")return freeHTML();if(AS.k=="card")return cardHTML();if(AS.k=="goal")return goalHTML();
- if(AS.k=="conf")return asShell(AS.title,'<p class="cft">'+esc(AS.text)+'</p><div class="cfb"><button type="button" class="b" data-a="asc">Annuler</button><button type="button" class="b '+(AS.danger?"dg":"ok")+'" data-a="ascf">'+esc(AS.ok)+'</button></div>');
+ if(AS.k=="conf")return asShell(AS.title,'<p class="cft">'+esc(AS.text)+'</p><div class="cfb"><button type="button" class="b" data-a="asc">'+esc(AS.no||"Annuler")+'</button><button type="button" class="b '+(AS.danger?"dg":"ok")+'" data-a="ascf">'+esc(AS.ok)+'</button></div>');
  if(AS.k=="info"){const n=G(AS.id);return n&&!n.x?asShell(n.name,'<div class="asg">'+infoHTML(n)+'</div>'):""}
  if(AS.k=="sel"){const ns=[...selset].map(G).filter(n=>n&&!n.x);if(!ns.length)return"";
   const ps=ns.every(isPack),same=ps&&ns.length>1&&ns.every(n=>n.k==ns[0].k),pinned=ns.every(n=>n.pn);let a="";
@@ -1810,7 +1813,8 @@ const pd=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||"");return m?Math.round
 const gInfo=(o,k)=>{const x=o=="0"?optN():G(o);if(!xdAct(x))return null;const tg=x.xd-GM,dl=tg-day()+1,r={x,xd:x.xd,tg,dl,late:dl<1,u:0,s:0,q:0};
  (k?[k]:["fc","qcm"]).forEach(t=>{const g=TD().g.get(o+"|"+t)||{u:0,s:0},tot=g.u+g.s,qq=dl>=1?Math.ceil(tot/dl):tot;r[t]={u:g.u,s:g.s,q:qq};r.u+=g.u;r.s+=Math.min(g.s,qq);r.q+=qq});return r};
 const xbN=(o,k)=>XB.d==day()?(XB.n[o+"|"+k]||0):0;
-const gLeft=(o,k)=>{const i=gInfo(o,k);return i?Math.max(0,i.q-i[k].s)+xbN(o,k):1e9};
+// « Sans limite » : la date d'examen fixe seulement un minimum par jour, elle ne bloque plus les nouvelles cartes
+const gLeft=(o,k)=>{if(!cfg.nl)return 1e9;const i=gInfo(o,k);return i?Math.max(0,i.q-i[k].s)+xbN(o,k):1e9};
 const cuAct=()=>{const o=optN(),c=o&&!o.x&&o.cu;return c&&day()<c.d0+c.n?c:null};
 const rvLeft=()=>{const c=cuAct();if(!c)return 1e9;const T=TD(),dl=c.d0+c.n-day();return Math.max(0,Math.ceil((T.due+T.rev)/dl)-T.rev)};
 // ordre d'une session : apprentissage en cours, puis révisions de la plus fragile à la moins fragile, puis nouvelles dans l'ordre du cours
@@ -1957,6 +1961,9 @@ const CK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="cu
 const side=(p,d)=>kidsS(p).filter(n=>n.k=="f").map(n=>'<button class="sd'+(n.id==cur?" on":"")+'" style="padding-left:'+(12+d*14)+'px" data-a="cd" data-drop="'+n.id+'" data-v="'+n.id+'">'+ic("f",16,n.c)+'<span>'+esc(n.name)+'</span></button>'+side(n.id,d+1)).join("");
 const PAL=["","#d9694a","#e09a2b","#c9a227","#4aa36a","#2fa3a3","#4a86e0","#8a6fd6","#d867a6"],PN=["Par défaut","Corail","Orange","Jaune","Vert","Turquoise","Bleu","Violet","Rose"];
 const nm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+// homonyme au même endroit (même dossier parent, même type), hors corbeille
+const dupOf=(p,name,ks,ex)=>{const k=nm(String(name).trim());return S.nodes.find(n=>(n.p||0)==(p||0)&&!n.x&&ks.includes(n.k)&&n.id!==ex&&nm(String(n.name||"").trim())==k)};
+function dupAsk(name,what,go,ren){CF=go;AS={k:"conf",title:"Ce nom existe déjà",text:"Il y a déjà "+what+" « "+name+" » à cet endroit. Tu peux changer le nom, ou "+(ren?"renommer":"créer")+" quand même pour avoir les deux.",ok:(ren?"Renommer":"Créer")+" quand même",no:"Changer le nom"};asRender()}
 const unflash=()=>{document.querySelectorAll&&document.querySelectorAll(".ts").forEach(x=>x.remove())};
 const flash=(m,u)=>{if(!document.createElement||!document.body)return;unflash();const d=document.createElement("div");d.className="ts";d.setAttribute&&d.setAttribute("role","status");d.innerHTML="<span>"+esc(m)+"</span>"+(u?'<button data-a="undo">Annuler</button>':"");document.body.appendChild(d);setTimeout(()=>d.remove(),u?5500:2200)};
 const moveIds=(ids,to)=>{const mv=[];ids.forEach(i=>{const n=G(i);if(!n||n.p==to||i==to||(to&&(!G(to)||G(to).x))||desc(i).some(x=>x.id==to))return;mv.push(n)});
@@ -2101,7 +2108,9 @@ const A={
  del(id){const n=G(id);if(!n)return;const b=killIds([id]);pend=menu=null;render();undoB(b,(n.k=='f'?'Dossier':'Paquet')+' supprimé')},
  nf(){ed={m:"new"};view="name";render()},
  ren(id){ed={m:"ren",id};view="name";render()},
- ok(){const v=$("nm").value.trim();if(!v){$("msg").textContent="Donne un nom.";return}
+ ok(){const fv=ed.force;ed.force=null;const v=fv!=null?fv:$("nm").value.trim();if(!v){$("msg").textContent="Donne un nom.";return}
+  if(fv==null){const p0=ed.m=="ren"?(G(ed.id)||{}).p:cur,k0=ed.m=="ren"?(G(ed.id)||{}).k:"f",d=dupOf(p0,v,k0=="f"?["f"]:["fc","qcm"],ed.m=="ren"?ed.id:null);
+   if(d&&!(ed.m=="ren"&&nm(G(ed.id).name.trim())==nm(v))){const e0=ed;dupAsk(d.name,d.k=="f"?"un dossier":"un paquet",()=>{if(ed!==e0||view!="name")return;ed.force=v;A.ok()},ed.m=="ren");return}}
   if(ed.m=="ren"){const n0=G(ed.id);if(n0&&n0.name!=v){const snap=snapF([n0],["name"]);n0.name=v;n0.u=Date.now();save();A.cd(cur);undoP(snap,"Renommé",true);return}}
   if(ed.m=="new")S.nodes.push({id:uid(),p:cur,k:"f",name:v,u:Date.now()});else{const n=G(ed.id);n.name=v;n.u=Date.now()}save();A.cd(cur)},
  mv(id){ed={ids:[id]};view="move";render()},
@@ -2110,9 +2119,11 @@ const A={
  ty(k){ty=k;const s=[$("nm")?$("nm").value:"",$("tx")?$("tx").value:""];render();if($("nm"))$("nm").value=s[0];if($("tx"))$("tx").value=s[1]},
  impn(){impStep=2;impCp=false;render();scrollTo(0,0)},
  impb(){impStep=1;render();scrollTo(0,0)},
- add(){const r=parseAll($("tx").value),nm=$("nm").value.trim()||"Nouveau paquet";
+ add(f){const r=parseAll($("tx").value),nm=$("nm").value.trim()||"Nouveau paquet";
   if(!r.fc.length&&!r.qcm.length){$("msg").textContent="Rien de reconnu : vérifie le format indiqué.";return}
   const both=r.fc.length&&r.qcm.length,now=Date.now(),pl=(n,a,b)=>n+" "+(n>1?b:a);
+  if(f!==true){const d=(r.fc.length&&dupOf(cur,both?nm+" · Flashcards":nm,["fc","qcm"]))||(r.qcm.length&&dupOf(cur,both?nm+" · QCM":nm,["fc","qcm"]));
+   if(d){dupAsk(d.name,"un paquet",()=>{if(view=="imp"&&$("tx"))A.add(true)});return}}
   if(r.fc.length)S.nodes.push({id:uid(),p:cur,k:"fc",name:both?nm+" · Flashcards":nm,items:r.fc,u:now});
   if(r.qcm.length)S.nodes.push({id:uid(),p:cur,k:"qcm",name:both?nm+" · QCM":nm,items:r.qcm,u:now});
   save();A.cd(cur);
@@ -2363,7 +2374,7 @@ const setDesk=()=>{let d=false;try{d=matchMedia("(hover:hover) and (pointer:fine
 const setLt=()=>{document.documentElement.classList.toggle("nolt",!!cfg.nolt)};
 const setFs=()=>{document.documentElement.dataset.fs=String(cfg.fs||0)};
 const fsHTML=()=>'<h2 class="h2">Taille du texte des révisions</h2><div class="chips">'+[[0,"Normale"],[1,"Grande"],[2,"Très grande"]].map(([v,l])=>'<button class="chip'+((cfg.fs||0)==v?" on":"")+'" data-a="fs" data-v="'+v+'">'+l+'</button>').join("")+'</div><p class="help">Questions, réponses et propositions, en révision comme en examen. Réglage propre à cet appareil.</p>';
-const goalRow=()=>{const o=optN(),a=xdAct(o);return '<button class="item row" data-a="xd" data-v="0"><span class="tx"><b>Date d\'examen</b><small>'+(a?"Pour tout : "+dstr(o.xd):"Aucune pour l\'ensemble. Tu peux aussi en mettre une par dossier, depuis son menu ⋯")+'</small></span><i class="chv">'+ic("cr",16)+'</i></button><p class="help">Les nouvelles cartes sont réparties chaque jour pour être toutes vues '+GM+' jours avant l\'examen. Tu peux toujours en faire plus.</p>'};
+const goalRow=()=>{const o=optN(),a=xdAct(o);return '<button class="item row" data-a="xd" data-v="0"><span class="tx"><b>Date d\'examen</b><small>'+(a?"Pour tout : "+dstr(o.xd):"Aucune pour l\'ensemble. Tu peux aussi en mettre une par dossier, depuis son menu ⋯")+'</small></span><i class="chv">'+ic("cr",16)+'</i></button><p class="help">Les nouvelles cartes sont réparties chaque jour pour être toutes vues '+GM+' jours avant l\'examen. Tu peux toujours en faire plus'+(cfg.nl?"":" : avec « Sans limite », elles restent toutes disponibles et la date fixe seulement un minimum par jour")+'.</p>'};
 // ---- feuilles : date d'examen, aperçu d'une carte ----
 function goalPrev(id,v){const d=pd(v);if(d==null)return"Choisis le premier jour de l\'examen.";if(d<day())return"Cette date est passée.";
  const ps=(id=="0"?desc(0):desc(id)).filter(p=>isPack(p)&&p.items&&!hidRel(p,0)),uk=k=>ps.reduce((a,p)=>a+(p.k==k?p.items.filter(isNew).length:0),0),uf=uk("fc"),uq=uk("qcm"),u=uf+uq,tg=d-GM,dl=tg-day()+1,pl=(k,a,b)=>k+" "+(k>1?b:a);
@@ -2509,7 +2520,7 @@ function nxSetHTML(){const sp=rs?"bk":SETP,C=NXC;
 function nxValHTML(){const w=AS.w,r=(a,v,l,on)=>'<button type="button" class="asr nxck" role="menuitemradio" aria-checked="'+on+'" data-a="'+a+'" data-v="'+v+'"><span>'+l+'</span>'+(on?'<i aria-hidden="true">'+CK+'</i>':'')+'</button>',
  p=t=>'<p class="help nxh">'+t+'</p>';
  if(w=="rt")return asShell("Taux de mémorisation visé",'<div class="asg">'+[.8,.85,.9,.95].map(v=>r("rt",v,Math.round(v*100)+" %",(cfg.rt||.9)==v)).join("")+'</div>'+p("90 % est la valeur d\'Anki. Plus haut, tu retiens mieux mais tu révises beaucoup plus souvent ; plus bas, moins de révisions mais plus d\'oublis."));
- if(w=="nl")return asShell("Nouvelles cartes par jour",'<div class="asg">'+[10,20,30,50,0].map(v=>r("nl",v,v||"Sans limite",cfg.nl==v)).join("")+'</div>'+p("Cartes et questions jamais vues proposées chaque jour, pour garder une charge régulière. "+(cfg.nl?"Il en reste "+newLeft()+" aujourd\'hui, tous appareils confondus.":"")));
+ if(w=="nl")return asShell("Nouvelles cartes par jour",'<div class="asg">'+[10,20,30,50,0].map(v=>r("nl",v,v||"Sans limite",cfg.nl==v)).join("")+'</div>'+p("Cartes et questions jamais vues proposées chaque jour, pour garder une charge régulière. "+(cfg.nl?"Il en reste "+newLeft()+" aujourd\'hui, tous appareils confondus. ":"")+"Réglage propre à cet appareil : choisis-le aussi sur tes autres appareils."));
  if(w=="fs")return asShell("Taille du texte des révisions",'<div class="asg">'+[[0,"Normale"],[1,"Grande"],[2,"Très grande"]].map(([v,l])=>r("fs",v,l,(cfg.fs||0)==v)).join("")+'</div>'+p("Questions, réponses et propositions, en révision comme en examen. Réglage propre à cet appareil."));
  if(w=="gl"&&window.glassUI)return asShell("Transparence du verre",glassUI().replace('<h2 class="h2">Liquid Glass</h2>',''));
  return ""}
@@ -3071,7 +3082,7 @@ setTh();setIp();setDens();setFs();setLt();setDesk();setNx();boot();document.addE
  A.cim=function(v){imp2.mode=v;if(v==="add")pickTarget();imSync();if(A._pv)A._pv()};
  var oAdd=A.add;
  A.add=function(){
-  if(view!=="imp"||imp2.mode!=="add")return oAdd.call(A);
+  if(view!=="imp"||imp2.mode!=="add")return oAdd.apply(A,arguments);
   var m=byId("msg"),bad=function(t){if(m){m.textContent=t;m.className="help pv-ko"}},n=imp2.target!=null?G(imp2.target):null;
   if(!n||n.x||!n.items||(n.k!=="fc"&&n.k!=="qcm")){bad("Choisis un paquet de destination.");return}
   var r=parseAll(byId("tx").value),items=n.k==="fc"?r.fc:r.qcm;
