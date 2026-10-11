@@ -1497,7 +1497,7 @@ IC.flag='<path d="M5.5 21V4"/><path d="M5.5 4.5h12l-2.6 4.25 2.6 4.25h-12"/>';
 IC.flame='<path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.4 2.6-5.3 3.5-8.3.6 1.5 1.5 2.4 2.5 2.9.3-2.6 1.6-4.5 3.3-6.4.4 3.4 4.2 6.1 4.2 11.3 0 3.9-3 6.7-7 6.7z"/><path d="M12 21c-1.6 0-2.8-1.2-2.8-2.8 0-1.7 1.4-2.6 2.1-4 .9 1 3.5 2 3.5 4 0 1.6-1.2 2.8-2.8 2.8z"/>';
 IC.cal='<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>';
 let cfg={srs:true,ipad:true,nl:20,hc:0,rt:.9,vw:"list"};try{Object.assign(cfg,JSON.parse(localStorage.getItem("revis-cfg")))}catch(e){}
-const saveCfg=()=>{try{localStorage.setItem("revis-cfg",JSON.stringify(cfg))}catch(e){}};
+const saveCfg=()=>{try{localStorage.setItem("revis-cfg",JSON.stringify(cfg))}catch(e){}try{setPush()}catch(e){}};
 const INT=[1,3,7,14,30],day=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5),isDue=i=>i.d==null||i.d<=day(),ms=new Set();
 const sched=(i,ok)=>{if(i.d==null)bumpNew();if(ok){i.b=(i.b||0)+1;i.d=day()+INT[Math.min(i.b,INT.length)-1]}else{i.b=0;i.d=day()}};
 const isNew=i=>i.d==null,isRev=i=>i.d!=null&&i.d<=day();
@@ -1549,13 +1549,15 @@ function undoRun(){const u=U;U=null;if(!u||Date.now()-u.t>8000)return false;cons
 const flagSet=(ns,f,t,val,msg)=>{const snap=snapF(ns,[f,t]),now=Date.now();ns.forEach(n=>{if(val)n[f]=1;else delete n[f];n[t]=now});save();render();undoP(snap,msg,false,[t])};
 const pinI=z=>'<span class="pinI" title="Épinglé" aria-label="Épinglé">'+ic("pin",z||14)+'</span>';
 // ---- tri ----
-const sortMode=()=>{const m=cfg.so;return m=="recent"||m=="due"||m=="manual"?m:"name"};
+const sortMode=()=>{const m=cfg.so;return m=="recent"||m=="due"||m=="manual"||m=="created"?m:"name"};
+// date de création : lue dans l'identifiant (uid() commence par Date.now() en base 36), 0 si inconnue (données de démonstration)
+const crAt=n=>{if(!n)return 0;if(n.cr)return n.cr;const m=/^([0-9a-z]{7,9})[0-9a-z]{5}$/.exec(String(n.id));if(!m)return 0;const t=parseInt(m[1],36);return t>1577836800000&&t<Date.now()+864e5?t:0};
 const lastDay=n=>{let m=-1;packsOf(n).forEach(p=>(p.items||[]).forEach(i=>{const d=i.l!=null?i.l:(i.t?Math.floor((i.t-new Date().getTimezoneOffset()*6e4)/864e5):-1);if(d>m)m=d}));return m};
 const dueOf=n=>{const c=cnN(n);return c.r*1000+Math.min(c.w,newLeft())};
 const kidsS=p=>{const a=kids(p),m=sortMode();if(m=="name")return a;
  const srt=l=>{const ix=l.map((n,i)=>[n,i]);
   if(m=="manual")return ix.sort((x,y)=>((x[0].o??1e9)-(y[0].o??1e9))||x[1]-y[1]).map(x=>x[0]);
-  const key=m=="recent"?lastDay:dueOf,k=new Map(l.map(n=>[n.id,key(n)]));
+  const key=m=="recent"?lastDay:m=="created"?crAt:dueOf,k=new Map(l.map(n=>[n.id,key(n)]));
   return ix.sort((x,y)=>(k.get(y[0].id)-k.get(x[0].id))||x[1]-y[1]).map(x=>x[0])};
  return[...srt(a.filter(n=>n.k=="f")),...srt(a.filter(n=>n.k!="f"))]};
 function applyOrder(l,msg){const snap=snapF(l,["o","ou"]),now=Date.now();let ch=false;l.forEach((x,i)=>{const v=(i+1)*10;if(x.o!==v){x.o=v;x.ou=now;ch=true}});if(!ch)return;save();render();undoP(snap,msg,false,["ou"])}
@@ -1571,6 +1573,7 @@ function infoHTML(n){const ps=packsOf(n),its=ps.flatMap(p=>p.items||[]),d0=day()
  its.forEach(i=>{ans+=i.n||0;mis+=i.m||0;if((i.m||0)>=2)hard++;if(i.d!=null&&i.d>d0&&i.d<next)next=i.d;if(i.l!=null&&i.l>last)last=i.l});
  const row=(a,b)=>'<div class="inf"><span>'+a+'</span><b>'+b+'</b></div>';
  let h=row("Contenu",([nf?pl(nf,"carte","cartes"):"",nq?pl(nq,"question","questions"):""].filter(Boolean).join(", ")||"vide")+(n.k=="f"?" dans "+pl(ps.length,"paquet","paquets"):""));
+ const ct=crAt(n);if(ct)h+=row("Créé le",new Date(ct).toLocaleDateString("fr",{day:"numeric",month:"long",year:"numeric"})+" à "+new Date(ct).toLocaleTimeString("fr",{hour:"2-digit",minute:"2-digit"}));
  if(cfg.srs)h+=row("Aujourd'hui",c.r||w?[c.r?c.r+" à revoir":"",w?pl(w,"nouvelle","nouvelles"):""].filter(Boolean).join(", "):"Rien à réviser");
  h+=row("Réussite",ans?Math.round((ans-mis)/ans*100)+" % ("+pl(ans,"réponse","réponses")+")":"Pas encore révisé");
  if(cfg.srs)h+=row("Prochaine révision",c.r?"Aujourd'hui":next<1e9?(next-d0==1?"Demain":dstr(next).replace(/^./,m=>m.toUpperCase())):"Aucune planifiée");
@@ -1606,6 +1609,7 @@ function asHTML(){if(!AS)return"";
   a+=asR("spin",null,pinned?"Désépingler":"Épingler","pin");
   if(ps)a+=asR("sdup",null,"Dupliquer","dup");
   if(same)a+=asR("smg",null,"Fusionner en un paquet","merge");
+  if(cfg.srs&&ns.some(n=>packsOf(n).some(p=>p.items&&p.items.some(isNew))))a+=asR("skn",null,"Marquer comme déjà su","sp");
   a+=asR("srst",null,"Réinitialiser la progression","reset");
   return asShell(ns.length+" sélectionné"+(ns.length>1?"s":""),'<div class="asg">'+a+'</div>')}
  const n=G(AS.id);if(!n||n.x)return"";const f=n.k=="f",inh=!n.h&&hidRel(n,cur),man=sortMode()=="manual",g=man?grpOf(n):[],gi=g.findIndex(x=>x.id==n.id);
@@ -1618,7 +1622,7 @@ function asHTML(){if(!AS)return"";
  if(!inh)a2+=asR("hide",n.id,n.h?"Afficher dans « Réviser tout »":"Cacher de « Réviser tout »",n.h?"eye":"eyeoff");
  if(man&&gi>0)a2+=asR("mvu",n.id,"Monter","up");
  if(man&&gi>=0&&gi<g.length-1)a2+=asR("mvd",n.id,"Descendre","down");
- const a3=asR("rz",n.id,"Réinitialiser la progression","reset")+asR("del",n.id,"Supprimer","trash","dg");
+ const a3=(cfg.srs&&packsOf(n).some(p=>p.items&&p.items.some(isNew))?asR("kn",n.id,"Marquer comme déjà su","sp"):"")+asR("rz",n.id,"Réinitialiser la progression","reset")+asR("del",n.id,"Supprimer","trash","dg");
  return asShell(n.name,'<div class="asg">'+a1+'</div><div class="asg">'+a2+'</div><div class="asg">'+a3+'</div>')}
 function asRender(){let el=document.getElementById("asd");
  const html=asHTML();if(!html){AS=null;if(el){el.remove();if(!document.querySelector(".shd:not(.asd)"))document.documentElement.classList.remove("sho")}return}
@@ -1630,6 +1634,15 @@ function dupNodes(ids){const ns=ids.map(G).filter(isPack).filter(n=>!n.x);if(!ns
 function askReset(ids){const ns=ids.map(G).filter(n=>n&&!n.x);if(!ns.length)return;const ps=[...new Set(ns.flatMap(packsOf))].filter(p=>p.items),cnt=ps.reduce((a,p)=>a+p.items.length,0),name=ns.length==1?"« "+ns[0].name+" »":ns.length+" éléments";
  CF=()=>{const snap=ps.map(cp),now=Date.now();ps.forEach(p=>{p.items.forEach(i=>PFX.forEach(f=>delete i[f]));delete p.last;p.u=now});selm=false;selset.clear();save();render();undoS(snap,"Progression remise à zéro")};
  AS={k:"conf",title:"Remettre à zéro ?",text:"La progression de "+cnt+(cnt>1?" cartes ou questions":" carte ou question")+" de "+name+" sera effacée (calendrier de révision et taux de réussite). Le contenu reste intact.",ok:"Réinitialiser",danger:1};asRender()}
+// « Déjà su » : les cartes jamais vues entrent directement en répétition espacée, comme une première réponse « Bien » déjà consolidée
+// (stabilité FSRS de « Bien », prochaine révision après l'intervalle correspondant). Pas compté dans les statistiques ni dans la limite du jour (i.f non posé).
+function askKnown(ids){const ns=ids.map(G).filter(n=>n&&!n.x);if(!ns.length)return;const ps=[...new Set(ns.flatMap(packsOf))].filter(p=>p.items&&!p.x),pl=(k,a,b)=>k+" "+(k>1?b:a),
+  nf=ps.reduce((a,p)=>a+(p.k=="fc"?p.items.filter(isNew).length:0),0),nq=ps.reduce((a,p)=>a+(p.k=="qcm"?p.items.filter(isNew).length:0),0),name=ns.length==1?"« "+ns[0].name+" »":ns.length+" éléments";
+ if(!nf&&!nq){flash("Aucune carte jamais vue dans "+name);return}
+ const what=[nf?pl(nf,"carte","cartes"):"",nq?pl(nq,"question","questions"):""].filter(Boolean).join(" et "),st=FW[2],iv=fI(st);
+ CF=()=>{const snap=ps.map(cp),now=Date.now(),t=day();ps.forEach(p=>{let ch=false;p.items.forEach(i=>{if(!isNew(i))return;i.st=2;i.s=+st.toFixed(4);i.df=+fD0(3).toFixed(3);i.l=t;i.d=t+fz(iv);i.t=now;delete i.k;delete i.b;ch=true});if(ch)p.u=now});
+  selm=false;selset.clear();TDv++;save();render();undoS(snap,what+(nf+nq>1?" marquées comme déjà sues":" marquée comme déjà sue"))};
+ AS={k:"conf",title:"Marquer comme déjà su ?",text:(nf+nq>1?"Les "+what+" jamais vues de "+name+" passent directement en répétition espacée, comme si tu les avais déjà réussies":"La "+(nf?"carte":"question")+" jamais vue de "+name+" passe directement en répétition espacée, comme si tu l\'avais déjà réussie")+" : première révision dans "+pl(iv,"jour","jours")+" environ. Celles déjà révisées ne changent pas. Tu pourras annuler.",ok:"Marquer comme su"};asRender()}
 const ikey2=i=>String(i.q||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
 function askMerge(){const ns=[...selset].map(G).filter(n=>n&&!n.x&&isPack(n));if(ns.length<2||!ns.every(n=>n.k==ns[0].k))return;const t=ns[0],o=ns.slice(1);
  CF=()=>{const snap=ns.map(cp),seen=new Set(t.items.map(ikey2));let add=0,dup=0;
@@ -1646,14 +1659,14 @@ function trashHTML(){const rs=trashRoots(),now=Date.now(),pl=(k,a,b)=>k+" "+(k>1
  return h+'<div class="menu"><button class="dg" data-a="tre">Vider la corbeille</button></div><div class="dock"><button class="b" data-a="set">Fermer</button></div>'}
 function pinsHTML(){const ps=S.nodes.filter(n=>n.pn&&!n.x&&(n.k=="f"||isPack(n))).sort((a,b)=>a.name.localeCompare(b.name,"fr",{numeric:true}));if(!ps.length)return"";
  return '<div class="so"><small class="lbl">ÉPINGLÉS</small><div class="pins">'+ps.map(n=>{const f=n.k=="f",d=cfg.srs?dn(n):0;return '<button class="chip pinc" data-a="'+(f?"cd":"go")+'" data-v="'+n.id+'">'+ic(f?"f":n.k,18,n.c)+'<span>'+esc(n.name)+'</span>'+(d?'<em>'+d+'</em>':'')+'</button>'}).join("")+'</div></div>'}
-const sortHTML=()=>'<div class="so"><small class="lbl">TRIER PAR</small><div class="chips">'+[["name","Nom"],["recent","Récent"],["due","À revoir"],["manual","Manuel"]].map(([v,l])=>'<button class="chip'+(sortMode()==v?" on":"")+'" data-a="so" data-v="'+v+'">'+l+'</button>').join("")+'</div>'+(sortMode()=="manual"?'<small class="help">Ordre manuel : maintiens une ligne puis glisse-la entre deux autres, ou utilise « Monter » et « Descendre » dans ⋯.</small>':'')+'</div>';
+const sortHTML=()=>'<div class="so"><small class="lbl">TRIER PAR</small><div class="chips">'+[["name","Nom"],["recent","Récent"],["created","Création"],["due","À revoir"],["manual","Manuel"]].map(([v,l])=>'<button class="chip'+(sortMode()==v?" on":"")+'" data-a="so" data-v="'+v+'">'+l+'</button>').join("")+'</div>'+(sortMode()=="manual"?'<small class="help">Ordre manuel : maintiens une ligne puis glisse-la entre deux autres, ou utilise « Monter » et « Descendre » dans ⋯.</small>':'')+'</div>';
 const ftLabel=k=>({f:"Dossiers",fc:"Flashcards",qcm:"QCM",due:"À réviser"})[k]||"Tous";
 function pvHTML(){if(!PV)return"";
  const row=(a,v,label,on,icon)=>'<button type="button" class="pvr" role="menuitemradio" aria-checked="'+on+'" data-a="'+a+'" data-v="'+v+'"><span class="ck">'+(on?CK:"")+'</span><span>'+label+'</span>'+(icon?ic(icon,19):"")+'</button>';
  let m;
  if(PV=="more")m=nxMoreM(row);else if(PV=="view"){const vm=vmode();m=[["grid","Icônes","vg"],["list","Liste","vl"]].concat(wide()?[["cols","Colonnes","vc"]]:[]).map(([v,l,i])=>row("vw",v,l,vm==v,i)).join("")}
  else{const so=sortMode(),act=so!="name"||ft!="all"||fq.trim();
-  m='<div class="pvh">Trier par</div>'+[["name","Nom"],["recent","Récent"],["due","À revoir"],["manual","Manuel"]].map(([v,l])=>row("so",v,l,so==v)).join("")
+  m='<div class="pvh">Trier par</div>'+[["name","Nom"],["recent","Récent"],["created","Date de création"],["due","À revoir"],["manual","Manuel"]].map(([v,l])=>row("so",v,l,so==v)).join("")
    +(so=="manual"?'<p class="pvn">Ordre manuel : maintiens une ligne puis glisse-la entre deux autres, ou utilise « Monter » et « Descendre » dans ⋯.</p>':"")
    +'<div class="pvs"></div><div class="pvh">Filtrer</div>'+[["all","Tous"],["f","Dossiers"],["fc","Flashcards"],["qcm","QCM"]].concat(cfg.srs?[["due","À réviser"]]:[]).map(([v,l])=>row("ft",v,l,ft==v)).join("")
    +row("flt","",fo?"Masquer la recherche par nom":"Rechercher par nom…",false,"search")
@@ -1726,7 +1739,7 @@ async function loadS(){let ls=null;try{ls=JSON.parse(localStorage.getItem(K))}ca
 function bootErr(){$("app").innerHTML='<div class="done"><h1>Données momentanément illisibles</h1><p class="help">Safari n\'a pas pu ouvrir la base de données de l\'app. Tes données ne sont pas effacées. Ferme complètement l\'app, puis rouvre-la.</p><button class="b ok" type="button" onclick="location.reload()">Réessayer</button></div>'}
 async function boot(){const w=setTimeout(()=>{if(!booted)$("app").innerHTML='<div class="empty">Chargement de tes données…</div>'},700);
  let s=null;try{s=await loadS()}catch(e){stErr=String(e)}clearTimeout(w);if(!s)return bootErr();
- S=s;booted=true;persist();trashSweep();render();
+ S=s;booted=true;setPull();persist();trashSweep();render();
  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{})}catch(e){}
  iload().then(()=>{ready=true;render();sync();rt()})}
 if(typeof addEventListener=="function"){addEventListener("pagehide",()=>{stFlush()});document.addEventListener("visibilitychange",()=>{if(document.hidden)stFlush()})}
@@ -1812,6 +1825,23 @@ const applyP=(i,p)=>{const nw=i.d==null;fsInit(i);i.st=p.st;i.s=+p.s.toFixed(4);
 const GM=8,MORE=20,CU_MIN=100;let TDv=0,TDc=null;
 const optN=()=>G("opt");
 const optMk=()=>{let o=optN();if(!o){o={id:"opt",p:"-",k:"opt",u:Date.now()};S.nodes.push(o)}return o};
+// ---- réglages communs à tous les appareils : nœud « set » synchronisé comme les autres (la version la plus récente gagne) ----
+// Restent propres à l'appareil : le code de synchro, le panneau latéral ouvert ou fermé, et deux compteurs internes.
+// Créé avec u=1 : tant qu'aucun réglage n'est modifié, chaque appareil garde les siens ; le premier changement se propage partout.
+const SETL=["code","sb","hc","cud"],canon=o=>o&&typeof o=="object"&&!Array.isArray(o)?"{"+Object.keys(o).sort().map(k=>JSON.stringify(k)+":"+canon(o[k])).join(",")+"}":JSON.stringify(o===undefined?null:o);
+const setSnap=()=>{const c={};Object.keys(cfg).forEach(k=>{if(!SETL.includes(k)&&cfg[k]!==undefined)c[k]=cfg[k]});let ac="";try{ac=localStorage.getItem("revis-accent")||""}catch(e){}return{c,th:TH||"",ac}};
+const setU=()=>{try{return+localStorage.getItem("revis-setu")||0}catch(e){return 0}},setUW=u=>{try{localStorage.setItem("revis-setu",String(u))}catch(e){}};
+let setLock=false;
+function setPush(){if(setLock||!booted||!S||!S.nodes)return;const v=setSnap(),n=G("set");if(n&&!n.x&&canon({c:n.c||{},th:n.th||"",ac:n.ac||""})==canon(v))return;
+ const u=Date.now();if(n){n.c=v.c;n.th=v.th;n.ac=v.ac;n.u=u;delete n.x}else S.nodes.push({id:"set",p:"-",k:"set",u,...v});setUW(u);save()}
+function setPull(){if(!booted||!S||!S.nodes)return;const n=G("set");
+ if(!n){S.nodes.push({id:"set",p:"-",k:"set",u:1,...setSnap()});return}
+ if(n.x||(n.u||0)<=setU())return;setUW(n.u||0);
+ if(canon({c:n.c||{},th:n.th||"",ac:n.ac||""})==canon(setSnap()))return;
+ setLock=true;try{const c=n.c||{};Object.keys(c).forEach(k=>{if(!SETL.includes(k))cfg[k]=c[k]});try{localStorage.setItem("revis-cfg",JSON.stringify(cfg))}catch(e){}
+  TH=n.th||null;try{TH?localStorage.setItem("revis-theme",TH):localStorage.removeItem("revis-theme")}catch(e){}
+  setTh();setIp();setDens();setFs();setLt();setNx();if(typeof window!="undefined"){if(n.ac&&window.accApply)window.accApply(n.ac);if(window.applyGL)window.applyGL()}
+ }finally{setLock=false}setTimeout(render,0)}
 const xdAct=x=>!!x&&!x.x&&x.xd!=null&&x.xd>=day();
 const gOwn=p=>{for(let x=p.p?G(p.p):null;x;x=x.p?G(x.p):null){if(x.k=="f"&&xdAct(x))return x.id}return xdAct(optN())?"0":null};
 const ownOf=p=>hidRel(p,0)?null:gOwn(p);
@@ -1898,7 +1928,7 @@ async function sync1(){
  busy=true;clearTimeout(tm);sm="Synchronisation…";ui();
  try{const h=await H(),r=await rpc("revis_pull",{p_hash:h}),lg=((r&&r.nodes)||[]).some(n=>n.d),rm=new Map(((r&&r.nodes)||[]).map(n=>{if(n.k=="img"&&n.d){if(!IMG.has(n.id)){IMG.set(n.id,n.d);iput(n.id,n.d)}const{d,...o}=n;n=o}return[n.id,n]})),ln=new Map(S.nodes.map(n=>[n.id,n]));
   const keep=new Set(view=="study"||view=="exam"?(deck.virt?[...deck.own.values()].map(n=>n.id):[deck.id]):view=="edit"?[ed.id]:[]);
-  mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep);TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
+  mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep);setPull();TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
   const ch=S.nodes.some(n=>ln.get(n.id)!==n);
   if(cur&&(!G(cur)||G(cur).x))cur=0;
   persist();
@@ -1933,7 +1963,7 @@ async function sync(){
   try{r=await rpc("revis_n_pull",{p_hash:h,p_since:st.rev||0})}catch(e){if(e.message=="404"){V2=false;busy=false;return sync1()}throw e}
   const dirty=new Set(),rm=new Map(((r&&r.nodes)||[]).map(n=>{if(n.k=="img"&&n.d){if(!IMG.has(n.id)){IMG.set(n.id,n.d);iput(n.id,n.d)}dirty.add(n.id);const{d,...o}=n;n=o}return[n.id,n]})),ln=new Map(S.nodes.map(n=>[n.id,n]));
   const keep=new Set(view=="study"||view=="exam"?(deck.virt?[...deck.own.values()].map(n=>n.id):[deck.id]):view=="edit"?[ed.id]:[]);
-  mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep,dirty);TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
+  mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep,dirty);setPull();TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
   rm.forEach(n=>{st.sv[n.id]=n.u||0});
   const ch=S.nodes.some(n=>ln.get(n.id)!==n);
   if(cur&&(!G(cur)||G(cur).x))cur=0;
@@ -1958,7 +1988,7 @@ async function rt(){if(!cfg.code||ws||typeof WebSocket!="function")return;try{co
 setInterval(poll,2000);
 const fc4=c=>c.match(/.{4}/g).join("-");
 const syncUI=()=>'<h2 class="h2">Synchronisation entre appareils</h2>'+(cfg.code
- ?'<p class="code">'+fc4(cfg.code)+'</p><button class="b sm" data-a="cpc">Copier le code</button><p class="help">Saisis ce code dans Réglages sur ton autre appareil. Garde-le secret : il donne accès à tes paquets.</p><p class="help">Note-le aussi dans un endroit sûr : si tu supprimes l\'icône de l\'écran d\'accueil, les données de cet appareil sont effacées et ce code est le seul moyen de les retrouver.</p><p class="help">'+esc(sm)+'</p><div class="menu"><button data-a="sy">Synchroniser maintenant</button><button class="dg" data-a="unsyn">Désactiver</button></div>'
+ ?'<p class="code">'+fc4(cfg.code)+'</p><button class="b sm" data-a="cpc">Copier le code</button><p class="help">Saisis ce code dans Réglages sur ton autre appareil. Garde-le secret : il donne accès à tes paquets.</p><p class="help">Tes réglages suivent aussi (thème, couleur, nouvelles cartes par jour, apparence…) : la dernière modification faite sur un appareil s\'applique aux autres. Seuls le code et l\'ouverture du panneau latéral restent propres à chaque appareil.</p><p class="help">Note-le aussi dans un endroit sûr : si tu supprimes l\'icône de l\'écran d\'accueil, les données de cet appareil sont effacées et ce code est le seul moyen de les retrouver.</p><p class="help">'+esc(sm)+'</p><div class="menu"><button data-a="sy">Synchroniser maintenant</button><button class="dg" data-a="unsyn">Désactiver</button></div>'
  :'<p class="help">Retrouve les mêmes paquets et la même progression sur iPhone et iPad.</p><button class="b" data-a="syn">Activer sur cet appareil</button><input id="jc" placeholder="Ou entre le code d\'un autre appareil"><button class="b" data-a="join">Utiliser ce code</button><p class="help">'+esc(sm)+'</p>');
 // index id → position dans S.nodes, reconstruit quand le tableau change ; chaque résultat est revérifié (remplacement sur place)
 let GI=null,GA=null,GN=-1;
@@ -2042,7 +2072,7 @@ function parseAll(t){
 function parse(t,k){return parseAll(t)[k=="fc"?"fc":"qcm"]}
 function startQ(o){order=o;idx=0;score=0;wrong=[];sel={};val=false;vprev=null;hesd=false;render()}
 const A={
- th(){TH=dark()?"light":"dark";try{localStorage.setItem("revis-theme",TH)}catch(e){}setTh();render()},
+ th(){TH=dark()?"light":"dark";try{localStorage.setItem("revis-theme",TH)}catch(e){}try{setPush()}catch(e){}setTh();render()},
  cd(id){cur=nid(id);view="browse";menu=pend=null;om=false;PV=null;colSel=null;cropen=false;selm=false;selset.clear();fq="";ft="all";fo=false;render();qs()},
  resume(){const p=lastGet();if(!p)return;if(p.a=="go")return A.go(p.id);if(p.a=="all"){cur=nid(p.cur||0);return A.all(p.t,"both")}},
  cro(){cropen=!cropen;render()},
@@ -2111,6 +2141,8 @@ const A={
  dup(id){dupNodes([id])},
  sdup(){dupNodes([...selset]);selm=false;selset.clear();render()},
  rz(id){askReset([id])},
+ kn(id){askKnown([id])},
+ skn(){askKnown([...selset])},
  srst(){askReset([...selset])},
  smg(){askMerge()},
  tr(){view='trash';trashSweep();render();scrollTo(0,0)},
@@ -2385,7 +2417,7 @@ const solTxt=n=>{const its=packsOf(n).flatMap(p=>p.items||[]);if(!cfg.srs||!its.
 const setDesk=()=>{let d=false;try{d=matchMedia("(hover:hover) and (pointer:fine)").matches&&!(navigator.maxTouchPoints>0)}catch(e){}document.documentElement.dataset.desk=d?"1":"0"};
 const setLt=()=>{document.documentElement.classList.toggle("nolt",!!cfg.nolt)};
 const setFs=()=>{document.documentElement.dataset.fs=String(cfg.fs||0)};
-const fsHTML=()=>'<h2 class="h2">Taille du texte des révisions</h2><div class="chips">'+[[0,"Normale"],[1,"Grande"],[2,"Très grande"]].map(([v,l])=>'<button class="chip'+((cfg.fs||0)==v?" on":"")+'" data-a="fs" data-v="'+v+'">'+l+'</button>').join("")+'</div><p class="help">Questions, réponses et propositions, en révision comme en examen. Réglage propre à cet appareil.</p>';
+const fsHTML=()=>'<h2 class="h2">Taille du texte des révisions</h2><div class="chips">'+[[0,"Normale"],[1,"Grande"],[2,"Très grande"]].map(([v,l])=>'<button class="chip'+((cfg.fs||0)==v?" on":"")+'" data-a="fs" data-v="'+v+'">'+l+'</button>').join("")+'</div><p class="help">Questions, réponses et propositions, en révision comme en examen. Il suit sur tous tes appareils synchronisés.</p>';
 const goalRow=()=>{const o=optN(),a=xdAct(o);return '<button class="item row" data-a="xd" data-v="0"><span class="tx"><b>Date d\'examen</b><small>'+(a?"Pour tout : "+dstr(o.xd):"Aucune pour l\'ensemble. Tu peux aussi en mettre une par dossier, depuis son menu ⋯")+'</small></span><i class="chv">'+ic("cr",16)+'</i></button><p class="help">Les nouvelles cartes sont réparties chaque jour pour être toutes vues '+GM+' jours avant l\'examen. Tu peux toujours en faire plus'+(cfg.nl?"":" : avec « Sans limite », elles restent toutes disponibles et la date fixe seulement un minimum par jour")+'.</p>'};
 // ---- feuilles : date d'examen, aperçu d'une carte ----
 function goalPrev(id,v){const d=pd(v);if(d==null)return"Choisis le premier jour de l\'examen.";if(d<day())return"Cette date est passée.";
@@ -2489,8 +2521,8 @@ const NXC={red:"#d9694a",ora:"#e09a2b",yel:"#c9a227",grn:"#4aa36a",tea:"#2fa3a3"
 const NXHELP={
  srs:"Après chaque carte, note ta réponse (À revoir, Difficile, Bien, Facile) : l\'algorithme calcule le moment où tu risques de l\'oublier et la reprogramme juste avant. Désactivée : tout le paquet est proposé à chaque révision.",
  an:"Activée : quand tu coches exactement les bonnes propositions, la correction s\'affiche puis la question suivante arrive après 1,5 seconde. Touche « Suivant » pour avancer plus vite.",
- nx:"Accueil épuré : tes dossiers d\'abord, Réviser en bas de l\'écran, Réglages en groupes. Réglage propre à cet appareil : active-le aussi sur tes autres appareils.",
- fh:"Tranche de la couleur du dossier sur chaque dossier, en liste, en icônes et en colonnes (grise pour un dossier sans couleur). Réglage propre à cet appareil.",
+ nx:"Accueil épuré : tes dossiers d\'abord, Réviser en bas de l\'écran, Réglages en groupes. Il suit sur tous tes appareils synchronisés.",
+ fh:"Tranche de la couleur du dossier sur chaque dossier, en liste, en icônes et en colonnes (grise pour un dossier sans couleur). Il suit sur tous tes appareils synchronisés.",
  ipad:"Désactivée : la version téléphone est affichée, centrée.",
  fcst:"Désactivé : le graphique est masqué dans les statistiques."};
 const bkUI=()=>(rs?'<p class="help">Sauvegarde du '+esc(rs.date)+' : '+rs.np+' paquet'+(rs.np>1?"s":"")+'. Elle remplacera toutes tes données actuelles'+(cfg.code?', y compris sur tes autres appareils synchronisés':'')+'.</p><div class="menu"><button data-a="rsx">Annuler</button><button class="dg" data-a="rsok">Remplacer mes données</button></div>':'<p class="help">Un fichier JSON avec tous tes dossiers, paquets, images et ta progression. '+bkInfo()+'</p><div class="menu"><button data-a="exp">Exporter</button><button data-a="rst">Restaurer</button></div>')+(bm?'<p class="help">'+esc(bm)+'</p>':'');
@@ -2534,8 +2566,8 @@ function nxSetHTML(){const sp=rs?"bk":SETP,C=NXC;
 function nxValHTML(){const w=AS.w,r=(a,v,l,on)=>'<button type="button" class="asr nxck" role="menuitemradio" aria-checked="'+on+'" data-a="'+a+'" data-v="'+v+'"><span>'+l+'</span>'+(on?'<i aria-hidden="true">'+CK+'</i>':'')+'</button>',
  p=t=>'<p class="help nxh">'+t+'</p>';
  if(w=="rt")return asShell("Taux de mémorisation visé",'<div class="asg">'+[.8,.85,.9,.95].map(v=>r("rt",v,Math.round(v*100)+" %",(cfg.rt||.9)==v)).join("")+'</div>'+p("90 % est la valeur d\'Anki. Plus haut, tu retiens mieux mais tu révises beaucoup plus souvent ; plus bas, moins de révisions mais plus d\'oublis."));
- if(w=="nl")return asShell("Nouvelles cartes par jour",'<div class="asg">'+[10,20,30,50,0].map(v=>r("nl",v,v||"Sans limite",cfg.nl==v)).join("")+'</div>'+p("Cartes et questions jamais vues proposées chaque jour, pour garder une charge régulière. "+(cfg.nl?"Il en reste "+newLeft()+" aujourd\'hui, tous appareils confondus. ":"")+"Réglage propre à cet appareil : choisis-le aussi sur tes autres appareils."));
- if(w=="fs")return asShell("Taille du texte des révisions",'<div class="asg">'+[[0,"Normale"],[1,"Grande"],[2,"Très grande"]].map(([v,l])=>r("fs",v,l,(cfg.fs||0)==v)).join("")+'</div>'+p("Questions, réponses et propositions, en révision comme en examen. Réglage propre à cet appareil."));
+ if(w=="nl")return asShell("Nouvelles cartes par jour",'<div class="asg">'+[10,20,30,50,0].map(v=>r("nl",v,v||"Sans limite",cfg.nl==v)).join("")+'</div>'+p("Cartes et questions jamais vues proposées chaque jour, pour garder une charge régulière. "+(cfg.nl?"Il en reste "+newLeft()+" aujourd\'hui, tous appareils confondus. ":"")+"Il suit sur tous tes appareils synchronisés."));
+ if(w=="fs")return asShell("Taille du texte des révisions",'<div class="asg">'+[[0,"Normale"],[1,"Grande"],[2,"Très grande"]].map(([v,l])=>r("fs",v,l,(cfg.fs||0)==v)).join("")+'</div>'+p("Questions, réponses et propositions, en révision comme en examen. Il suit sur tous tes appareils synchronisés."));
  if(w=="gl"&&window.glassUI)return asShell("Transparence du verre",glassUI().replace('<h2 class="h2">Liquid Glass</h2>',''));
  return ""}
 A.nxv=v=>{AS={k:"nxv",w:v};asRender()};
@@ -2732,13 +2764,13 @@ setTh();setIp();setDens();setFs();setLt();setDesk();setNx();boot();document.addE
  var R=document.documentElement,app=document.getElementById("app");
  /* 1. curseur de transparence (0 = très clair, 1 = teinté) */
  var GL=function(){return typeof cfg!="undefined"&&cfg.gl!=null?cfg.gl:1};
- var applyGL=function(){R.style.setProperty("--gt",GL())};
+ var applyGL=function(){R.style.setProperty("--gt",GL())};window.applyGL=applyGL;
  applyGL();
  window.glassUI=function(){
   return '<h2 class="h2">Liquid Glass</h2><div class="pn gls"><div class="glp" aria-hidden="true"><span class="glpp">Aperçu</span></div>'
    +'<input id="gl" type="range" min="0" max="100" step="1" value="'+Math.round(GL()*100)+'" style="--glp:'+Math.round(GL()*100)+'%" aria-label="Transparence du verre">'
    +'<div class="gll"><span>Clair</span><output id="glValue" for="gl">'+Math.round(GL()*100)+' %</output><span>Teinté</span></div></div>'
-   +'<p class="help">Du verre très transparent au verre teinté, plus lisible. Réglage propre à cet appareil.</p>';
+   +'<p class="help">Du verre très transparent au verre teinté, plus lisible. Il suit sur tous tes appareils synchronisés.</p>';
  };
  function syncGlassInput(t,persist){if(!t||t.id!=="gl")return;var v=Math.max(0,Math.min(1,+t.value/100));cfg.gl=v;t.style.setProperty("--glp",Math.round(v*100)+"%");applyGL();var out=document.getElementById("glValue");if(out)out.value=Math.round(v*100)+" %";if(persist)saveCfg()}
  document.addEventListener("input",function(e){syncGlassInput(e.target,false)},true);
@@ -3547,11 +3579,13 @@ setTh();setIp();setDens();setFs();setLt();setDesk();setNx();boot();document.addE
  function apply(hex){
   if(!/^#[0-9a-f]{6}$/i.test(hex))return;
   saved=hex;try{localStorage.setItem(KEY,hex)}catch(e){}
+  try{if(window.setPush)window.setPush()}catch(e){}
   var base=safe(hex),hs=hsl(hex),second=safe(hexAt((hs[0]+34)%360,Math.max(.38,hs[1]*.82),hs[2]));
   root.style.setProperty("--acc",base);root.style.setProperty("--acc2",second);
   var picker=document.querySelector("#contrast-settings input[type=color]");if(picker)picker.value=hex;
   document.querySelectorAll("#contrast-settings [data-color]").forEach(function(b){var on=b.dataset.color===hex;b.classList.toggle("selected",on);b.setAttribute("aria-pressed",String(on))});
  }
+ window.accApply=apply;
  function addSettings(){
   if(!app)return;
   var h1=app.querySelector("h1");if(!h1||(h1.textContent.trim()!=="Réglages"&&!document.getElementById("accent-slot"))||document.getElementById("contrast-settings"))return;
