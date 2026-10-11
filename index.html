@@ -1609,7 +1609,7 @@ function asHTML(){if(!AS)return"";
   a+=asR("spin",null,pinned?"Désépingler":"Épingler","pin");
   if(ps)a+=asR("sdup",null,"Dupliquer","dup");
   if(same)a+=asR("smg",null,"Fusionner en un paquet","merge");
-  if(cfg.srs&&ns.some(n=>packsOf(n).some(p=>p.items&&p.items.some(isNew))))a+=asR("skn",null,"Marquer comme déjà su","sp");
+  if(cfg.srs&&ns.some(n=>packsOf(n).some(p=>p.items&&p.items.length)))a+=asR("skn",null,"Marquer comme déjà révisé","sp");
   a+=asR("srst",null,"Réinitialiser la progression","reset");
   return asShell(ns.length+" sélectionné"+(ns.length>1?"s":""),'<div class="asg">'+a+'</div>')}
  const n=G(AS.id);if(!n||n.x)return"";const f=n.k=="f",inh=!n.h&&hidRel(n,cur),man=sortMode()=="manual",g=man?grpOf(n):[],gi=g.findIndex(x=>x.id==n.id);
@@ -1622,7 +1622,7 @@ function asHTML(){if(!AS)return"";
  if(!inh)a2+=asR("hide",n.id,n.h?"Afficher dans « Réviser tout »":"Cacher de « Réviser tout »",n.h?"eye":"eyeoff");
  if(man&&gi>0)a2+=asR("mvu",n.id,"Monter","up");
  if(man&&gi>=0&&gi<g.length-1)a2+=asR("mvd",n.id,"Descendre","down");
- const a3=(cfg.srs&&packsOf(n).some(p=>p.items&&p.items.some(isNew))?asR("kn",n.id,"Marquer comme déjà su","sp"):"")+asR("rz",n.id,"Réinitialiser la progression","reset")+asR("del",n.id,"Supprimer","trash","dg");
+ const a3=(cfg.srs&&packsOf(n).some(p=>p.items&&p.items.length)?asR("kn",n.id,"Marquer comme déjà révisé","sp"):"")+asR("rz",n.id,"Réinitialiser la progression","reset")+asR("del",n.id,"Supprimer","trash","dg");
  return asShell(n.name,'<div class="asg">'+a1+'</div><div class="asg">'+a2+'</div><div class="asg">'+a3+'</div>')}
 function asRender(){let el=document.getElementById("asd");
  const html=asHTML();if(!html){AS=null;if(el){el.remove();if(!document.querySelector(".shd:not(.asd)"))document.documentElement.classList.remove("sho")}return}
@@ -1634,15 +1634,24 @@ function dupNodes(ids){const ns=ids.map(G).filter(isPack).filter(n=>!n.x);if(!ns
 function askReset(ids){const ns=ids.map(G).filter(n=>n&&!n.x);if(!ns.length)return;const ps=[...new Set(ns.flatMap(packsOf))].filter(p=>p.items),cnt=ps.reduce((a,p)=>a+p.items.length,0),name=ns.length==1?"« "+ns[0].name+" »":ns.length+" éléments";
  CF=()=>{const snap=ps.map(cp),now=Date.now();ps.forEach(p=>{p.items.forEach(i=>PFX.forEach(f=>delete i[f]));delete p.last;p.u=now});selm=false;selset.clear();save();render();undoS(snap,"Progression remise à zéro")};
  AS={k:"conf",title:"Remettre à zéro ?",text:"La progression de "+cnt+(cnt>1?" cartes ou questions":" carte ou question")+" de "+name+" sera effacée (calendrier de révision et taux de réussite). Le contenu reste intact.",ok:"Réinitialiser",danger:1};asRender()}
-// « Déjà su » : les cartes jamais vues entrent directement en répétition espacée, comme une première réponse « Bien » déjà consolidée
-// (stabilité FSRS de « Bien », prochaine révision après l'intervalle correspondant). Pas compté dans les statistiques ni dans la limite du jour (i.f non posé).
+// « Déjà révisé » (cours appris ou révisé hors de l'app) : les cartes jamais vues entrent directement en répétition espacée
+// (stabilité FSRS de « Bien », prochaine révision après l'intervalle correspondant) ; celles à revoir aujourd'hui sont notées « Bien ».
+// Rien n'est compté dans les statistiques ni dans la limite du jour (i.f non posé, pas de journal). Les cartes pas encore dues ne changent pas.
 function askKnown(ids){const ns=ids.map(G).filter(n=>n&&!n.x);if(!ns.length)return;const ps=[...new Set(ns.flatMap(packsOf))].filter(p=>p.items&&!p.x),pl=(k,a,b)=>k+" "+(k>1?b:a),
-  nf=ps.reduce((a,p)=>a+(p.k=="fc"?p.items.filter(isNew).length:0),0),nq=ps.reduce((a,p)=>a+(p.k=="qcm"?p.items.filter(isNew).length:0),0),name=ns.length==1?"« "+ns[0].name+" »":ns.length+" éléments";
- if(!nf&&!nq){flash("Aucune carte jamais vue dans "+name);return}
- const what=[nf?pl(nf,"carte","cartes"):"",nq?pl(nq,"question","questions"):""].filter(Boolean).join(" et "),st=FW[2],iv=fI(st);
- CF=()=>{const snap=ps.map(cp),now=Date.now(),t=day();ps.forEach(p=>{let ch=false;p.items.forEach(i=>{if(!isNew(i))return;i.st=2;i.s=+st.toFixed(4);i.df=+fD0(3).toFixed(3);i.l=t;i.d=t+fz(iv);i.t=now;delete i.k;delete i.b;ch=true});if(ch)p.u=now});
-  selm=false;selset.clear();TDv++;save();render();undoS(snap,what+(nf+nq>1?" marquées comme déjà sues":" marquée comme déjà sue"))};
- AS={k:"conf",title:"Marquer comme déjà su ?",text:(nf+nq>1?"Les "+what+" jamais vues de "+name+" passent directement en répétition espacée, comme si tu les avais déjà réussies":"La "+(nf?"carte":"question")+" jamais vue de "+name+" passe directement en répétition espacée, comme si tu l\'avais déjà réussie")+" : première révision dans "+pl(iv,"jour","jours")+" environ. Celles déjà révisées ne changent pas. Tu pourras annuler.",ok:"Marquer comme su"};asRender()}
+  name=ns.length==1?"« "+ns[0].name+" »":ns.length+" éléments",nw=[],du=[];
+ ps.forEach(p=>p.items.forEach(i=>{if(isNew(i))nw.push([p,i]);else if(isRev(i))du.push([p,i])}));
+ if(!nw.length&&!du.length){flash("Rien à marquer dans "+name+" : aucune carte jamais vue ni à revoir aujourd\'hui");return}
+ const cnt=(l,a1,a2)=>{const f=l.filter(x=>x[0].k=="fc").length,q=l.length-f;return[f?pl(f,"carte "+a1,"cartes "+a2):"",q?pl(q,"question "+a1,"questions "+a2):""].filter(Boolean).join(" et ")},
+  st=FW[2],iv=fI(st),
+  grad=(i,sv,t,now)=>{i.st=2;i.s=+sv.toFixed(4);i.df=+(i.df||fD0(3)).toFixed(3);i.l=t;i.d=t+fz(fI(sv));i.t=now;delete i.k;delete i.b};
+ CF=()=>{const snap=ps.map(cp),now=Date.now(),t=day(),tp=new Set();
+  nw.forEach(([p,i])=>{grad(i,st,t,now);tp.add(p)});
+  du.forEach(([p,i])=>{fsInit(i);if(i.st==2){applyP(i,opts(i)[2]);i.t=now}else grad(i,Math.max(i.s||0,st),t,now);tp.add(p)});
+  tp.forEach(p=>{p.u=now});selm=false;selset.clear();TDv++;save();render();const all=nw.concat(du),nq=all.filter(x=>x[0].k=="qcm").length,nt=all.length;undoS(snap,nq==nt?pl(nt,"question marquée comme révisée","questions marquées comme révisées"):nq?nt+" cartes et questions marquées comme révisées":pl(nt,"carte marquée comme révisée","cartes marquées comme révisées"))};
+ const tx=[];
+ if(nw.length)tx.push(cnt(nw,"jamais vue","jamais vues")+" : "+(nw.length>1?"elles passent":"elle passe")+" directement en répétition espacée, comme si tu "+(nw.length>1?"les avais réussies":"l\'avais réussie")+" (première révision dans "+pl(iv,"jour","jours")+" environ).");
+ if(du.length)tx.push(cnt(du,"à revoir aujourd\'hui","à revoir aujourd\'hui")+" : "+(du.length>1?"elles sont comptées comme révisées":"elle est comptée comme révisée")+" avec « Bien » et reprogrammée"+(du.length>1?"s":"")+".");
+ AS={k:"conf",title:"Marquer comme déjà révisé ?",text:"Dans "+name+", "+tx.join(" Et ")+" Les autres cartes ne changent pas. Rien n\'est compté dans tes statistiques. Tu pourras annuler.",ok:"Marquer comme révisé"};asRender()}
 const ikey2=i=>String(i.q||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
 function askMerge(){const ns=[...selset].map(G).filter(n=>n&&!n.x&&isPack(n));if(ns.length<2||!ns.every(n=>n.k==ns[0].k))return;const t=ns[0],o=ns.slice(1);
  CF=()=>{const snap=ns.map(cp),seen=new Set(t.items.map(ikey2));let add=0,dup=0;
