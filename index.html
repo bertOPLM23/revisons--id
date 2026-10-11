@@ -1394,6 +1394,18 @@ html[data-nx="1"] #app .nxhr .nxst b{font-weight:500;white-space:normal}
  html[data-nx="1"] #app .nxrl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}
  html[data-nx="1"] #app .nxrl .nxrr:nth-child(2)::before{display:none}}
 @media (min-width:768px){html[data-nx="1"][data-ipad="1"] #app .nxk b{font-size:calc(34px*var(--fz,1))}}
+/* nouvelle apparence : interrupteur clair | sombre dans la barre du haut (creux, pastille du mode actuel en relief) */
+html[data-nx="1"] .nxtg .nxths{display:inline-flex;align-items:center;gap:2px;flex:none;align-self:center;height:40px;box-sizing:border-box;padding:3px;margin:0 2px;border-radius:999px;cursor:pointer;font:inherit;
+ background:var(--lq-well,rgb(0 0 0/.05));border:1px solid;border-color:var(--lq-rim,rgb(0 0 0/.1)) var(--lq-edge-hi,#fff) var(--lq-edge-hi,#fff) var(--lq-rim,rgb(0 0 0/.1));box-shadow:inset 0 1px 3px rgb(0 0 0/.12);color:color-mix(in srgb,var(--mut) 70%,var(--ink))}
+html[data-nx="1"] .nxtg .nxths i{display:grid;place-items:center;width:32px;height:32px;border-radius:999px;transition:background-color .2s ease,color .2s ease}
+html[data-nx="1"] .nxtg .nxths i.on{background:var(--card);color:var(--acc);box-shadow:0 1px 4px rgb(0 0 0/.18)}
+html[data-nx="1"] .nxtg .nxths:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@media (max-width:359px){html[data-nx="1"] .nxtg .nxths i{width:28px}html[data-nx="1"] #app .tb .nxtg .tg{width:36px;min-width:36px;padding:0}html[data-nx="1"] #app .tb .nxtg{gap:0}}
+/* téléphone, dans un dossier (barre la plus chargée) : le bouton retour garde seulement son chevron, le mot reste lu par VoiceOver */
+html[data-nx="1"] #app .tb .crw .bk>:is(span,svg){flex-shrink:0}
+html[data-nx="1"] #app .tb .crw .bk.ico>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:430px){html[data-nx="1"] #app .tb:has(.nxtg [data-v=more]) .crw .bk>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+ html[data-nx="1"] #app .tb:has(.nxtg [data-v=more]) .crw{flex:none;min-width:44px}}
 /* nouvelle apparence : dossier en haut à gauche des flashcards */
 html[data-nx="1"] #app[data-view=study] .card>.nxfd{position:absolute;top:17px;left:18px;right:18px;display:flex;align-items:center;gap:7px;margin:0;font-size:12.5px;line-height:1.3;font-weight:600;text-align:left;color:color-mix(in srgb,var(--mut) 50%,var(--ink));pointer-events:none}
 html[data-nx="1"] #app[data-view=study] .card>.nxfd .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
@@ -2454,11 +2466,10 @@ const nxMoreM=row=>{const vm=vmode(),act=sortMode()!="name"||ft!="all"||fq.trim(
  if(view=="study"){const it=curIt();return (edH()?row("nxm","qed","Modifier",false,"edit"):"")+(it?row("nxm","fx",fxL(it.fx),false,"flag"):"")+(delH()?'<div class="pvs"></div>'+row("nxm","qdel",deck.k=="fc"?"Supprimer cette carte":"Supprimer cette question",false,"trash").replace('class="pvr"','class="pvr nxpdg"'):"")}
  if(view!="browse")return (view!="set"?row("nxm","set","Réglages",false,"set"):"")+row("nxm","th",dark()?"Mode clair":"Mode sombre",false,dark()?"sun":"moon");
  return '<div class="pvh">Affichage</div>'+[["grid","Icônes","vg"],["list","Liste","vl"]].concat(wide()?[["cols","Colonnes","vc"]]:[]).map(([v,l,i])=>row("vw",v,l,vm==v,i)).join("")
-  +'<div class="pvs"></div>'+row("pv","sort",act?"Trier et filtrer (actif)":"Trier et filtrer…",false,"flt")+row("nxm","sel","Sélectionner",false,"sl")
-  +'<div class="pvs"></div>'+row("nxm","set","Réglages",false,"set")+row("nxm","th",dark()?"Mode clair":"Mode sombre",false,dark()?"sun":"moon")};
+  +'<div class="pvs"></div>'+row("pv","sort",act?"Trier et filtrer (actif)":"Trier et filtrer…",false,"flt")+row("nxm","sel","Sélectionner",false,"sl")};
 const nxTg=s=>{const act=sortMode()!="name"||ft!="all"||fq.trim()||fo;
- return '<span class="tgs nxtg">'+(s==2||sySt()=="err"?sydH():"")+'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button>'
-  +'<button class="tg'+(PV?" on":"")+'" data-a="pv" data-v="more" aria-label="Affichage, tri et réglages" aria-haspopup="menu" aria-expanded="'+!!PV+'">'+ic("more",18)+(act?'<i class="dot"></i>':'')+'</button>'+pvHTML()+'</span>'};
+ return '<span class="tgs nxtg">'+(s==2||sySt()=="err"?sydH():"")+'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button>'+nxThSw()+nxSetB()
+  +'<button class="tg'+(PV?" on":"")+'" data-a="pv" data-v="more" aria-label="Affichage, tri et sélection" aria-haspopup="menu" aria-expanded="'+!!PV+'">'+ic("more",18)+(act?'<i class="dot"></i>':'')+'</button>'+pvHTML()+'</span>'};
 A.nxsqc=()=>{sq="";render();const i=$("sq");if(i)try{i.focus()}catch(e){}};
 A.nxt=()=>{cfg.nx=!cfg.nx;saveCfg();setNx();render()};
 A.fht=()=>{cfg.fh=!cfg.fh;saveCfg();setNx();render()};
@@ -2470,7 +2481,10 @@ A.nxr=()=>{const o=nxInfo();if(o.fcP.length&&!o.qcA.length&&!(cfg.srs&&o.F.r&&o.
 // ---- nouvelle apparence : Réglages en groupes (style Réglages iOS). Aides repliées derrière ⓘ (NXH), choix dans une feuille (AS.k="nxv"),
 //      sous-pages Synchronisation, Sauvegarde et Couleur de contraste (SETP, dans l'historique : le geste retour revient aux Réglages) ----
 let SETP=null,NXS=false;const NXH=new Set();
-const nxTgS=s=>'<span class="tgs nxtg">'+(s==2||sySt()=="err"?sydH():"")+'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button><button class="tg'+(PV=="more"?" on":"")+'" data-a="pv" data-v="more" aria-label="Réglages et thème" aria-haspopup="menu" aria-expanded="'+(PV=="more")+'">'+ic("more",18)+'</button>'+(PV=="more"?pvHTML():"")+'</span>';
+// accès direct (maquette 3 validée le 11/10/2026) : interrupteur clair | sombre qui montre le mode actuel, puis Réglages
+const nxThSw=()=>{const d=dark();return '<button type="button" class="nxths" data-a="th" role="switch" aria-checked="'+d+'" aria-label="Mode sombre"><i'+(d?'':' class="on"')+'>'+ic("sun",15)+'</i><i'+(d?' class="on"':'')+'>'+ic("moon",15)+'</i></button>'},
+ nxSetB=()=>'<button class="tg'+(view=="set"?' on" aria-current="page':'')+'" data-a="set" aria-label="Réglages">'+ic("set",18)+'</button>';
+const nxTgS=s=>'<span class="tgs nxtg">'+(s==2||sySt()=="err"?sydH():"")+'<button class="tg" data-a="stats" aria-label="Statistiques">'+ic("st",18)+'</button>'+nxThSw()+nxSetB()+'</span>';
 const NXC={red:"#d9694a",ora:"#e09a2b",yel:"#c9a227",grn:"#4aa36a",tea:"#2fa3a3",blu:"#4a86e0",vio:"#8a6fd6",pnk:"#d867a6",gry:"#8e8b82"};
 const NXHELP={
  srs:"Après chaque carte, note ta réponse (À revoir, Difficile, Bien, Facile) : l\'algorithme calcule le moment où tu risques de l\'oublier et la reprogramme juste avant. Désactivée : tout le paquet est proposé à chaque révision.",
@@ -2585,7 +2599,12 @@ function nxStats(logs,d0,cells,t30,k,today){const pl=(n,a,b)=>n+" "+(n>1?b:a);
 /* nouvelle apparence : dossier de la carte en haut à gauche (point de couleur + nom), catégorie à droite */
 function nxFd(c){const own=deck.virt&&deck.own?deck.own.get(c):deck,f=own&&own.p?G(own.p):null,col=f&&f.c?f.c:"";
  return '<span class="nxfd"'+(col?' style="--fc:'+esc(col)+'"':'')+'><i class="dt" aria-hidden="true"></i><span class="vh">Dossier : </span><span class="fn">'+esc(f?f.name:"Accueil")+'</span>'+(c.c?'<span class="vh">, catégorie : </span><span class="cat">'+esc(c.c)+'</span>':'')+'</span><span class="vh">. </span>'}
-function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}}
+function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}
+
+ if(cfg.nx){nxBk();requestAnimationFrame(nxBk)}}
+// nouvelle apparence : si le mot du bouton retour serait coupé (« Réglag… »), on n'affiche que le chevron (le mot reste lu par VoiceOver)
+function nxBk(){const b=document.querySelector("#app .tb .crw .bk"),t=b&&b.querySelector(":scope>span");if(!t)return;b.classList.remove("ico");if(!cfg.nx)return;const r=document.createRange();r.selectNodeContents(t);const w=b.closest(".crw");const br=b.getBoundingClientRect();if(r.getBoundingClientRect().right>br.right-(parseFloat(getComputedStyle(b).paddingRight)||0)+.5||b.scrollWidth>b.clientWidth||t.scrollWidth>t.clientWidth+1||r.getBoundingClientRect().width>t.getBoundingClientRect().width+.5||b.getBoundingClientRect().right>(w?w.getBoundingClientRect().right:innerWidth)+.5)b.classList.add("ico")}
+if(typeof addEventListener=="function"){addEventListener("resize",()=>requestAnimationFrame(nxBk));if(document.fonts&&document.fonts.ready)document.fonts.ready.then(nxBk)}
 function render0(){
  if(!booted)return;
  NXB=view=="browse"&&!!cfg.nx;NXS=view=="set"&&!!cfg.nx;
