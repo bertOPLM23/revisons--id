@@ -1431,6 +1431,12 @@ html[data-fh="1"]:not([data-nx="1"]) #app .cw[data-drop]{--fk:var(--fc,color-mix
 .swb:not(.on){-webkit-backdrop-filter:none;backdrop-filter:none;transition:opacity .15s,-webkit-backdrop-filter 0s .15s,backdrop-filter 0s .15s}
 /* ===== Refonte, étape 1 : intervalle sous « Bien » lisible (texte clair à 70 % sur la goutte terracotta : 3,3:1 à 3,8:1) ===== */
 #app .dock.g4 .rb.ok small{opacity:1}
+/* ===== Refonte, étape 2 : libellé « Bien » lisible sur Mac (clair) : bande brillante raccourcie, haut de la goutte légèrement plus dense ===== */
+html[data-desk="1"][data-theme="light"] #app .dock.g4 .rb.ok{background-image:linear-gradient(180deg,rgb(255 255 255/.22) 0,rgb(255 255 255/.05) 7%,transparent 10%),linear-gradient(180deg,color-mix(in srgb,var(--acc),#000 4%) 0,var(--lq-btn-mid) 60%,var(--lq-btn-lo))}
+/* ===== Refonte, étape 3 : textes coupés sur petit écran (icônes des boutons de note, indicateur d'import, titre des confirmations) ===== */
+@media (max-width:374px){#app .dock.g4 .rb span::before{content:none}}
+@media (max-width:359px){html[data-nx="1"] #app .nxst2>span:last-child{white-space:normal}}
+.sh:has([data-a="ascf"]) .shh b{white-space:normal;text-align:center}
 </style></head>
 <body><div id="mesh" aria-hidden="true"><i></i></div><svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="lg-dock" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB" filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse"><feImage id="lg-map" x="0" y="0" width="100" height="60" preserveAspectRatio="none" result="map"/><feDisplacementMap in="SourceGraphic" in2="map" scale="28" xChannelSelector="R" yChannelSelector="B"/></filter></svg><main><div id="app"></div></main><input type="file" id="fi" accept="image/*" hidden><input type="file" id="fb" accept="application/json,.json" hidden>
 <script>
