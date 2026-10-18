@@ -193,6 +193,7 @@ Espace/Entrée/flèches/1-4 pour retourner et noter, Ctrl+Z pour annuler ; lettr
 - **Statistiques** : une synchro qui apporte des changements rafraîchit l'écran des statistiques (`ui(ch)` ne le faisait que pour l'accueil), et ouvrir les statistiques lance une synchro. Avant, l'activité d'un autre appareil n'apparaissait qu'en quittant puis rouvrant l'écran.
 - **« + » de la barre du bas** : vrai cercle (`aspect-ratio:1/1`, « Réviser » s'étire à sa hauteur) avec une icône SVG centrée (décalage mesuré < 0,2 px ; avant, bouton de 56×53,5 px et glyphe 1,9 px trop bas).
 - **Retours du 18/10/2026 (captures iPad)** : la feuille Corbeille était déstructurée (les règles `.nxsr`, `.nxst`, `.nxtra`… sont limitées à `#app` alors que la feuille `#asd` est ajoutée au `<body>` : **toute feuille réutilisant du HTML de page a besoin de ses propres règles `#asd …`**) ; ajoutées dans le bloc « correctifs du 18/10/2026 ». Et le titre de la barre du haut (`.tb.tbon`, au défilement) passait sur le contenu : bandeau dégradé `.tb.tbon::before` derrière le titre.
+- **Bouton retour réduit au chevron** (`.tb.tbon .bk` au défilement, `.bk.ico` quand le mot ne tient pas) : chevron décentré de 2,4 px (iPad) à 4,4 px (iPhone, bouton de 48×44) à cause d'un `padding:0 12px 0 8px` hérité ; maintenant 44×44 (36 sous 360 px), `padding:0`, décalage mesuré < 0,4 px.
 - Le bug « texte sur texte » du menu Synchronisation n'existe plus (confirmé par Idriss après le passage en feuille).
 
 ### Nouvelle apparence (`cfg.nx`, ajoutée le 09/10/2026 ; **seule apparence depuis le 18/10/2026**)
