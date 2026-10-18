@@ -3820,6 +3820,20 @@ html[data-theme="dark"] h1:has(.rvd){color:var(--ink)}
 html[data-nx="1"] #app .dock.nxd .nxad:not(.wide){display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;height:auto;align-self:center;padding:0;line-height:0}
 html[data-nx="1"][data-desk="1"] #app .dock.nxd .nxad:not(.wide){width:54px}
 html[data-nx="1"] #app .dock.nxd .nxad .nxpl{display:block;flex:none}
+/* barre du haut au défilement : bandeau de fond sous le titre (le contenu ne passe plus sous le texte) */
+.tb.tbon::before{content:"";position:absolute;z-index:-1;left:-100vw;right:-100vw;top:calc(-8px - env(safe-area-inset-top,0px));bottom:-12px;pointer-events:none;background:linear-gradient(color-mix(in srgb,var(--bg) 96%,transparent) 58%,transparent)}
+/* feuille Corbeille : lignes (les règles de la page sont limitées à #app) */
+#asd .nxsg{display:flex;flex-direction:column;margin:0}
+#asd .nxsr{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:8px 4px;box-sizing:border-box;border:0;background:none;box-shadow:none;font:inherit;font-size:16px;color:var(--ink);text-align:left}
+#asd .nxsr+.nxsr{border-top:1px solid color-mix(in srgb,var(--line) 85%,transparent)}
+#asd .nxst{flex:1;min-width:0}
+#asd .nxst b{display:block;font-weight:500;overflow-wrap:anywhere}
+#asd .nxst small{display:block;margin-top:2px;font-size:13px;line-height:1.35;color:var(--mut)}
+#asd .nxmvi{display:flex;flex:none;color:var(--mut)}
+#asd .nxtra{flex:none;min-height:40px;padding:0 8px;border:0;background:none;box-shadow:none;font:inherit;font-size:15px;font-weight:600;color:var(--acc)}
+#asd .nxtrx{flex:none;width:38px;height:38px;padding:0;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:none;color:var(--ko);background:color-mix(in srgb,var(--ko) 9%,transparent)}
+#asd .nxtre{justify-content:center;font-weight:600;color:var(--ko)}
+#asd :is(.nxtra,.nxtrx,.nxtre):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 /* feuilles-pages : Synchronisation, Sauvegarde, Corbeille */
 #asd .nxpb{display:flex;flex-direction:column;gap:12px;align-items:stretch}
 #asd .nxpb>.h2:first-child{display:none}
