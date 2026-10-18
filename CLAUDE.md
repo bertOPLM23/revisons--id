@@ -19,6 +19,7 @@
 - Ne pas se contredire d'une réponse à l'autre.
 - Signaler honnêtement ce qui n'a pas pu être testé (pas d'accès à un vrai iPhone/iPad/Mac ni à Safari, synchro réelle non testable, etc.). Si un audit précédent s'est trompé, le dire.
 - À la fin de chaque modification, **rappeler quels fichiers redéployer**.
+- **Livraison (règle d'Idriss, 18/10/2026) :** donner le zip de ce qui se déploie (les 8 fichiers du site, **jamais `CLAUDE.md` dedans**) et, **à côté, `CLAUDE.md` en fichier séparé**, à jour. Le tout avec `SendUserFile`.
 - Respecter la typographie française (« 1 carte » / « 2 cartes », « 1 question juste » / « 2 justes », apostrophes, espaces).
 - Quand Idriss demande une analyse « sans rien modifier », ne toucher à aucun fichier et attendre sa validation explicite, numéro par numéro.
 
