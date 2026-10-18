@@ -1,6 +1,6 @@
 # CLAUDE.md — « Mes révisions »
 
-> Contexte de projet pour Claude Code. Rédigé le 7 octobre 2026, mis à jour le 8 octobre 2026 après une session d'audit, de corrections et de refonte visuelle « Liquid Glass ».
+> Contexte de projet pour Claude Code. Rédigé le 7 octobre 2026, mis à jour le 8 octobre 2026 après une session d'audit, de corrections et de refonte visuelle « Liquid Glass », puis le 18 octobre 2026 pour la nouvelle identité **rev.** (voir §6, « Identité rev. »).
 > **En cas de désaccord entre ce document et `index.html`, c'est le code qui fait foi.** Les points incertains sont marqués **[à vérifier]**.
 
 ---
@@ -154,7 +154,7 @@ Espace/Entrée/flèches/1-4 pour retourner et noter, Ctrl+Z pour annuler ; lettr
 
 ## 6. Direction artistique : Liquid Glass
 
-- Sobre, moderne, **proche de l'interface de Claude** : thème chaud **crème / anthracite**, accent **terracotta** (`#b5573a` clair, `#e08a6a` sombre ; `#c96a48` dans l'icône). Mode clair et sombre. Garder la cohérence visuelle à chaque ajout.
+- **Depuis le 18/10/2026, l'app s'appelle « rev. »** et sa palette est **vert profond / ivoire** (voir « Identité rev. » plus bas). Les mentions de terracotta, crème/anthracite et « proche de l'interface de Claude » ci-dessous sont **historiques**. Mode clair et sombre. Garder la cohérence visuelle à chaque ajout.
 - Style **« Liquid Glass » inspiré d'iOS 27**, approuvé par Idriss le 07/10/2026, construit en trois étapes. Toute l'interface repose sur **trois matières** :
   - **panneau de verre** : fond légèrement givré (`--lq-panel`, `--lq-row-fill`), lumière en haut (`--lq-drop-gl`), liseré clair en haut à gauche et plus dense en bas à droite (`border-color: var(--lq-edge-hi) var(--lq-rim) var(--lq-rim) var(--lq-edge-hi)`) ;
   - **goutte** (boutons, puces, propositions, résultats) : même matière en relief, ombres internes, **onde au toucher** (`::after`, partant du doigt via `--gx/--gy` posées par la « lumière sous le doigt ») et **déformation organique** au toucher (`border-radius` asymétrique, bref) ; les boutons d'action sont des gouttes terracotta ;
@@ -177,7 +177,17 @@ Espace/Entrée/flèches/1-4 pour retourner et noter, Ctrl+Z pour annuler ; lettr
 
 ---
 
-### Nouvelle apparence (`cfg.nx`, ajoutée le 09/10/2026)
+### Identité rev. (18/10/2026)
+- **Une seule apparence** : la « nouvelle apparence » (`nx`) est **toujours active** (`cfg.nx=true` forcé au chargement, `setNx()` pose `data-nx="1"`, `nx` est dans `SETL` donc non synchronisé). Le réglage et `A.nxt` n'ont plus d'effet ; l'ancien code (ancienne apparence, `cfg.nx` faux) reste dans le fichier, **inactif** : nettoyage possible seulement sur demande d'Idriss.
+- **Palette** (jetons `:root` lignes 11-13 + bloc `<style id="rev-brand">` **en toute fin de `<body>`**, qui passe devant les jetons posés par CSS et par scripts) : clair `--bg #f7f3ea` (ivoire), `--card #fffdf8`, `--ink #15201b`, `--mut #4f5d56`, `--line #e3ddcf`, `--acc`/`--pri` `#173d32` (vert profond), `--acc2 #2b5f7a`, `--ok #1f5c47`, `--ko #a83a2f` ; sombre `--bg #0d1915`, `--card #15241e`, `--ink #eef0e8`, `--acc #a9dcc0`, `--onp #0f2a22`. Laiton `#98772f` (clair) / `#d2b273` (sombre) **réservé** au point du logo et à la série. Sauge `#dfe8e1` (pastilles).
+- **Couleur de contraste supprimée** : le vert est imposé. Le script de la couleur est neutralisé (`apply()` et `addSettings()` retournent tout de suite, la clé `revis-accent` est effacée au chargement) ; la ligne et la sous-page `acc` ont disparu des Réglages.
+- **Typographie** : New York (`ui-serif`) pour les titres `h1` et le logo, SF Pro pour le reste. Titre de l'accueil : `rev<span class="rvd">.</span>`.
+- **Matières** : surfaces ivoire quasi pleines pour le contenu (`--gp-fill` .94) ; verre seulement sur la barre du haut, la barre du bas et les feuilles. Fond : voile vert et voile laiton très discrets (`--nv-bg`), **taches animées `#mesh i` supprimées** (`display:none`).
+- **Icône** (piste « Carte affinée », maquette validée) : feuille arrière en verre, feuille ivoire avec « r. » (point laiton) et deux lignes, fond vert en dégradé. Fichiers `apple-touch-icon.png` (180, plein cadre), `icon-512.png`, `favicon.svg` à la racine, **et** intégrés en `data:` dans le `<head>` de `index.html`. Le « r » est un tracé (Liberation Serif Bold) : l'icône ne dépend d'aucune police.
+- Nom : `<title>` et `apple-mobile-web-app-title` = « rev. ». Le nom du projet Supabase (« Mes révisions ») ne change pas.
+- Contraste mesuré le 18/10/2026 (iPhone 390 px, clair et sombre : accueil, dossier, flashcard recto/verso, QCM avant/après, Réglages, Statistiques) : aucun texte sous 4,5:1, sauf le point laiton du logo (décoratif, 44 px).
+
+### Nouvelle apparence (`cfg.nx`, ajoutée le 09/10/2026 ; **seule apparence depuis le 18/10/2026**)
 - Interrupteur « Nouvelle apparence » (Réglages › Affichage), **désactivé par défaut** : l'ancienne apparence reste identique au pixel près. Refonte « Liquid Glass repensé » validée par Idriss (maquette 2 « groupes iOS ») ; faits : l'écran des dossiers (accueil et intérieur d'un dossier) les **Réglages** (maquette 1 « liste iOS »), la **recherche** (maquette 2 « vignettes ») et l'**import** (habillé), tous validés le 09/10/2026, puis l'écran de révision et les Statistiques.
 - Code : bloc `nx…` juste avant `render()` (premier script). `NXB` est vrai pendant le rendu de l'écran des dossiers en nouvelle apparence : `tg()` affiche alors Statistiques + « ⋯ » (menu `PV="more"` : Icônes / Liste / Colonnes, Trier et filtrer, Sélectionner, Réglages, thème) et `tbHTML()` ne renvoie rien. `render0()` appelle `nxBody(nxInfo())` à la place des encadrés, du bouton Réviser et de l'ancienne barre du bas.
 - Écran : champ « Rechercher dans tes cours » (ouvre l'écran de recherche, curseur dedans), bande de puces (série/objectif → Statistiques, Reprendre, À corriger, épinglés ; les rappels d'examen, de sauvegarde et de code restent en encadrés), groupes « Dossiers » puis « Paquets » (un panneau de verre par groupe en liste, vignettes en icônes, colonnes dans un panneau), chaque ligne = nom + pastille terracotta « à réviser » (`dn(n)`) + ⋯.
