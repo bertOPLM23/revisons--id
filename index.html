@@ -1733,6 +1733,7 @@ function freeHTML(){const n=FRP&&G(FRP.id);if(!n||n.x)return"";
   if(hid)b+='<p class="help">'+pl(hid,"paquet caché n\'est","paquets cachés ne sont")+' pas inclus.</p>'}
  return asShell("Révision libre",b)}
 function asHTML(){if(!AS)return"";
+ if(AS.k=="nxp")return AS.w=="sync"?asShell("Synchronisation",'<div class="nxpb">'+syncUI()+'</div>'):AS.w=="bk"?asShell("Sauvegarde",'<div class="nxpb">'+bkUI()+'</div>'):asShell("Corbeille",nxTrashHTML(true));
  if(AS.k=="nxr")return nxRevHTML();if(AS.k=="nxv")return nxValHTML();if(AS.k=="nxa")return nxAddHTML();
  if(AS.k=="fix")return fixHTML();if(AS.k=="rev")return revHTML();if(AS.k=="free")return freeHTML();if(AS.k=="card")return cardHTML();if(AS.k=="goal")return goalHTML();
  if(AS.k=="conf")return asShell(AS.title,'<p class="cft">'+esc(AS.text)+'</p><div class="cfb"><button type="button" class="b" data-a="asc">'+esc(AS.no||"Annuler")+'</button><button type="button" class="b '+(AS.danger?"dg":"ok")+'" data-a="ascf">'+esc(AS.ok)+'</button></div>');
@@ -1762,7 +1763,8 @@ function asHTML(){if(!AS)return"";
 function asRender(){let el=document.getElementById("asd");
  const html=asHTML();if(!html){AS=null;if(el){el.remove();if(!document.querySelector(".shd:not(.asd)"))document.documentElement.classList.remove("sho")}return}
  if(!el){el=document.createElement("div");el.id="asd";el.className="shd asd";document.body.appendChild(el)}
- el.innerHTML=html;document.documentElement.classList.add("sho")}
+ if(AS&&AS.k=="nxp"&&el._h){const a=document.activeElement;if(el._h===html||(a&&el.contains(a)&&/^(INPUT|TEXTAREA)$/.test(a.tagName))){document.documentElement.classList.add("sho");return}}
+ el.innerHTML=html;el._h=html;document.documentElement.classList.add("sho")}
 function dupNodes(ids){const ns=ids.map(G).filter(isPack).filter(n=>!n.x);if(!ns.length)return;const made=[];
  ns.forEach(n=>{const c=cp(n);c.id=uid();c.name=n.name+" (copie)";["h","hu","pn","pu","o","ou","last","x","xt","xb","xr","xp"].forEach(f=>delete c[f]);(c.items||[]).forEach(i=>PFX.forEach(f=>delete i[f]));c.u=Date.now();S.nodes.push(c);made.push(c.id)});
  save();render();undoX(made,made.length>1?made.length+" paquets dupliqués (progression remise à zéro)":"Paquet dupliqué (progression remise à zéro)")}
@@ -1905,7 +1907,14 @@ const lbl=(i,p)=>i.im?p.name+", zone "+(i.t+1)+(i.a?" ("+i.a+")":""):i.q;
 const dstr=d=>new Date(d*864e5).toLocaleDateString("fr",{timeZone:"UTC",weekday:"short",day:"numeric",month:"long"});
 const mmss=t=>Math.floor(t/60)+":"+String(t%60).padStart(2,"0"),dur=t=>t<60?t+" s":Math.floor(t/60)+" min"+(t%60?" "+t%60+" s":"");
 const exH=it=>it.e?'<div class="ex"><b>Explication</b><p>'+fmt(it.e)+'</p></div>':"";
-const optsH=(it,s,v,act)=>it.o.map((o,i)=>{const on=!!s[i],k=!!o.k,tg=act?"button":"div";let c="opt",tag="";
+// propositions de QCM : ordre mélangé à chaque séance (mêmes objets, seul l'affichage change ; les données ne sont pas modifiées).
+// QSD = graine de la séance (0 = ordre d'origine, pour un ancien examen repris) ; po(it) = propositions dans l'ordre affiché.
+let QSD=0;const qSeed=()=>{QSD=(Math.random()*4294967295>>>0)||1};
+const QPM=new WeakMap(),qHash=t=>{let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0};
+const po=it=>{const o=it&&it.o;if(!o||o.length<2||!QSD)return o||[];let c=QPM.get(it);
+ if(!c||c.s!==QSD||c.a!==o||c.n!==o.length){let x=(QSD^qHash(String(it.q||"")))>>>0;const r=()=>{x=(x+0x6D2B79F5)>>>0;let t=Math.imul(x^x>>>15,1|x);t=(t+Math.imul(t^t>>>7,61|t))^t;return((t^t>>>14)>>>0)/4294967296},a=o.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}c={s:QSD,a:o,n:o.length,p:a};QPM.set(it,c)}return c.p};
+const optsH=(it,s,v,act)=>po(it).map((o,i)=>{const on=!!s[i],k=!!o.k,tg=act?"button":"div";let c="opt",tag="";
  if(v){if(on&&k){c+=" hit";tag='<span class="mkr" aria-hidden="true">✓</span><span class="vh">Vraie, bien cochée</span>'}else if(!on&&!k){c+=" dim";tag='<span class="vh">Fausse, bien laissée</span>'}else if(k){c+=" miss";tag='<span class="tg2">Oubliée</span><span class="vh">: cette proposition était vraie</span>'}else{c+=" ko";tag='<span class="tg2">Fausse</span><span class="vh">: tu l\'avais cochée</span>'}}else if(on)c+=" s";
  return '<'+tg+' class="'+c+'"'+(act?' data-a="'+act+'" data-v="'+i+'"'+(v?' aria-disabled="true"':' aria-pressed="'+on+'"'):'')+'><span class="cb'+(on?" on":"")+'">'+(on?CK:"")+'</span><b>'+"ABCDEFGH"[i]+'</b><span class="ot">'+fmt(o.t)+'</span>'+tag+'</'+tg+'>'}).join("");
 function tick(){if(view!="exam"||!ex||ex.done){clearInterval(xt);return}const r=Math.max(0,Math.ceil((ex.end-Date.now())/1000)),e=$("tmr");if(e){e.textContent=mmss(r);e.classList.toggle("lo",r<=60)}if(r<=0)A.xfin()}
@@ -2021,7 +2030,7 @@ const fmtMin=m=>m<60?m+" min":Math.floor(m/60)+" h"+(m%60?" "+String(m%60).padSt
 const recR=(i,ok)=>{if(!(i.st==2||(i.st==null&&i.d!=null)))return;const L=LG(),d=day();if(!L.r)L.r={};const a=L.r[d]||[0,0];a[0]++;if(ok)a[1]++;L.r[d]=a;L.u=Date.now()};
 // examen en cours : conservé si Safari recharge la page
 const EXK="revis-exam",exGet=()=>{try{return JSON.parse(localStorage.getItem(EXK))}catch(e){return null}},exClr=()=>{try{localStorage.removeItem(EXK)}catch(e){}};
-const exSave=()=>{if(view!="exam"||!ex||ex.done||!deck||!deck.own)return;try{localStorage.setItem(EXK,JSON.stringify({it:deck.items.map(i=>{const p=deck.own.get(i);return[p?p.id:null,p?p.items.indexOf(i):-1,ikey(i)]}),s:ex.s,i:ex.i,t0:ex.t0,end:ex.end}))}catch(e){}};
+const exSave=()=>{if(view!="exam"||!ex||ex.done||!deck||!deck.own)return;try{localStorage.setItem(EXK,JSON.stringify({it:deck.items.map(i=>{const p=deck.own.get(i);return[p?p.id:null,p?p.items.indexOf(i):-1,ikey(i)]}),s:ex.s,i:ex.i,t0:ex.t0,end:ex.end,sd:QSD}))}catch(e){}};
 const qs=()=>{if(!cfg.code)return;clearTimeout(tm);tm=setTimeout(sync,view=="study"||view=="exam"?1500:600)};
 const save=()=>{TDv++;persist();qs()};
 const SB="https://yjhkaecnjyyhhbjjospa.supabase.co",SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqaGthZWNuanl5aGhiampvc3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMTk4NDEsImV4cCI6MjEwNTc5NTg0MX0.CG_Ga7Mgi6JaqmCcx2yIhyVZ3iSTRKTyVKK8QGw8NJA";
@@ -2053,7 +2062,7 @@ const merge=(a,b,keep,dset)=>{const m=new Map();a.forEach(n=>m.set(n.id,n));
  b.forEach(r=>{const l=m.get(r.id);if(!l){m.set(r.id,r);return}
   const kp=keep.has(r.id),rw=(r.u||0)>(l.u||0)&&!kp,was=mDirty;mDirty=false;m.set(r.id,fixHide(mergeNode(l,r,rw,kp),l,r));if(mDirty&&dset)dset.add(r.id);mDirty=was||mDirty});
  return[...m.values()]};
-const ui=f=>{if(view=="set"||(f&&view=="browse"))render();else sdu()};
+const ui=f=>{if(view=="set"||(f&&(view=="browse"||view=="stats")))render();else sdu()};
 let lastV=null,hp=null,hc=null,ws,tp,wt;
 const H=()=>{if(hc!==cfg.code){hc=cfg.code;hp=hash(cfg.code)}return hp};
 const ping=()=>{try{ws&&ws.readyState==1&&ws.send(JSON.stringify({topic:tp,event:"broadcast",payload:{type:"broadcast",event:"ch",payload:{}},ref:"b"}))}catch(e){}};
@@ -2132,7 +2141,7 @@ async function rt(){if(!cfg.code||ws||typeof WebSocket!="function")return;try{co
 setInterval(poll,2000);
 const fc4=c=>c.match(/.{4}/g).join("-");
 const syncUI=()=>'<h2 class="h2">Synchronisation entre appareils</h2>'+(cfg.code
- ?'<p class="code">'+fc4(cfg.code)+'</p><button class="b sm" data-a="cpc">Copier le code</button><p class="help">Saisis ce code dans Réglages sur ton autre appareil. Garde-le secret : il donne accès à tes paquets.</p><p class="help">Tes réglages suivent aussi (thème, couleur, nouvelles cartes par jour, apparence…) : la dernière modification faite sur un appareil s\'applique aux autres. Seuls le code et l\'ouverture du panneau latéral restent propres à chaque appareil.</p><p class="help">Note-le aussi dans un endroit sûr : si tu supprimes l\'icône de l\'écran d\'accueil, les données de cet appareil sont effacées et ce code est le seul moyen de les retrouver.</p><p class="help">'+esc(sm)+'</p><div class="menu"><button data-a="sy">Synchroniser maintenant</button><button class="dg" data-a="unsyn">Désactiver</button></div>'
+ ?'<p class="code">'+fc4(cfg.code)+'</p><button class="b sm" data-a="cpc">Copier le code</button><p class="help">Saisis ce code dans Réglages sur ton autre appareil. Garde-le secret : il donne accès à tes paquets.</p><p class="help">Tes réglages suivent aussi (thème, nouvelles cartes par jour, taille du texte…) : la dernière modification faite sur un appareil s\'applique aux autres. Seuls le code et l\'ouverture du panneau latéral restent propres à chaque appareil.</p><p class="help">Note-le aussi dans un endroit sûr : si tu supprimes l\'icône de l\'écran d\'accueil, les données de cet appareil sont effacées et ce code est le seul moyen de les retrouver.</p><p class="help">'+esc(sm)+'</p><div class="menu"><button data-a="sy">Synchroniser maintenant</button><button class="dg" data-a="unsyn">Désactiver</button></div>'
  :'<p class="help">Retrouve les mêmes paquets et la même progression sur iPhone et iPad.</p><button class="b" data-a="syn">Activer sur cet appareil</button><input id="jc" placeholder="Ou entre le code d\'un autre appareil"><button class="b" data-a="join">Utiliser ce code</button><p class="help">'+esc(sm)+'</p>');
 // index id → position dans S.nodes, reconstruit quand le tableau change ; chaque résultat est revérifié (remplacement sur place)
 let GI=null,GA=null,GN=-1;
@@ -2214,7 +2223,7 @@ function parseAll(t){
  return{fc,qcm,skip};
 }
 function parse(t,k){return parseAll(t)[k=="fc"?"fc":"qcm"]}
-function startQ(o){order=o;idx=0;score=0;wrong=[];sel={};val=false;vprev=null;hesd=false;render()}
+function startQ(o){qSeed();order=o;idx=0;score=0;wrong=[];sel={};val=false;vprev=null;hesd=false;render()}
 const A={
  th(){TH=dark()?"light":"dark";try{localStorage.setItem("revis-theme",TH)}catch(e){}try{setPush()}catch(e){}setTh();render()},
  thm(v){const t=v=="light"||v=="dark"?v:null;if(t!==TH){TH=t;try{t?localStorage.setItem("revis-theme",t):localStorage.removeItem("revis-theme")}catch(e){}try{setPush()}catch(e){}setTh()}render()},
@@ -2290,7 +2299,7 @@ const A={
  skn(){askKnown([...selset])},
  srst(){askReset([...selset])},
  smg(){askMerge()},
- tr(){view='trash';trashSweep();render();scrollTo(0,0)},
+ tr(){trashSweep();AS={k:"nxp",w:"tr"}},
  trr(id){const n=G(id);if(!n)return;const nm=n.name;trashRestoreOne(id);save();render();flash('« '+nm+' » restauré')},
  trp(id){const n=G(id);if(!n)return;CF=()=>{purgeNodes([n,...tdesc(id,n.xb)]);save();render();flash('Supprimé définitivement')};AS={k:'conf',title:'Supprimer définitivement ?',text:'« '+n.name+' » et tout son contenu seront effacés. Cette action est irréversible.',ok:'Supprimer',danger:1};asRender()},
  tre(){const rs=trashRoots();if(!rs.length)return;CF=()=>{rs.forEach(n=>purgeNodes([n,...tdesc(n.id,n.xb)]));save();render();flash('Corbeille vidée')};AS={k:'conf',title:'Vider la corbeille ?',text:rs.length+(rs.length>1?' éléments seront effacés':' élément sera effacé')+' définitivement. Cette action est irréversible.',ok:'Vider',danger:1};asRender()},
@@ -2327,12 +2336,12 @@ const A={
   back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=Date.now();save()}render()},
  yes(){if(cfg.srs&&!deck.free)return A.rate(3);const i=deck.items[q[0]];if(cfg.hc<6){cfg.hc++;saveCfg()}if(!deck.free){rec(i,true);save()}q.shift();known++;back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=Date.now();save()}render()},
  opt(i){if(val)return;sel[i]=!sel[i];render()},
- val(){val=true;const it=deck.items[order[idx]],ok=it.o.every((o,i)=>!!sel[i]===!!o.k);if(ok)score++;else wrong.push(order[idx]);if(!deck.free){rec(it,ok);if(cfg.srs){recR(it,ok);vprev=ok?cp(it):null;hesd=false;let p=opts(it)[ok?2:0];if(ok&&p.m)p={...p,st:2,k:null,m:0,iv:fI(p.s)};applyP(it,p)}save()}
+ val(){val=true;const it=deck.items[order[idx]],ok=po(it).every((o,i)=>!!sel[i]===!!o.k);if(ok)score++;else wrong.push(order[idx]);if(!deck.free){rec(it,ok);if(cfg.srs){recR(it,ok);vprev=ok?cp(it):null;hesd=false;let p=opts(it)[ok?2:0];if(ok&&p.m)p={...p,st:2,k:null,m:0,iv:fI(p.s)};applyP(it,p)}save()}
   anp=!!(cfg.an&&ok);render();if(anp){const t=++ant,i0=idx,o0=order;setTimeout(()=>{if(t===ant&&anp&&view=="study"&&val&&idx===i0&&order===o0)A.next()},1500)}},
  next(){anp=false;ant++;idx++;sel={};val=false;vprev=null;hesd=false;if(idx>=order.length&&!deck.virt&&order.length==deck.items.length){deck.last=score+"/"+order.length;deck.u=Date.now();save()}render()},
  redo(){startQ(wrong.slice())},
  restart(){if(deck&&deck.free)return A.fre();A.st(0,rmode)},
- stats(){view="stats";menu=pend=null;hmSel=null;om=false;render();scrollTo(0,0)},
+ stats(){view="stats";menu=pend=null;hmSel=null;om=false;render();scrollTo(0,0);if(cfg.code)setTimeout(sync,0)},
  hard(t){const own=new Map(),items=[];hardList().forEach(({i,p})=>{if(p.k==t){own.set(i,p);items.push(i)}});if(!items.length)return;deck={virt:1,own,name:"Ce que tu rates souvent",k:t,items};A.st(1)},
  edit(id){ed={id};view="edit";menu=pend=null;render();scrollTo(0,0)},
  pimg(v){const[i,f]=v.split(":");pk={t:"card",id:ed.id,i:+i,f};$("fi").click()},
@@ -2342,12 +2351,12 @@ const A={
  xn(v){xs.n=+v;render()},
  xt(v){xs.t=+v;render()},
  xgo(){const ps=desc(cur).filter(n=>n.k=="qcm"&&xs.ids.has(n.id)),own=new Map();ps.forEach(n=>n.items.forEach(i=>own.set(i,n)));let it=shuf(ps.flatMap(n=>n.items));if(xs.n)it=it.slice(0,xs.n);if(!it.length)return;
-  deck={virt:1,own,name:"Examen",k:"qcm",items:it};ex={i:0,s:it.map(()=>({})),t0:Date.now(),end:Date.now()+it.length*xs.t*1000,done:false};view="exam";pend=null;clearInterval(xt);xt=setInterval(tick,500);render();scrollTo(0,0)},
+  qSeed();deck={virt:1,own,name:"Examen",k:"qcm",items:it};ex={i:0,s:it.map(()=>({})),t0:Date.now(),end:Date.now()+it.length*xs.t*1000,done:false};view="exam";pend=null;clearInterval(xt);xt=setInterval(tick,500);render();scrollTo(0,0)},
  xo(i){ex.s[ex.i][i]=!ex.s[ex.i][i];pend=null;render();exSave()},
  xnx(){ex.i++;pend=null;render();scrollTo(0,0);exSave()},
  xpv(){ex.i--;pend=null;render();scrollTo(0,0);exSave()},
  xfin(){if(!ex||ex.done)return;clearInterval(xt);exClr();const now=Date.now();ex.done=true;ex.to=now>=ex.end;ex.dt=Math.min(now,ex.end)-ex.t0;ex.bad=[];ex.sc=0;
-  deck.items.forEach((it,j)=>{const ok=it.o.every((o,i)=>!!ex.s[j][i]===!!o.k);if(ok)ex.sc++;else ex.bad.push(j);rec(it,ok)});save();pend=null;render();scrollTo(0,0)},
+  deck.items.forEach((it,j)=>{const ok=po(it).every((o,i)=>!!ex.s[j][i]===!!o.k);if(ok)ex.sc++;else ex.bad.push(j);rec(it,ok)});save();pend=null;render();scrollTo(0,0)},
  xq(){if(pend=="xq"){clearInterval(xt);exClr();pend=null;view="browse";render()}else{pend="xq";render()}},
  xredo(){view="study";nodue=false;startQ(ex.bad.slice())},
  allg(t){A.all(t,"both")},
@@ -2376,7 +2385,7 @@ const A={
  xres(){const o=exGet();if(!o||!o.it)return;const own=new Map(),items=[],sv=[];
   o.it.forEach(([pid,ix,k],j)=>{const p=G(pid);if(!p||p.x||!p.items)return;let it=p.items[ix];if(!it||ikey(it)!==k)it=p.items.find(x=>ikey(x)===k);if(!it||own.has(it))return;own.set(it,p);items.push(it);sv.push((o.s&&o.s[j])||{})});
   if(!items.length){exClr();render();return flash("Les questions de cet examen n\'existent plus.")}
-  deck={virt:1,own,name:"Examen",k:"qcm",items};ex={i:Math.max(0,Math.min(o.i||0,items.length-1)),s:sv,t0:o.t0,end:o.end,done:false};view="exam";pend=null;clearInterval(xt);
+  QSD=o.sd||0;deck={virt:1,own,name:"Examen",k:"qcm",items};ex={i:Math.max(0,Math.min(o.i||0,items.length-1)),s:sv,t0:o.t0,end:o.end,done:false};view="exam";pend=null;clearInterval(xt);
   if(Date.now()>=ex.end)return A.xfin();xt=setInterval(tick,500);exSave();render();scrollTo(0,0)},
  xab(){CF=()=>{exClr();render();flash("Examen abandonné")};AS={k:"conf",title:"Abandonner l\'examen ?",text:"Tes réponses en cours seront perdues. Rien n\'est compté dans tes statistiques.",ok:"Abandonner",danger:1};asRender()},
  exp(){const data={app:"mes-revisions",version:3,date:new Date().toISOString(),nodes:S.nodes.filter(n=>!n.x).map(n=>n.k=="img"?{...n,d:IMG.get(n.id)}:n)},name="revisions-"+new Date().toISOString().slice(0,10)+".json",blob=new Blob([JSON.stringify(data)],{type:"application/json"});
@@ -2493,8 +2502,11 @@ document.addEventListener("input",e=>{if(e.target.id=="fq"){fq=e.target.value;co
 document.addEventListener("change",e=>{const t=e.target;
  if(t.dataset&&t.dataset.ex!=null&&view=="edit"){const n=G(ed.id),it=n.items[+t.dataset.ex],v=t.value.trim();if(v)it.e=v;else delete it.e;n.u=Date.now();save();flash("Explication enregistrée")}
  else if(t.id=="fi"){const f=t.files[0];t.value="";if(!f||!pk)return;flash("Préparation de l'image…");loadImg(f).then(src=>{const n=G(pk.id),it=n.items[pk.i];it[pk.f]=newImg(src);n.u=Date.now();gc();save();render();pk=null}).catch(()=>flash("Image illisible : essaie une photo JPEG ou PNG."))}
- else if(t.id=="fb"){const f=t.files[0];t.value="";if(!f)return;f.text().then(x=>{const o=JSON.parse(x);if(!o||!Array.isArray(o.nodes)||!o.nodes.every(n=>n&&n.id!=null&&n.k))throw 0;rs={nodes:o.nodes.filter(n=>!n.x),np:o.nodes.filter(n=>!n.x&&(n.k=="fc"||n.k=="qcm")).length,date:o.date?new Date(o.date).toLocaleDateString("fr",{day:"numeric",month:"long",year:"numeric"}):"date inconnue"};bm="";render()}).catch(()=>{bm="Ce fichier n'est pas une sauvegarde de Mes révisions.";render()})}});
-document.addEventListener("click",e=>{if(sw||dd){sw=false;dd=false;return}const t=e.target.closest("[data-a]");if(t&&A[t.dataset.a]){if(AS&&t.closest("#asd"))AS=null;A[t.dataset.a](t.dataset.v);asRender()}});
+ else if(t.id=="fb"){const f=t.files[0];t.value="";if(!f)return;f.text().then(x=>{const o=JSON.parse(x);if(!o||!Array.isArray(o.nodes)||!o.nodes.every(n=>n&&n.id!=null&&n.k))throw 0;AS={k:"nxp",w:"bk"};rs={nodes:o.nodes.filter(n=>!n.x),np:o.nodes.filter(n=>!n.x&&(n.k=="fc"||n.k=="qcm")).length,date:o.date?new Date(o.date).toLocaleDateString("fr",{day:"numeric",month:"long",year:"numeric"}):"date inconnue"};bm="";render()}).catch(()=>{bm="Ce fichier n'est pas une sauvegarde de rev.";AS={k:"nxp",w:"bk"};render()})}});
+document.addEventListener("click",e=>{if(sw||dd){sw=false;dd=false;return}const t=e.target.closest("[data-a]");if(t&&A[t.dataset.a]){const sv=AS,inS=!!(sv&&t.closest("#asd"));if(inS)AS=null;A[t.dataset.a](t.dataset.v);
+ /* feuilles-pages (Synchronisation, Sauvegarde, Corbeille) : une action dans la feuille la laisse ouverte ; une confirmation ouverte depuis elle y revient */
+ if(inS){if(sv.k=="nxp"){if(AS==null&&t.dataset.a!="asc")AS=sv;else if(AS&&AS.k=="conf")AS.back=sv}else if(sv.k=="conf"&&sv.back&&AS==null)AS=sv.back}
+ asRender()}});
 document.addEventListener("scroll",e=>{const t=e.target;if(t&&t.classList&&t.classList.contains("pvsc"))pvEdges(t)},true);
 if(typeof addEventListener=="function"){addEventListener("resize",()=>{if(PV)pvFit()});if(window.visualViewport)visualViewport.addEventListener("resize",()=>{if(PV)pvFit()})}
 document.addEventListener("keydown",e=>{if(AS&&e.key=="Escape"){AS=null;CF=null;asRender()}else if(PV&&e.key=="Escape"){PV=null;render()}});
@@ -2628,7 +2640,7 @@ function nxBody(o){let h="";const due=cfg.srs?(o.fcP.length?o.F.t:0)+(o.qcP.leng
  if(selm)return h+selDock();
  const hp=o.fcA.length||o.qcA.length;
  return h+'<div class="dock nxd">'+(hp?'<button type="button" class="b ok nxrv" data-a="nxr">'+ic("play",19)+'<span>Réviser</span>'+(due?'<small><span class="vh">, </span>'+due+'<span class="vh"> à faire</span></small>':'')+'</button>':'')
-  +'<button type="button" class="b nxad'+(hp?'':' ok wide')+'" data-a="nxa" aria-label="Ajouter un dossier ou un paquet">'+(hp?'<span aria-hidden="true">+</span>':'+ Ajouter')+'</button></div>'}
+  +'<button type="button" class="b nxad'+(hp?'':' ok wide')+'" data-a="nxa" aria-label="Ajouter un dossier ou un paquet">'+(hp?'<svg class="nxpl" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>':'+ Ajouter')+'</button></div>'}
 // feuille « Réviser » : flashcards, QCM, mode examen (portée : le dossier ouvert)
 function nxRevHTML(){const o=nxInfo(),r=[],any=o.fcP.length||o.qcP.length;
  if(o.fcP.length){r.push(asR("allg","fc","Flashcards"+(o.F.t?" · "+o.F.t:""),"fc"));if(cfg.srs&&o.F.r&&o.F.w)r.push(asR("all","fc","Flashcards : choisir nouvelles ou à revoir","lay"))}
@@ -2672,7 +2684,7 @@ const NXHELP={
  ipad:"Désactivée : la version téléphone est affichée, centrée.",
  fcst:"Désactivé : le graphique est masqué dans les statistiques."};
 const bkUI=()=>(rs?'<p class="help">Sauvegarde du '+esc(rs.date)+' : '+rs.np+' paquet'+(rs.np>1?"s":"")+'. Elle remplacera toutes tes données actuelles'+(cfg.code?', y compris sur tes autres appareils synchronisés':'')+'.</p><div class="menu"><button data-a="rsx">Annuler</button><button class="dg" data-a="rsok">Remplacer mes données</button></div>':'<p class="help">Un fichier JSON avec tous tes dossiers, paquets, images et ta progression. '+bkInfo()+'</p><div class="menu"><button data-a="exp">Exporter</button><button data-a="rst">Restaurer</button></div>')+(bm?'<p class="help">'+esc(bm)+'</p>':'');
-function nxSetHTML(){const sp=rs?"bk":SETP,C=NXC;
+function nxSetHTML(){let sp=SETP;const C=NXC;if(sp=="sync"||sp=="bk"){AS={k:"nxp",w:sp};SETP=sp=null}
  const I=(n,c)=>'<span class="nxsi" style="--c:'+c+'" aria-hidden="true">'+ic(n,18)+'</span>';
  if(sp){const T={sync:"Synchronisation",bk:"Sauvegarde",acc:"Couleur de contraste"}[sp]||"Réglages";
   const top='<div class="tb"><div class="crw"><button class="bk" data-a="nxsp" data-v="">'+ic("chev",22)+'<span>Réglages</span></button></div>'+nxTgS()+'</div>';
@@ -2725,8 +2737,8 @@ let PVV=null;
 const nxTree=(p,d,ex)=>kids(p).filter(n=>n.k=="f"&&!ex.includes(n.id)).map(n=>'<button type="button" class="nxsr nxmvr" style="--d:'+d+'"'+nxFc(n)+' data-a="mvto" data-v="'+n.id+'">'+(d==1?'<i class="nxb" aria-hidden="true"></i>':'')
  +'<span class="nxmvi">'+ic("f",19,n.c)+'</span><span class="nxst"><b>'+esc(n.name)+'</b></span>'+(n.id==same()?'<span class="nxtag">actuel</span>':'<span class="nxsc" aria-hidden="true">'+ic("cr",15)+'</span>')+'</button>'+nxTree(n.id,d+1,ex)).join("");
 const nxMoveHTML=()=>'<div class="nxsg nxmv"><button type="button" class="nxsr nxmvr" style="--d:0" data-a="mvto" data-v="0"><span class="nxmvi">'+ic("home",19)+'</span><span class="nxst"><b>Accueil</b></span>'+(same()===0?'<span class="nxtag">actuel</span>':'<span class="nxsc" aria-hidden="true">'+ic("cr",15)+'</span>')+'</button>'+nxTree(0,1,ed.ids)+'</div>';
-function nxTrashHTML(){const rs=trashRoots(),now=Date.now(),pl=(k,a,b)=>k+" "+(k>1?b:a);
- let h='<div class="tb"><div class="crw"><button class="bk" data-a="set">'+ic("chev",22)+'<span>Réglages</span></button></div>'+tg(1)+'</div><h1>Corbeille</h1><p class="help nxsqh">Les dossiers et paquets supprimés sont conservés 30 jours, puis effacés définitivement.</p>';
+function nxTrashHTML(sheet){const rs=trashRoots(),now=Date.now(),pl=(k,a,b)=>k+" "+(k>1?b:a);
+ let h=sheet?'<p class="help nxsqh">Les dossiers et paquets supprimés sont conservés 30 jours, puis effacés définitivement.</p>':'<div class="tb"><div class="crw"><button class="bk" data-a="set">'+ic("chev",22)+'<span>Réglages</span></button></div>'+tg(1)+'</div><h1>Corbeille</h1><p class="help nxsqh">Les dossiers et paquets supprimés sont conservés 30 jours, puis effacés définitivement.</p>';
  if(!rs.length)return h+'<div class="empty">La corbeille est vide.</div>';
  return h+'<div class="nxsg nxtr">'+rs.map(n=>{const f=n.k=="f",left=Math.max(0,Math.ceil((n.xt+TR_MS-now)/864e5)),ago=Math.floor((now-n.xt)/864e5),inner=f?tdesc(n.id,n.xb).length:(n.items||[]).length,
   sub=f?pl(inner,"élément","éléments"):pl(inner,n.k=="fc"?"carte":"question",n.k=="fc"?"cartes":"questions");
@@ -2887,7 +2899,7 @@ function render0(){
   if(idx>=n)h+='<div class="done"><h1>Score : '+score+' / '+n+'</h1><p class="help">Une question est juste quand toutes ses propositions sont bien cochées.</p>'+(wrong.length?'<button class="b ok" data-a="redo">Refaire mes erreurs ('+wrong.length+')</button>':'')+(endB(!!wrong.length)??'<button class="b" data-a="restart">Recommencer</button><button class="b" data-a="back">Retour aux paquets</button>')+'</div>';
   else{const it=deck.items[order[idx]];
    h+='<div class="meta"><span>Question '+(idx+1)+' / '+n+'</span><span>'+score+' juste'+(score>1?"s":"")+'</span></div><div class="qb">'+(cfg.nx?'<div class="nxqq">':'')+'<div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+'<p class="hint">Coche les propositions vraies.</p>'+(cfg.nx?'</div>':'');
-   const bad=val?it.o.filter((o,i)=>!!sel[i]!==!!o.k).length:0;
+   const bad=val?po(it).filter((o,i)=>!!sel[i]!==!!o.k).length:0;
    if(val)h+='<p class="res '+(bad?"r":"g")+'" role="status"><span class="state-icon" aria-hidden="true">'+(bad?"!":"✓")+'</span><span>'+(bad?bad+(bad>1?" erreurs":" erreur"):"Tout juste")+'</span>'+(!bad&&vprev?(hesd?'<span class="hz">Noté comme difficile</span>':'<button type="button" class="lnk hz" data-a="hes">J\'ai hésité</button>'):'')+'</p>';
    h+=nxOpts(optsH(it,sel,val,"opt"));
    if(val)h+=exH(it);
@@ -3196,7 +3208,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
    q=rmIx(q,j);tot--;back=false;
    if(!q.length){if(tot<=0)empty=true;else if(!dk.virt){dk.last="terminé";dk.u=now}}
   }else{
-   var okv=!!val&&it.o.every(function(o,i){return !!sel[i]===!!o.k});
+   var okv=!!val&&po(it).every(function(o,i){return !!sel[i]===!!o.k});
    sn={pos:idx,val:val,sel:sel,ok:okv,wp:wrong.indexOf(j)};
    order=rmIx(order,j);wrong=rmIx(wrong,j);if(okv)score--;sel={};val=false;
    if(!order.length)empty=true;
@@ -3361,6 +3373,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   desc(cur).forEach(function(n){if(n.k==="qcm"&&n.items)n.items.forEach(function(it,i){if(XS&&XS.sel.has(n.id+"#"+i)){pool.push(it);own.set(it,n)}})});
   var it=shuf(pool);if(xs.n)it=it.slice(0,xs.n);if(!it.length)return;
   deck={virt:1,own:own,name:"Examen",k:"qcm",items:it};
+  qSeed();
   ex={i:0,s:it.map(function(){return{}}),t0:Date.now(),end:Date.now()+it.length*xs.t*1000,done:false};
   view="exam";pend=null;clearInterval(xt);xt=setInterval(tick,500);render();scrollTo(0,0);exSave();
  };
@@ -3802,6 +3815,24 @@ h1{font-family:ui-serif,"New York",Georgia,"Times New Roman",serif;font-weight:6
 h1:has(.rvd){font-size:38px;line-height:1.05;letter-spacing:-.035em;color:#173d32}
 html[data-ipad="1"] h1:has(.rvd){font-size:44px}
 html[data-theme="dark"] h1:has(.rvd){color:var(--ink)}
+/* ===== correctifs du 18/10/2026 ===== */
+/* « + » : un vrai cercle (même hauteur que « Réviser », qui s'étire à la sienne), icône vectorielle centrée */
+html[data-nx="1"] #app .dock.nxd .nxad:not(.wide){display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;height:auto;align-self:center;padding:0;line-height:0}
+html[data-nx="1"][data-desk="1"] #app .dock.nxd .nxad:not(.wide){width:54px}
+html[data-nx="1"] #app .dock.nxd .nxad .nxpl{display:block;flex:none}
+/* feuilles-pages : Synchronisation, Sauvegarde, Corbeille */
+#asd .nxpb{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+#asd .nxpb>.h2:first-child{display:none}
+#asd .nxpb :is(p,h2){margin:0}
+#asd .nxpb .help,#asd .nxsqh{font-size:14px;line-height:1.4;color:var(--mut)}
+#asd .nxpb .code{font:600 18px/1.3 ui-monospace,Menlo,monospace;letter-spacing:.03em;text-align:center;padding:14px 12px;border-radius:16px;background:var(--lq-well,rgb(21 32 27/.07));color:var(--ink);word-break:break-all}
+#asd .nxpb input{display:block;width:100%;box-sizing:border-box;min-height:46px;padding:0 14px;border:0;border-radius:14px;background:var(--lq-well,rgb(21 32 27/.07));box-shadow:inset 0 1px 2px rgb(0 0 0/.12);color:var(--ink);font:inherit;font-size:16px}
+#asd .nxpb input::placeholder{color:var(--mut)}
+#asd .nxpb .b{width:100%;justify-content:center;min-height:48px}
+#asd .nxpb .menu{display:flex;flex-direction:column;gap:8px;padding:0;border:0;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+#asd .nxpb .menu::before,#asd .nxpb .menu::after{display:none}
+#asd .nxpb .menu button{width:100%;min-height:48px;border-radius:24px}
+#asd .nxpb label.b,#asd .nxpb .menu label{display:flex;align-items:center;justify-content:center;min-height:48px}
 .rvd{color:#98772f}html[data-theme="dark"] .rvd{color:#d2b273}
 /* réglages : pastilles d'icône sauge, un seul ton */
 html[data-nx="1"] #app .nxsi{background:#dfe8e1;color:#173d32;box-shadow:none}
