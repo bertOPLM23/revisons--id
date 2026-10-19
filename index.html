@@ -1828,7 +1828,7 @@ function pvEdges(el){if(!el)return;const up=el.scrollTop>2,dn=el.scrollTop+el.cl
 function pvFit(){const m=document.querySelector(".pvm"),sc=document.querySelector(".pvsc");if(!m||!sc)return;
  m.style.maxHeight="";const r=m.getBoundingClientRect(),vh=window.visualViewport?visualViewport.height:innerHeight;
  m.style.maxHeight=Math.max(150,Math.floor(vh-r.top-16))+"px";pvEdges(sc)}
-function tbHTML(){if(NXB)return"";const vm=vmode(),vi=vm=="grid"?"vg":vm=="cols"?"vc":"vl",act=sortMode()!="name"||ft!="all"||fq.trim()||fo;
+function tbHTML(){if(NXB)return selm||fo?"":nxXbHTML();const vm=vmode(),vi=vm=="grid"?"vg":vm=="cols"?"vc":"vl",act=sortMode()!="name"||ft!="all"||fq.trim()||fo;
  const b=(a,v,on,label,icon,extra)=>'<button class="tg'+(on?" on":"")+'" data-a="'+a+'"'+(v?' data-v="'+v+'"':"")+' aria-label="'+label+'"'+(a=="pv"?' aria-haspopup="menu" aria-expanded="'+on+'"':"")+'>'+ic(icon,20)+(extra||"")+'</button>';
  return '<div class="bt">'+b("sel","",selm,selm?"Terminer la sélection":"Sélectionner","sl")+b("pv","view",PV=="view","Affichage",vi)+b("pv","sort",PV=="sort","Trier et filtrer","flt",act?'<i class="dot"></i>':"")+(cur?'':'<button class="tg" data-a="search" aria-label="Rechercher">'+ic("search",20)+'</button>')+pvHTML()+'</div>'}
 const hidRel=(n,root)=>{for(let x=n;x&&!x.x&&x.id!=root;x=x.p?G(x.p):null){if(x.h)return true}return false};
@@ -2628,6 +2628,57 @@ function nxTile(n){const f=n.k=="f",s=selm&&selset.has(n.id),hd=hidRel(n,cur),d=
 const nxList=l=>{const g=vmode()=="grid",r=n=>g?nxTile(n):nxItem(n,fq.trim()),grp=(t,a)=>a.length?'<div class="nxs" role="heading" aria-level="2">'+t+'</div><div class="nxg'+(g?" tiles":"")+'">'+a.map(r).join("")+'</div>':"";
  return grp("Dossiers",l.filter(n=>n.k=="f"))+grp("Paquets",l.filter(n=>n.k!="f"))};
 // bande « aujourd'hui » : série et objectif, reprendre, à corriger, épinglés (remplace les encadrés de l'accueil)
+// ---- 19/10/2026 : rappels compacts (badge Examen près du titre, cartes Rattrapage / Retard) et bulle de détail ----
+let BB=null,BBC=null,BBT=0;
+const nxDsh=d=>new Date(d*864e5).toLocaleDateString("fr",{timeZone:"UTC",weekday:"short",day:"numeric",month:"short"}),nxDlg=d=>new Date(d*864e5).toLocaleDateString("fr",{timeZone:"UTC",weekday:"long",day:"numeric",month:"long"});
+const nxJ=g=>{const d=g.xd-day();return d>0?"J-"+d:"Jour J"};
+const nxSeg=(j,n)=>'<span class="rqseg" aria-hidden="true">'+Array.from({length:n},(_,i)=>'<i'+(i+1==j?' class="cu"':i+1<j?' class="dn"':'')+'></i>').join("")+'</span>';
+// examens à afficher (mêmes règles que les anciennes cartes) : triés par date, le plus proche d'abord
+function nxXds(){if(!cfg.srs)return[];const ids=[];if(xdAct(optN()))ids.push("0");S.nodes.forEach(n=>{if(n.k=="f"&&xdAct(n)&&!path(n.p).some(x=>x.x))ids.push(n.id)});
+ const anc=cur?path(cur).map(x=>x.id):[],rel=id=>!cur||(id=="0"?!anc.some(a=>xdAct(G(a))):anc.includes(id)||path(G(id).p).some(x=>x.id==cur));
+ return ids.filter(rel).map(id=>({id,g:gInfo(id)})).filter(o=>o.g).sort((a,b)=>a.g.xd-b.g.xd)}
+// badge Examen à côté du titre : « Examen J-58 », puis « J-58 », puis l'icône seule selon la place (nxXb)
+function nxXbHTML(){const L=nxXds();if(!L.length)return"";const g=L[0].g,j=nxJ(g);
+ return '<button type="button" class="rqbadge'+(BB=="ex"?" on":"")+'" data-bb="ex" data-lv="0" data-a="bb" data-v="ex" aria-haspopup="dialog" aria-expanded="'+(BB=="ex")+'" aria-label="Examen '+esc(nxDsh(g.xd))+', '+j+' : voir le détail">'+ic("cal",15)+'<span class="rqt1">Examen</span><b class="rqt2">'+j+'</b></button>'}
+function nxXb(){const b=document.querySelector("#app .h1r .rqbadge");if(!b)return;const r=b.closest(".h1r"),h=r&&r.querySelector("h1");if(!h)return;
+ const w0=h.style.whiteSpace,f0=h.style.flex;h.style.whiteSpace="nowrap";h.style.flex="none";const tw=h.scrollWidth;h.style.whiteSpace=w0;h.style.flex=f0;
+ const gap=parseFloat(getComputedStyle(r).columnGap)||12,av=r.clientWidth;let lv=0;
+ for(;lv<2;lv++){b.dataset.lv=lv;if(tw+gap+b.offsetWidth<=av)break}b.dataset.lv=lv}
+// rattrapage étalé : total de la journée mémorisé sur cet appareil seulement (aucune donnée synchronisée)
+function nxCuBase(c,k){let b=k;try{const s=JSON.parse(localStorage.getItem("revis-cu0")||"null");if(s&&s.d==day()&&s.c==c.d0)b=Math.max(s.k,k);if(!s||s.d!=day()||s.c!=c.d0||b!=s.k)localStorage.setItem("revis-cu0",JSON.stringify({d:day(),c:c.d0,k:b}))}catch(e){}return b}
+function nxCu(){if(!cfg.srs||cur)return"";const c=cuAct(),ib='<button type="button" class="rqinfo" data-bb="cu" data-a="bb" data-v="cu" aria-haspopup="dialog" aria-expanded="'+(BB=="cu")+'" aria-label="Plus de détails">'+ic("info",19)+'</button>';
+ if(c){const k=rvLeft();if(!k)return"";const j=day()-c.d0+1,b=nxCuBase(c,k),pr=b>k;
+  return '<div class="pn rqcard"><div class="rqgrid"><div class="rqlbl">'+(pr?'<i class="nxrg" style="--p:'+Math.round((b-k)*100/b)+'" aria-hidden="true"></i>':'')+'<span>Rattrapage · jour '+j+' sur '+c.n+'</span>'+nxSeg(j,c.n)+'</div><b class="rqttl">'+(pr?k+" restantes sur "+b:k+(k>1?" révisions":" révision")+'<span class="rqtoday"> aujourd\'hui</span>')+'</b>'+ib+'<div class="rqacts"><button type="button" class="rqbtn" data-a="cuall">Tout rattraper</button></div></div></div>'}
+ const T=TD(),od=T.odf+T.odq;if(od<CU_MIN||cfg.cud==day())return"";const mn=odMin();
+ return '<div class="pn rqcard rqlate"><div class="rqgrid"><div class="rqlbl w"><span>Retard</span></div><b class="rqttl">'+od+' révisions'+(mn?' · ≈ '+fmtMin(mn):'')+'</b>'+ib+'<div class="rqacts"><button type="button" class="rqbtn rqalt" data-a="cusp">Étaler sur 3 jours</button><button type="button" class="rqbtn" data-a="cuall">Tout rattraper</button></div></div></div>'}
+// bulle de détail (ancrée sur le badge ou sur le ⓘ), posée sur <body> comme les feuilles
+function nxBbHTML(){const r=(a,b)=>'<div class="bbr"><span>'+a+'</span><b>'+b+'</b></div>',pl=(k,a,b)=>k+" "+(k>1?b:a);
+ if(BB=="ex")return nxXds().map(o=>{const g=o.g,id=o.id,nm=id=="0"?"":G(id).name,dt=[g.fc.q?pl(g.fc.q,"carte","cartes"):"",g.qcm.q?g.qcm.q+" QCM":""].filter(Boolean).join(" et ");let rows;
+  if(!g.u)rows=r("Nouvelles cartes","toutes vues");
+  else if(g.late)rows=r("Reste à voir",pl(g.u,"nouvelle","nouvelles"))+r("Prévu avant le",nxDsh(g.tg));
+  else rows=r("Aujourd\'hui",g.s>=g.q?"objectif atteint":pl(g.q,"nouvelle","nouvelles")+" minimum")+(g.s<g.q&&dt?r("Détail",dt):"")+r("À découvrir",g.u+" d\'ici le "+nxDsh(g.tg));
+  return '<div class="bbs"><small class="bbl">Examen'+(nm&&id!=cur?" · "+esc(nm):"")+'</small><div class="bbt">'+nxDlg(g.xd)+'<span class="bbj">'+nxJ(g)+'</span></div>'+rows+(g.u&&g.q?'<div class="bar"><i style="width:'+Math.min(100,Math.round(g.s/g.q*100))+'%"></i></div>':"")+'</div>'}).join("");
+ const c=cuAct();
+ if(c){const k=rvLeft(),j=day()-c.d0+1,b=nxCuBase(c,k);return '<div class="bbs"><small class="bbl">Rattrapage étalé</small><div class="bbt">Jour '+j+' sur '+c.n+nxSeg(j,c.n)+'</div>'+r("Aujourd\'hui",k?(b>k?k+" restantes sur "+b:pl(k,"révision prévue","révisions prévues")):"part du jour terminée")+'<p class="bbp">Les plus fragiles passent en premier, la suite est répartie sur les jours restants.</p><button type="button" class="rqbtn wide" data-a="cuall">Tout rattraper maintenant</button></div>'}
+ const T=TD(),od=T.odf+T.odq,mn=odMin();
+ return '<div class="bbs"><small class="bbl w">Retard</small><div class="bbt">'+od+' révisions en retard</div>'+(mn?r("À ton rythme","≈ "+fmtMin(mn)):"")+'<p class="bbp">Les plus fragiles passent en premier.</p><div class="bbg"><button type="button" class="rqbtn" data-a="cuall">Tout rattraper</button><button type="button" class="rqbtn rqalt" data-a="cusp">Étaler sur 3 jours</button></div></div>'}
+function nxBbRender(){let d=document.getElementById("bbd");
+ if(!BB||view!="browse"){if(d)d.remove();return}
+ const t=document.querySelector('#app [data-bb="'+BB+'"]');if(!t){BB=null;if(d)d.remove();return}
+ const html='<div class="bbx" data-a="bbc"></div><div class="bbm" role="dialog" aria-label="Détail" tabindex="-1">'+nxBbHTML()+'<i class="bba"></i></div>',fresh=!d;
+ if(!d){d=document.createElement("div");d.id="bbd";document.body.appendChild(d)}
+ if(d.dataset.h!==html){d.innerHTML=html;d.dataset.h=html}
+ const m=d.querySelector(".bbm"),a=d.querySelector(".bba"),rc=t.getBoundingClientRect(),vw=innerWidth,vh=window.visualViewport?visualViewport.height:innerHeight,w=Math.min(352,vw-24),cx=rc.left+rc.width/2,l=Math.max(12,Math.min(cx-w/2,vw-12-w));
+ m.style.width=w+"px";m.style.left=l+"px";m.style.maxHeight="";let up=false,tp=rc.bottom+10;const h=m.offsetHeight;
+ if(tp+h>vh-12&&rc.top-10-h>=12){tp=rc.top-10-h;up=true}else if(tp+h>vh-12)m.style.maxHeight=Math.max(150,Math.floor(vh-tp-12))+"px";
+ m.style.top=tp+"px";m.classList.toggle("up",up);a.style.left=Math.max(20,Math.min(cx-l,w-20))+"px";
+ if(fresh)try{m.focus({preventScroll:true})}catch(e){}}
+function nxFit(){nxBk();nxXb();nxBbRender()}
+A.bb=v=>{BB=BB==v?null:v;BBC=cur;BBT=Date.now();render()};
+A.bbc=()=>{BB=null;render()};
+{const a0=A.cuall,b0=A.cusp;A.cuall=function(){BB=null;return a0.apply(this,arguments)};A.cusp=function(){BB=null;return b0.apply(this,arguments)}}
+document.addEventListener("keydown",e=>{if(BB&&e.key=="Escape"){BB=null;render()}});
+if(typeof addEventListener=="function"){addEventListener("scroll",e=>{if(BB&&Date.now()-BBT>400&&!(e.target&&e.target.closest&&e.target.closest("#bbd"))){BB=null;nxBbRender();render()}},{passive:true,capture:true});addEventListener("resize",()=>requestAnimationFrame(nxBbRender))}
 function nxBand(rest){const c=[];
  if(!cfg.nosk){const L=S.nodes.filter(n=>n.k=="log"&&!n.x),cc=d=>L.reduce((s,l)=>s+((l.h||{})[d]||0),0),d0=day(),t=cc(d0);let k=0,d=t?d0:d0-1;while(cc(d)>0){k++;d--}
   if(k||t||rest){const tt=t+rest,g=cfg.srs&&tt;
@@ -2635,12 +2686,13 @@ function nxBand(rest){const c=[];
     +'<span><b>'+(k?k+(k>1?" jours":" jour")+" d\'affilée":"Commence ta série")+'</b>'+(g?' · '+t+'/'+tt+'<span class="vh"> révisions faites aujourd\'hui</span>':t?' · '+t+(t>1?" révisions":" révision"):"")+'</span></button>')}}
  const ri=resumeInfo();if(ri)c.push('<button type="button" class="chip nxc" data-a="resume">'+ic("play",15)+'<span>Reprendre <b>'+ri.label+'</b></span></button>');
  const fx=fxList().length;if(fx)c.push('<button type="button" class="chip nxc" data-a="fxl">'+ic("flag",15)+'<span><b>'+fx+'</b> à corriger</span></button>');
+ if(cfg.srs&&cuAct()&&!rvLeft())c.push('<span class="chip nxc rqdone" role="status">'+CK+'<span>Rattrapage du jour terminé</span></span>');
  S.nodes.filter(n=>n.pn&&!n.x&&(n.k=="f"||isPack(n))).sort((a,b)=>a.name.localeCompare(b.name,"fr",{numeric:true})).forEach(n=>{const f=n.k=="f",d=cfg.srs?dn(n):0;
   c.push('<button type="button" class="chip nxc pinc" data-a="'+(f?"cd":"go")+'" data-v="'+n.id+'">'+ic(f?"f":n.k,16,n.c)+'<span>'+esc(n.name)+'</span>'+(d?'<em>'+d+'</em>':'')+'</button>')});
  return c.length?'<div class="nxband" role="group" aria-label="Aujourd\'hui">'+c.join("")+'</div>':""}
 function nxBody(o){let h="";const due=cfg.srs?(o.fcP.length?o.F.t:0)+(o.qcP.length?o.Q.t:0):0;
  if(!cur&&!selm)h+='<button type="button" class="nxq" data-a="nxq">'+ic("search",19)+'<span>Rechercher dans tes cours</span></button>';
- if(!selm&&!fo){if(!cur)h+=nxBand(due);h+=exCard()+goalCards()+cuCard();if(!cur)h+=bkCard()+codeCard()}
+ if(!selm&&!fo){if(!cur)h+=nxBand(due);h+=exCard()+nxCu();if(!cur)h+=bkCard()+codeCard()}
  h+=vmode()=="cols"&&!selm&&!fo&&!fq.trim()&&ft=="all"?colsHTML():'<div class="nxl" id="lst">'+listHTML()+'</div>';
  if(selm)return h+selDock();
  const hp=o.fcA.length||o.qcA.length;
@@ -2794,14 +2846,15 @@ function nxFd(c){const own=deck.virt&&deck.own?deck.own.get(c):deck,f=own&&own.p
  return '<span class="nxfd"'+(col?' style="--fc:'+esc(col)+'"':'')+'><i class="dt" aria-hidden="true"></i><span class="vh">Dossier : </span><span class="fn">'+esc(f?f.name:"Accueil")+'</span>'+(c.c?'<span class="vh">, catégorie : </span><span class="cat">'+esc(c.c)+'</span>':'')+'</span><span class="vh">. </span>'}
 function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}
 
- if(cfg.nx){nxBk();requestAnimationFrame(nxBk)}}
+ if(cfg.nx){nxFit();requestAnimationFrame(nxFit)}else nxBbRender()}
 // nouvelle apparence : si le mot du bouton retour serait coupé (« Réglag… »), on n'affiche que le chevron (le mot reste lu par VoiceOver)
 function nxBk(){const b=document.querySelector("#app .tb .crw .bk"),t=b&&b.querySelector(":scope>span");if(!t)return;b.classList.remove("ico");if(!cfg.nx)return;const r=document.createRange();r.selectNodeContents(t);const w=b.closest(".crw");const br=b.getBoundingClientRect();if(r.getBoundingClientRect().right>br.right-(parseFloat(getComputedStyle(b).paddingRight)||0)+.5||b.scrollWidth>b.clientWidth||t.scrollWidth>t.clientWidth+1||r.getBoundingClientRect().width>t.getBoundingClientRect().width+.5||b.getBoundingClientRect().right>(w?w.getBoundingClientRect().right:innerWidth)+.5)b.classList.add("ico")}
-if(typeof addEventListener=="function"){addEventListener("resize",()=>requestAnimationFrame(nxBk));if(document.fonts&&document.fonts.ready)document.fonts.ready.then(nxBk)}
+if(typeof addEventListener=="function"){addEventListener("resize",()=>requestAnimationFrame(nxFit));if(document.fonts&&document.fonts.ready)document.fonts.ready.then(nxFit)}
 function render0(){
  if(!booted)return;
  NXB=view=="browse"&&!!cfg.nx;NXS=view=="set"&&!!cfg.nx;
  if(view!="browse"&&!(cfg.nx&&PV=="more"&&view===PVV))PV=null;PVV=view;
+ if(BB&&(view!="browse"||BBC!==cur))BB=null;
  const pvOld=document.querySelector(".pvsc"),pvTop=pvOld?pvOld.scrollTop:0;
  let h="";
  if(view=="browse"){
@@ -3858,6 +3911,66 @@ html[data-nx="1"] #app :is(.tb.tbon .bk,.tb .bk.ico){box-sizing:border-box;displ
 /* réglages : pastilles d'icône sauge, un seul ton */
 html[data-nx="1"] #app .nxsi{background:#dfe8e1;color:#173d32;box-shadow:none}
 html[data-nx="1"][data-theme="dark"] #app .nxsi{background:#1f3a30;color:#a9dcc0}
+/* 19/10/2026 : badge Examen près du titre, cartes Rattrapage / Retard compactes, bulle de détail */
+html[data-nx="1"] #app .h1r:has(.rqbadge){justify-content:flex-start;align-items:center;gap:12px;flex-wrap:nowrap}
+html[data-nx="1"] #app .rqbadge{position:relative;flex:none;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 9px;border-radius:16px;border:1px solid color-mix(in srgb,#98772f 55%,transparent);background:color-mix(in srgb,#98772f 12%,transparent);color:var(--ink);font:inherit;font-size:14px;white-space:nowrap;margin:0}
+html[data-nx="1"] #app .rqbadge svg{flex:none;color:#98772f}
+html[data-nx="1"] #app .rqbadge b{font-weight:700;color:#6e5220}
+html[data-nx="1"][data-theme="dark"] #app .rqbadge{border-color:color-mix(in srgb,#d2b273 50%,transparent);background:color-mix(in srgb,#d2b273 12%,transparent)}
+html[data-nx="1"][data-theme="dark"] #app .rqbadge svg,html[data-nx="1"][data-theme="dark"] #app .rqbadge b{color:#d2b273}
+html[data-nx="1"] #app .rqbadge::before{content:"";position:absolute;inset:-6px -4px}
+html[data-nx="1"] #app .rqbadge[data-lv="1"] .rqt1,html[data-nx="1"] #app .rqbadge[data-lv="2"] .rqt1,html[data-nx="1"] #app .rqbadge[data-lv="2"] .rqt2{display:none}
+html[data-nx="1"] #app .rqbadge[data-lv="2"]{width:32px;padding:0;justify-content:center}
+html[data-nx="1"] #app .rqcard{container-type:inline-size;padding:10px 12px 12px 16px;margin:0}
+html[data-nx="1"] #app .rqgrid{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"l i" "t b";align-items:center;gap:4px 10px}
+html[data-nx="1"] #app .rqlate .rqgrid{grid-template-areas:"l i" "t t" "b b";row-gap:6px}
+html[data-nx="1"] #app .rqlbl{grid-area:l;display:flex;align-items:center;gap:8px;min-width:0;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
+html[data-nx="1"] #app .rqlbl.w{color:var(--ko)}
+html[data-nx="1"] #app .rqttl{grid-area:t;min-width:0;font-size:18px;font-weight:600;letter-spacing:-.2px;color:var(--ink)}
+html[data-nx="1"] #app .rqinfo{grid-area:i;justify-self:end;position:relative;display:flex;align-items:center;justify-content:center;width:32px;height:32px;margin:-6px -4px -6px 0;padding:0;border:0;border-radius:16px;background:none;color:var(--mut)}
+html[data-nx="1"] #app .rqinfo::before{content:"";position:absolute;inset:-6px}
+html[data-nx="1"] #app .rqacts{grid-area:b;display:flex;gap:8px}
+html[data-nx="1"] #app .rqlate .rqacts .rqbtn{flex:1}
+html .rqbtn{position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 15px;border-radius:17px;border:1px solid color-mix(in srgb,var(--acc) 38%,transparent);background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc);font:inherit;font-size:13.5px;font-weight:600;white-space:nowrap;margin:0}
+html .rqbtn::before{content:"";position:absolute;inset:-5px -2px}
+html .rqbtn.rqalt{border-color:var(--line);background:none;color:var(--ink)}
+@container (min-width:560px){
+ html[data-nx="1"] #app .rqgrid{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"l i b" "t i b";column-gap:12px}
+ html[data-nx="1"] #app .rqlate .rqgrid{grid-template-areas:"l i b" "t i b"}
+ html[data-nx="1"] #app .rqlate .rqacts .rqbtn{flex:none}
+ html[data-nx="1"] #app .rqinfo{margin:0;align-self:center}
+}
+@container (max-width:380px){html[data-nx="1"] #app .rqtoday{display:none}}
+html[data-nx="1"] #app .rqlbl>span:not(.rqseg){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@container (max-width:340px){
+ html[data-nx="1"] #app .rqgrid{grid-template-areas:"l i" "t t" "b b";row-gap:6px}
+ html[data-nx="1"] #app .rqacts .rqbtn{flex:1}
+ html[data-nx="1"] #app .rqlbl .rqseg{display:none}
+}
+html[data-nx="1"] #app .rqseg,html[data-nx="1"] #bbd .rqseg{display:inline-flex;gap:4px}
+.rqseg i{display:block;width:20px;height:5px;border-radius:3px;background:color-mix(in srgb,var(--mut) 28%,transparent)}
+.rqseg i.dn{background:color-mix(in srgb,var(--acc) 55%,transparent)}
+.rqseg i.cu{background:var(--acc)}
+html[data-nx="1"] #app .nxband .rqdone{pointer-events:none;color:var(--mut)}
+#bbd .bbx{position:fixed;inset:0;z-index:70;background:transparent}
+#bbd .bbm{position:fixed;z-index:71;box-sizing:border-box;padding:14px 16px;border-radius:22px;overflow:auto;background:var(--g-sol);border:1px solid var(--g-edge);box-shadow:0 18px 44px -14px var(--g-sh);color:var(--ink);animation:pvin .16s ease;outline:none}
+#bbd .bba{position:absolute;top:-7px;width:14px;height:14px;margin-left:-7px;transform:rotate(45deg);background:var(--g-sol);border-left:1px solid var(--g-edge);border-top:1px solid var(--g-edge)}
+#bbd .bbm.up .bba{top:auto;bottom:-7px;border:0;border-right:1px solid var(--g-edge);border-bottom:1px solid var(--g-edge)}
+#bbd .bbs+.bbs{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+#bbd .bbl{display:block;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+#bbd .bbl.w{color:var(--ko)}
+#bbd .bbt{display:flex;align-items:center;gap:10px;margin:2px 0 6px;font-family:ui-serif,"New York",Georgia,serif;font-size:21px;font-weight:600;letter-spacing:-.3px}
+#bbd .bbj{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;background:color-mix(in srgb,#98772f 16%,transparent);color:#6e5220;font:700 12.5px -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;letter-spacing:0}
+html[data-theme="dark"] #bbd .bbj{color:#d2b273}
+#bbd .bbr{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:14.5px}
+#bbd .bbr span{color:var(--mut)}
+#bbd .bbr b{text-align:right;font-weight:600}
+#bbd .bbp{margin:8px 0 12px;font-size:13.5px;line-height:1.4;color:var(--mut)}
+#bbd .bbg{display:flex;gap:8px}
+#bbd .bbg .rqbtn{flex:1;height:40px;border-radius:20px}
+#bbd .rqbtn.wide{width:100%;height:42px;border-radius:21px}
+#bbd .bbs .bar{margin-top:8px}
+html[data-desk="1"] #bbd .bbm{animation:none}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
