@@ -4020,6 +4020,19 @@ html[data-nx="1"] #app .dock.rqsd button.rqt::before,html[data-nx="1"] #app .doc
 .nxq:active,.lnk:active{scale:.975;transition:scale .09s var(--snap)}
 html[data-nx="1"] #app .dock.rqsd button.rqt:active{border-radius:22px 14px 20px 13px/14px 22px 13px 20px}
 html[data-nx="1"] #app .rqbtn:active{border-radius:14px 9px 13px 10px/10px 14px 9px 13px}
+
+/* 20/10/2026 (2e passe, audit « appui forcé » sur tous les écrans) : style A étendu aux éléments qui n'avaient aucun effet (recherche, réglages, interrupteur de thème, lignes de liste, boutons des feuilles) et réponse au focus des champs */
+.nxths,.nxsq,.nxsr,.nxsw,.nxsqa,.nxsqx,#asd .nxpb button,#app .nxpb button{transition:scale .62s var(--spring-pop),border-radius .5s var(--spring),background-color .15s}
+.nxths:active,.nxsq:active,.nxsqa:active,.nxsqx:active{scale:.92;transition:scale .09s var(--snap),border-radius .12s var(--snap)}
+.nxsr:active,.nxsw:active,#asd .nxpb button:active,#app .nxpb button:active{scale:.975;transition:scale .09s var(--snap),border-radius .12s var(--snap),background-color .15s}
+html[data-nx="1"] #app .nxsr:active{border-radius:22px 14px 20px 15px/15px 22px 14px 20px}
+html[data-nx="1"] #app #lst .nxg:not(.tiles) .item:not(.dragging){transition:scale .62s var(--spring-pop),border-radius .5s var(--spring),background-color .15s}
+html[data-nx="1"] #app #lst .nxg:not(.tiles) .item:not(.sel):not(.ins-a):not(.ins-b):not(.dragging):has(>.main:active){scale:.978;border-radius:22px 14px 20px 15px/15px 22px 14px 20px;transition:scale .09s var(--snap),border-radius .12s var(--snap),background-color .15s}
+html[data-nx="1"] #app .nxsqf,html[data-nx="1"] #app .nxq{transition:scale .5s var(--spring)}
+html[data-nx="1"] #app .nxsqf:focus-within{scale:1.012}
+:is(#app,#asd) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(#sq),textarea){transition:scale .5s var(--spring)}
+:is(#app,#asd) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(#sq),textarea):focus{scale:1.01}
+:is(#app,#asd) textarea:focus{scale:1.005}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
