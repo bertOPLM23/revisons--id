@@ -4042,6 +4042,45 @@ html[data-ipad="1"]:not([data-desk="1"]) #app:is([data-view="study"],[data-view=
 html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app:is([data-view=study],[data-view=exam]) .qb .opt .ot{font-size:calc(21px*var(--fz))}
 html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app[data-view=study] .card .q{font-size:calc(34px*var(--fz))}
 html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app[data-view=study] .card .a{font-size:calc(26px*var(--fz))}
+
+@media (orientation:landscape) and (max-height:520px) and (min-width:700px){html .sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;align-items:start}html .sgrid>.sgc>.sech:first-child{margin-top:6px;padding-top:0;border-top:0}}
+/* 20/10/2026 : affichage adaptatif selon l'orientation. Paysage « bas » (hauteur <= 520 px : iPhone en paysage, petite fenêtre) : mise en page compacte, indépendante de data-ipad (un iPhone en paysage dépasse 768 px de large et recevait la mise en page iPad, trop haute). Le préfixe :not([data-z*]) sert seulement à passer devant les règles iPad (même spécificité + position plus tardive). */
+@media (orientation:landscape) and (max-height:520px){
+ html .split{grid-template-columns:minmax(0,1fr)!important}
+ html .sb,html .sbt{display:none!important}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) body #app:is([data-view=study],[data-view=exam]){min-height:0}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app .nxrh{min-height:44px;gap:8px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app[data-view=study] .card{min-height:0;padding:42px 24px 18px;margin-top:2px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app[data-view=study] .card .q{font-size:calc(22px*var(--fz))}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app[data-view=study] .card .a{font-size:calc(18px*var(--fz))}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app[data-view=study]>.help{display:none}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .qb{display:grid;grid-template-columns:minmax(0,.62fr) minmax(0,1.38fr);column-gap:10px;row-gap:6px;align-items:start;padding:10px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .qb .nxqq>.hint{display:none}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .qb>*{grid-column:2;margin:0}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .qb>.nxqq{grid-column:1;grid-row:1 / span 4}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .qb .nxqq>.q{font-size:calc(20px*var(--fz))}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .nxog .opt{min-height:40px;padding-top:4px;padding-bottom:4px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .qb .opt .ot{font-size:calc(15px*var(--fz));line-height:1.25}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) body #app:is([data-view=study],[data-view=exam]){margin-top:4px;padding-top:0;padding-bottom:4px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .hd{padding-top:0;padding-bottom:0}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .nxrh{min-height:40px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .nxrh .nxrp{display:none}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .nxog .opt{align-items:center}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .nxrh .nxrbk,html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .nxrh .tg{width:38px;height:38px;min-height:38px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .dock{padding:5px;gap:6px;margin-top:6px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app:is([data-view=study],[data-view=exam]) .dock .b{min-height:40px;padding-top:4px;padding-bottom:4px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app[data-view=study] .card{padding:36px 22px 14px}
+
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) body #app[data-view=browse]{margin-top:8px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app[data-view=browse] .h1r{margin-top:0;margin-bottom:0}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app[data-view=browse] .h1r h1{font-size:30px;line-height:1.1}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app[data-view=browse] .nxq{min-height:38px;font-size:15px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app[data-view=browse] .nxband{margin-top:6px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app[data-view=browse] .nxband .nxc{min-height:36px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app .tb .tgs .tg,html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app .tb .nxths i{min-height:36px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app .dock.nxd .nxad{height:46px;min-height:46px}
+ html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app .dock.nxd{padding-top:5px;padding-bottom:5px}
+}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
