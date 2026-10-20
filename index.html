@@ -4033,6 +4033,15 @@ html[data-nx="1"] #app .nxsqf:focus-within{scale:1.012}
 :is(#app,#asd) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(#sq),textarea){transition:scale .5s var(--spring)}
 :is(#app,#asd) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(#sq),textarea):focus{scale:1.01}
 :is(#app,#asd) textarea:focus{scale:1.005}
+
+/* 20/10/2026 : révision et examen sur iPad (hors Mac) : le contenu occupe toute la hauteur de l'écran au lieu de laisser du vide en bas (cartes : hauteur calculée pour tenir avec la ligne d'aide et la barre de notes, identique au recto et au verso, donc la carte ne saute pas au retournement ; QCM : le bloc question + propositions s'étire, les propositions se répartissent) */
+html[data-ipad="1"]:not([data-desk="1"]) body #app:is([data-view="study"],[data-view="exam"]){min-height:calc(100vh - 28px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:calc(100dvh - 28px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app[data-view=study] .card{min-height:calc(100vh - 268px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:calc(100dvh - 268px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+html[data-ipad="1"]:not([data-desk="1"]) #app:is([data-view="study"],[data-view="exam"]) .qb{flex:1 1 auto;display:flex;flex-direction:column}
+html[data-ipad="1"]:not([data-desk="1"]) #app:is([data-view="study"],[data-view="exam"]) .qb>.nxog{flex:1 1 auto;justify-content:space-evenly}
+html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app:is([data-view=study],[data-view=exam]) .qb .opt .ot{font-size:calc(21px*var(--fz))}
+html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app[data-view=study] .card .q{font-size:calc(34px*var(--fz))}
+html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app[data-view=study] .card .a{font-size:calc(26px*var(--fz))}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
