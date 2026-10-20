@@ -2675,8 +2675,13 @@ function nxBbRender(){let d=document.getElementById("bbd");
  const m=d.querySelector(".bbm"),a=d.querySelector(".bba"),rc=t.getBoundingClientRect(),vw=innerWidth,vh=window.visualViewport?visualViewport.height:innerHeight,w=Math.min(352,vw-24),cx=rc.left+rc.width/2,l=Math.max(12,Math.min(cx-w/2,vw-12-w));
  m.style.width=w+"px";m.style.left=l+"px";m.style.maxHeight="";let up=false,tp=rc.bottom+10;const h=m.offsetHeight;
  if(tp+h>vh-12&&rc.top-10-h>=12){tp=rc.top-10-h;up=true}else if(tp+h>vh-12)m.style.maxHeight=Math.max(150,Math.floor(vh-tp-12))+"px";
- m.style.top=tp+"px";m.classList.toggle("up",up);a.style.left=Math.max(20,Math.min(cx-l,w-20))+"px";
+ m.style.top=tp+"px";m.style.transformOrigin=Math.round(Math.max(20,Math.min(cx-l,w-20)))+"px "+(up?"100%":"0");m.classList.toggle("up",up);a.style.left=Math.max(20,Math.min(cx-l,w-20))+"px";
  if(fresh)try{m.focus({preventScroll:true})}catch(e){}}
+/* 20/10/2026 (style B) : une ligne qui apparaît dans la liste monte doucement (rqnew) ; seulement si le nombre de lignes augmente sur le même écran */
+let RQI=null,RQK="";
+function nxNew(){const it=[...document.querySelectorAll('#app #lst .item[data-id]')],k=view+"|"+cur,ids=new Set(it.map(e=>e.dataset.id));
+ if(view=="browse"&&RQI&&RQK==k&&!selm&&ids.size>RQI.size)it.forEach(e=>{if(!RQI.has(e.dataset.id))e.classList.add("rqnew")});
+ RQI=ids;RQK=k}
 function nxFit(){nxBk();nxXb();nxBbRender()}
 A.bb=v=>{BB=BB==v?null:v;BBC=cur;BBT=Date.now();render()};
 A.bbc=()=>{BB=null;render()};
@@ -2853,7 +2858,7 @@ function nxFd(c){const own=deck.virt&&deck.own?deck.own.get(c):deck,f=own&&own.p
  return '<span class="nxfd"'+(col?' style="--fc:'+esc(col)+'"':'')+'><i class="dt" aria-hidden="true"></i><span class="vh">Dossier : </span><span class="fn">'+esc(f?f.name:"Accueil")+'</span>'+(c.c?'<span class="vh">, catégorie : </span><span class="cat">'+esc(c.c)+'</span>':'')+'</span><span class="vh">. </span>'}
 function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}
 
- if(cfg.nx){nxFit();requestAnimationFrame(nxFit)}else nxBbRender()}
+ nxNew();if(cfg.nx){nxFit();requestAnimationFrame(nxFit)}else nxBbRender()}
 // nouvelle apparence : si le mot du bouton retour serait coupé (« Réglag… »), on n'affiche que le chevron (le mot reste lu par VoiceOver)
 function nxBk(){const b=document.querySelector("#app .tb .crw .bk"),t=b&&b.querySelector(":scope>span");if(!t)return;b.classList.remove("ico");if(!cfg.nx)return;const r=document.createRange();r.selectNodeContents(t);const w=b.closest(".crw");const br=b.getBoundingClientRect();if(r.getBoundingClientRect().right>br.right-(parseFloat(getComputedStyle(b).paddingRight)||0)+.5||b.scrollWidth>b.clientWidth||t.scrollWidth>t.clientWidth+1||r.getBoundingClientRect().width>t.getBoundingClientRect().width+.5||b.getBoundingClientRect().right>(w?w.getBoundingClientRect().right:innerWidth)+.5)b.classList.add("ico")}
 if(typeof addEventListener=="function"){addEventListener("resize",()=>requestAnimationFrame(nxFit));if(document.fonts&&document.fonts.ready)document.fonts.ready.then(nxFit)}
@@ -3965,7 +3970,7 @@ html[data-nx="1"] #app .rqseg,html[data-nx="1"] #bbd .rqseg{display:inline-flex;
 .rqseg i.cu{background:var(--acc)}
 html[data-nx="1"] #app .nxband .rqdone{pointer-events:none;color:var(--mut)}
 #bbd .bbx{position:fixed;inset:0;z-index:70;background:transparent}
-#bbd .bbm{position:fixed;z-index:71;box-sizing:border-box;padding:14px 16px;border-radius:22px;overflow:auto;background:var(--g-sol);border:1px solid var(--g-edge);box-shadow:0 18px 44px -14px var(--g-sh);color:var(--ink);animation:pvin .16s ease;outline:none}
+#bbd .bbm{position:fixed;z-index:71;box-sizing:border-box;padding:14px 16px;border-radius:22px;overflow:auto;background:var(--g-sol);border:1px solid var(--g-edge);box-shadow:0 18px 44px -14px var(--g-sh);color:var(--ink);animation:rqbb .45s var(--spring-soft) backwards,shf .16s ease-out backwards;outline:none}
 #bbd .bba{position:absolute;top:-7px;width:14px;height:14px;margin-left:-7px;transform:rotate(45deg);background:var(--g-sol);border-left:1px solid var(--g-edge);border-top:1px solid var(--g-edge)}
 #bbd .bbm.up .bba{top:auto;bottom:-7px;border:0;border-right:1px solid var(--g-edge);border-bottom:1px solid var(--g-edge)}
 #bbd .bbs+.bbs{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
@@ -4005,6 +4010,16 @@ html[data-nx="1"] #app .dock.rqsd button.rqt::before,html[data-nx="1"] #app .doc
 .rqsd .rqt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;min-width:64px;padding:6px 8px;border-radius:16px;font-size:12.5px;font-weight:600;color:var(--ink)}
 .rqsd .rqt.dg{color:var(--ko)}
 .rqsd .rqt:disabled{opacity:.4}
+
+/* 20/10/2026 : animations organiques (maquette du 20/10 : style A au toucher et à l'ouverture, style B pour une ligne ajoutée) ; coupées par « réduire les animations » (règle globale) */
+@keyframes rqbb{from{transform:scale(.82)}}
+@keyframes rqrise{from{opacity:0;transform:translateY(14px)}}
+.rqnew{animation:rqrise .5s cubic-bezier(.16,1,.3,1) backwards}
+.rqbtn,.rqcap,.rqt,.rqbadge,.rqinfo,.nxq,.nxrbk,.fxb,.syd,.lnk{transition:scale .62s var(--spring-pop),border-radius .5s var(--spring)}
+.rqbtn:active,.rqcap:active,.rqt:active,.rqbadge:active,.rqinfo:active,.nxrbk:active,.fxb:active,.syd:active{scale:.93;transition:scale .09s var(--snap),border-radius .12s var(--snap)}
+.nxq:active,.lnk:active{scale:.975;transition:scale .09s var(--snap)}
+html[data-nx="1"] #app .dock.rqsd button.rqt:active{border-radius:22px 14px 20px 13px/14px 22px 13px 20px}
+html[data-nx="1"] #app .rqbtn:active{border-radius:14px 9px 13px 10px/10px 14px 9px 13px}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
