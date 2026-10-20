@@ -2786,7 +2786,9 @@ function nxValHTML(){const w=AS.w,r=(a,v,l,on)=>'<button type="button" class="as
 A.nxv=v=>{AS={k:"nxv",w:v};asRender()};
 A.nxh=k=>{if(NXH.has(k))NXH.delete(k);else NXH.add(k);render()};
 A.nxsp=v=>{SETP=v||null;render();scrollTo(0,0)};
-{const o=A.set;A.set=function(){SETP=null;return o.apply(this,arguments)}}
+{const o=A.set;A.set=function(){if(view=="set"){SETP=null;return A.cd(cur)}SETP=null;return o.apply(this,arguments)}}
+// 20/10/2026 : re-toucher l'icône Statistiques depuis les Statistiques en sort (comme Réglages)
+{const o=A.stats;A.stats=function(){if(view=="stats"){return A.cd(cur)}return o.apply(this,arguments)}}
 // curseur du verre (feuille) : la valeur affichée sur la ligne suit dès qu'on lâche le curseur
 if(typeof addEventListener=="function")document.addEventListener("change",e=>{if(e.target&&e.target.id=="gl"&&NXS&&view=="set")render()});
 // ---- nouvelle apparence : harmonisation des écrans secondaires (barre du haut Statistiques + ⋯ partout, Déplacer et Corbeille en panneau) ----
@@ -3441,14 +3443,19 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   var P=[["","Par défaut"],["#d04a4a","Rouge"],["#d9694a","Corail"],["#e09a2b","Orange"],["#c9a227","Jaune"],["#8fb339","Lime"],["#4aa36a","Vert"],["#2f8f6a","Forêt"],["#4fbf9f","Menthe"],["#2fa3a3","Turquoise"],["#4fb3e8","Ciel"],["#4a86e0","Bleu"],["#3a66c0","Marine"],["#5a5bd6","Indigo"],["#8a6fd6","Violet"],["#d867a6","Rose"],["#c73c8d","Fuchsia"],["#a8734a","Brun"],["#7c8aa0","Ardoise"]];
   PAL.length=0;PN.length=0;P.forEach(function(x){PAL.push(x[0]);PN.push(x[1])});
  })();
+ A.colpk=function(v){/* 20/10/2026 : le sélecteur natif est sur <body>, hors de #app, que render() reconstruit : sinon il se fermait tout seul */
+  var i=document.getElementById("colpk");if(!i){i=document.createElement("input");i.type="color";i.id="colpk";i.setAttribute("aria-label","Choisir une couleur personnalisée");
+   i.style.cssText="position:fixed;left:50%;bottom:0;width:1px;height:1px;opacity:0;border:0;padding:0";
+   i.addEventListener("change",function(e){A.setc(e.target.value)});document.body.appendChild(i)}
+  i.value=/^#[0-9a-f]{6}$/i.test(v)?v:"#d9694a";i.click()};
  function colUI(){
   if(view!=="col")return;var pal=$q("#app .pal");if(!pal)return;
   var n0=ed&&ed.ids&&ed.ids.length?G(ed.ids[0]):null,cur0=n0&&n0.c?n0.c:"";
   [].forEach.call(pal.querySelectorAll(".pc"),function(b){if(b.dataset.v===cur0)b.classList.add("cur")});
   if(pal.querySelector(".pcc"))return;
-  var known=PAL.indexOf(cur0)>=0,t=document.createElement("div");t.className="pc pcc"+(cur0&&!known?" cur":"");
-  t.innerHTML='<span class="cwheel"></span><span>Autre…</span><input type="color" aria-label="Choisir une couleur personnalisée" value="'+(cur0&&!known&&/^#[0-9a-f]{6}$/i.test(cur0)?cur0:"#d9694a")+'">';
-  t.querySelector("input").addEventListener("change",function(e){A.setc(e.target.value)});
+  var known=PAL.indexOf(cur0)>=0,t=document.createElement("button");t.type="button";t.className="pc pcc"+(cur0&&!known?" cur":"");t.setAttribute("data-a","colpk");t.setAttribute("data-v",cur0&&!known&&/^#[0-9a-f]{6}$/i.test(cur0)?cur0:"#d9694a");
+  t.setAttribute("aria-label","Choisir une couleur personnalisée");
+  t.innerHTML='<span class="cwheel"></span><span>Autre…</span>';
   pal.appendChild(t);
  }
 
