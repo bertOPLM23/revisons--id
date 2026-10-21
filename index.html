@@ -2243,6 +2243,8 @@ function parseAll(t){
  return{fc,qcm,skip};
 }
 function parse(t,k){return parseAll(t)[k=="fc"?"fc":"qcm"]}
+/* 21/10/2026 (A4) : une question ne se valide que si au moins une proposition est cochée ; une question importée sans aucune bonne réponse (défaut du contenu) ne se valide jamais : « Passer » (sans écriture) ou « À corriger » */
+const qNoKey=it=>!!it&&!po(it).some(o=>o.k),qvOk=()=>{if(view!="study"||!deck||deck.k!="qcm"||!order||idx>=order.length)return false;const it=deck.items[order[idx]];return!!it&&!qNoKey(it)&&po(it).some((o,i)=>!!sel[i])};
 function startQ(o){qSeed();order=o;idx=0;score=0;wrong=[];sel={};val=false;vprev=null;hesd=false;render()}
 const A={
  th(){TH=dark()?"light":"dark";try{localStorage.setItem("revis-theme",TH)}catch(e){}try{setPush()}catch(e){}setTh();render()},
@@ -2356,8 +2358,10 @@ const A={
   back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=Date.now();save()}render()},
  yes(){if(cfg.srs&&!deck.free)return A.rate(3);const i=deck.items[q[0]];if(cfg.hc<6){cfg.hc++;saveCfg()}if(!deck.free){rec(i,true);save()}q.shift();known++;back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=Date.now();save()}render()},
  opt(i){if(val)return;sel[i]=!sel[i];render()},
- val(){val=true;const it=deck.items[order[idx]],ok=po(it).every((o,i)=>!!sel[i]===!!o.k);if(ok)score++;else wrong.push(order[idx]);if(!deck.free){rec(it,ok);if(cfg.srs){recR(it,ok);vprev=ok?cp(it):null;hesd=false;let p=opts(it)[ok?2:0];if(ok&&p.m)p={...p,st:2,k:null,m:0,iv:fI(p.s)};applyP(it,p)}save()}
+ val(){if(val||!qvOk())return;val=true;const it=deck.items[order[idx]],ok=po(it).every((o,i)=>!!sel[i]===!!o.k);if(ok)score++;else wrong.push(order[idx]);if(!deck.free){rec(it,ok);if(cfg.srs){recR(it,ok);vprev=ok?cp(it):null;hesd=false;let p=opts(it)[ok?2:0];if(ok&&p.m)p={...p,st:2,k:null,m:0,iv:fI(p.s)};applyP(it,p)}save()}
   anp=!!(cfg.an&&ok);render();if(anp){const t=++ant,i0=idx,o0=order;setTimeout(()=>{if(t===ant&&anp&&view=="study"&&val&&idx===i0&&order===o0)A.next()},1500)}},
+ qskip(){if(view!="study"||!deck||deck.k!="qcm"||val||!order||idx>=order.length)return;anp=false;ant++;idx++;sel={};vprev=null;hesd=false;render()},
+ qfx(){A.fx();render()},
  next(){anp=false;ant++;idx++;sel={};val=false;vprev=null;hesd=false;if(idx>=order.length&&!deck.virt&&order.length==deck.items.length){deck.last=score+"/"+order.length;deck.u=Date.now();save()}render()},
  redo(){startQ(wrong.slice())},
  restart(){if(deck&&deck.free)return A.fre();A.st(0,rmode)},
@@ -2984,7 +2988,8 @@ function render0(){
    if(val)h+='<p class="res '+(bad?"r":"g")+'" role="status"><span class="state-icon" aria-hidden="true">'+(bad?"!":"✓")+'</span><span>'+(bad?bad+(bad>1?" erreurs":" erreur"):"Tout juste")+'</span>'+(!bad&&vprev?(hesd?'<span class="hz">Noté comme difficile</span>':'<button type="button" class="lnk hz" data-a="hes">J\'ai hésité</button>'):'')+'</p>';
    h+=nxOpts(optsH(it,sel,val,"opt"));
    if(val)h+=exH(it);
-   h+='</div><div class="dock"><button class="b ok'+(val&&anp?" an":"")+'" data-a="'+(val?"next":"val")+'">'+(val?(idx+1>=n?"Voir le score":"Suivant"):"Valider")+'</button></div>'}
+   if(!val&&qNoKey(it))h+='<p class="help qnk" role="status">Cette question n\'a aucune bonne réponse définie : elle ne peut pas être validée.</p><button type="button" class="lnk qnk" data-a="qfx">'+(it.fx?"Retirer de « À corriger »":"Signaler à corriger")+'</button>';
+   h+='</div><div class="dock">'+(!val&&qNoKey(it)?'<button class="b" data-a="qskip">Passer</button>':'<button class="b ok'+(val&&anp?" an":"")+'" data-a="'+(val?"next":"val")+'"'+(!val&&!qvOk()?' disabled':'')+'>'+(val?(idx+1>=n?"Voir le score":"Suivant"):"Valider")+'</button>')+'</div>'}
  }
  if(cfg.nx&&/^(col|stats)$/.test(view))h=h.replace(/<div class="dock"><button class="b" data-a="cd" data-v="[^"]*">(Annuler|Fermer)<\/button><\/div>/,"");
  const ap=$("app");if(ap.dataset)ap.dataset.view=view;document.documentElement.setAttribute("data-home",view=="browse"&&!cur?"1":"0");ap.innerHTML=h;hsync();asRender();{const sc=document.querySelector(".pvsc");if(sc){pvFit();sc.scrollTop=pvTop;pvEdges(sc)}}

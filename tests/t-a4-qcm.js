@@ -29,6 +29,17 @@ async function run(b) {
   t.ok(skip, 'question sans bonne réponse : bouton « Passer » proposé');
   if (skip) { await p.evaluate(() => document.querySelector('[data-a="qskip"]').click()); t.ok((await st()).idx === 1, '« Passer » avance à la suite') }
   t.ok(M.canon(JSON.parse(await snap())) === s1, 'question passée : aucune donnée modifiée');
+  await start(4);
+  // question sans bonne réponse : même en cochant quelque chose, double-tap et Entrée ne valident pas
+  await p.evaluate(() => { sel = { 0: true }; render() }); const s2 = M.canon(JSON.parse(await snap()));
+  await p.mouse.click(30, 700); await p.waitForTimeout(60); await p.mouse.click(30, 700); await p.keyboard.press('Enter'); await p.waitForTimeout(150);
+  t.ok(!(await st()).val && M.canon(JSON.parse(await snap())) === s2, 'question sans bonne réponse : double-tap et Entrée refusés, même avec une case cochée');
+  // « À corriger » : seul le drapeau fx (et l'horodatage u du paquet) change, rien d'autre
+  const b0 = await p.evaluate(() => JSON.stringify(S.nodes.filter(n => n.k != 'log').map(n => n.items ? n.items.map(i => { const { fx, ...r } = i; return r }) : n)));
+  await p.evaluate(() => document.querySelector('[data-a="qfx"]').click());
+  const f1 = await p.evaluate(() => ({ fx: G('pB').items[4].fx, label: document.querySelector('[data-a="qfx"]').textContent }));
+  const b1 = await p.evaluate(() => JSON.stringify(S.nodes.filter(n => n.k != 'log').map(n => n.items ? n.items.map(i => { const { fx, ...r } = i; return r }) : n)));
+  t.ok(f1.fx === 1 && /Retirer/.test(f1.label) && b0 === b1, '« Signaler à corriger » : drapeau posé via le mécanisme existant, progression et journal intacts');
   t.ok(!d.errs.length, 'aucune erreur JavaScript', d.errs.join(' | '));
   await d.ctx.close();
   return t;
