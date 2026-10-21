@@ -1663,7 +1663,7 @@ const bkCard=()=>{const d=bkDue();if(!d||!S.nodes.some(n=>!n.x&&(n.k=="fc"||n.k=
  return '<div class="pn bkp"><small class="lbl">SAUVEGARDE</small><b>'+(d.never?"Aucune sauvegarde exportée pour l\'instant":"Dernière sauvegarde il y a "+d.days+" jour"+(d.days>1?"s":""))+'</b><small class="help">Le fichier JSON te protège si ton navigateur ou ta synchro a un souci.</small><div class="menu"><button data-a="exp">Exporter</button><button data-a="bks">Plus tard</button></div></div>'};
 // ---- paquets / dossiers cachés : ignorés par « Réviser tout » et le mode examen, mais toujours visibles et révisables ----
 // ===== gestion des dossiers et paquets : annulation, corbeille, tri, épingles, dupliquer, réinitialiser, fusionner =====
-const TR_MS=30*864e5,PFX=["st","s","df","l","k","d","b","n","m","t","f"],isPack=n=>!!n&&(n.k=="fc"||n.k=="qcm"),cp=o=>JSON.parse(JSON.stringify(o));
+const TR_MS=30*864e5,PFX=["st","s","df","l","k","d","b","n","m","t","f","w"],isPack=n=>!!n&&(n.k=="fc"||n.k=="qcm"),cp=o=>JSON.parse(JSON.stringify(o));
 let U=null,AS=null,CF=null,PV=null;
 const snapF=(ns,fs)=>ns.map(n=>({id:n.id,v:fs.map(f=>[f,f in n,n[f]])}));
 const undoP=(snap,msg,bu,bump)=>{U={k:"p",snap,bu,bump:bump||[],t:Date.now()};flash(msg,1)};
@@ -1672,21 +1672,21 @@ const undoB=(b,msg)=>{U={k:"b",b,t:Date.now()};flash(msg,1)};
 const undoX=(ids,msg)=>{U={k:"x",ids,t:Date.now()};flash(msg,1)};
 const trashed=n=>!!(n.x&&n.xt&&!n.xp&&Date.now()-n.xt<TR_MS);
 const tdesc=(id,b)=>S.nodes.filter(n=>n.p==id&&n.x&&n.xb==b).flatMap(n=>[n,...tdesc(n.id,b)]);
-function restoreNodes(ns){const now=Date.now();ns.forEach(n=>{delete n.x;delete n.xt;delete n.xb;if(n.xr){delete n.xr;if(n.p&&(!G(n.p)||G(n.p).x))n.p=0}n.u=now})}
+function restoreNodes(ns){const now=hlc();ns.forEach(n=>{delete n.x;delete n.xt;delete n.xb;if(n.xr){delete n.xr;if(n.p&&(!G(n.p)||G(n.p).x))n.p=0}n.u=now})}
 function trashRestore(b){restoreNodes(S.nodes.filter(n=>n.xb==b&&n.x));gc()}
 function trashRestoreOne(id){const n=G(id);if(!n)return;restoreNodes([n,...tdesc(id,n.xb)]);gc()}
-function purgeNodes(ns){const now=Date.now();ns.forEach(n=>{delete n.items;n.x=1;n.xp=1;n.xt=n.xt||now;n.u=now});gc()}
+function purgeNodes(ns){const now=hlc();ns.forEach(n=>{delete n.items;n.x=1;n.xp=1;n.xt=n.xt||now;n.u=now});gc()}
 function purgeId(id){const n=G(id);if(n)purgeNodes([n,...tdesc(id,n.xb)])}
 function trashSweep(){let ch=false;S.nodes.forEach(n=>{if(n.x&&!n.xp&&n.xt&&Date.now()-n.xt>=TR_MS){delete n.items;n.xp=1;ch=true}});if(ch){gc();persist()}}
 const trashRoots=()=>S.nodes.filter(n=>n.x&&n.xr&&trashed(n)&&(n.k=="f"||isPack(n))).sort((a,b)=>b.xt-a.xt);
-function undoRun(){const u=U;U=null;if(!u||Date.now()-u.t>8000)return false;const now=Date.now();
+function undoRun(){const u=U;U=null;if(!u||Date.now()-u.t>8000)return false;const now=hlc();
  if(u.k=="p"){u.snap.forEach(s=>{const n=G(s.id);if(!n)return;s.v.forEach(([f,had,val])=>{if(had)n[f]=val;else delete n[f]});if(u.bu)n.u=now;u.bump.forEach(t=>{n[t]=now})})}
  else if(u.k=="s"){u.nodes.forEach(o=>{const c={...cp(o),u:now},i=S.nodes.findIndex(n=>n.id==c.id);if(i>=0)S.nodes[i]=c;else S.nodes.push(c)})}
  else if(u.k=="b")trashRestore(u.b);
  else if(u.k=="x")u.ids.forEach(purgeId);
  save();return true}
 // ---- indicateurs « caché » / « épinglé » : horodatage propre, fusionné séparément à la synchro ----
-const flagSet=(ns,f,t,val,msg)=>{const snap=snapF(ns,[f,t]),now=Date.now();ns.forEach(n=>{if(val)n[f]=1;else delete n[f];n[t]=now});save();render();undoP(snap,msg,false,[t])};
+const flagSet=(ns,f,t,val,msg)=>{const snap=snapF(ns,[f,t]),now=hlc();ns.forEach(n=>{if(val)n[f]=1;else delete n[f];n[t]=now});save();render();undoP(snap,msg,false,[t])};
 const pinI=z=>'<span class="pinI" title="Épinglé" aria-label="Épinglé">'+ic("pin",z||14)+'</span>';
 // ---- tri ----
 const sortMode=()=>{const m=cfg.so;return m=="recent"||m=="due"||m=="manual"||m=="created"?m:"name"};
@@ -1700,7 +1700,7 @@ const kidsS=p=>{const a=kids(p),m=sortMode();if(m=="name")return a;
   const key=m=="recent"?lastDay:m=="created"?crAt:dueOf,k=new Map(l.map(n=>[n.id,key(n)]));
   return ix.sort((x,y)=>(k.get(y[0].id)-k.get(x[0].id))||x[1]-y[1]).map(x=>x[0])};
  return[...srt(a.filter(n=>n.k=="f")),...srt(a.filter(n=>n.k!="f"))]};
-function applyOrder(l,msg){const snap=snapF(l,["o","ou"]),now=Date.now();let ch=false;l.forEach((x,i)=>{const v=(i+1)*10;if(x.o!==v){x.o=v;x.ou=now;ch=true}});if(!ch)return;save();render();undoP(snap,msg,false,["ou"])}
+function applyOrder(l,msg){const snap=snapF(l,["o","ou"]),now=hlc();let ch=false;l.forEach((x,i)=>{const v=(i+1)*10;if(x.o!==v){x.o=v;x.ou=now;ch=true}});if(!ch)return;save();render();undoP(snap,msg,false,["ou"])}
 const grpOf=n=>kidsS(n.p).filter(x=>(x.k=="f")==(n.k=="f"));
 function moveStep(id,d){const n=G(id);if(!n)return;const g=grpOf(n),i=g.findIndex(x=>x.id==id),j=i+d;if(i<0||j<0||j>=g.length)return;const l=g.slice();[l[i],l[j]]=[l[j],l[i]];applyOrder(l,d<0?"Déplacé vers le haut":"Déplacé vers le bas")}
 function reorderTo(id,refId,pos){const n=G(id),ref=G(refId);if(!n||!ref||n.p!=ref.p||(n.k=="f")!=(ref.k=="f"))return;
@@ -1771,10 +1771,10 @@ function asRender(){let el=document.getElementById("asd");
  if(AS&&AS.k=="nxp"&&el._h){const a=document.activeElement;if(el._h===html||(a&&el.contains(a)&&/^(INPUT|TEXTAREA)$/.test(a.tagName))){document.documentElement.classList.add("sho");return}}
  el.innerHTML=html;el._h=html;document.documentElement.classList.add("sho")}
 function dupNodes(ids){const ns=ids.map(G).filter(isPack).filter(n=>!n.x);if(!ns.length)return;const made=[];
- ns.forEach(n=>{const c=cp(n);c.id=uid();c.name=n.name+" (copie)";["h","hu","pn","pu","o","ou","last","x","xt","xb","xr","xp"].forEach(f=>delete c[f]);(c.items||[]).forEach(i=>PFX.forEach(f=>delete i[f]));c.u=Date.now();S.nodes.push(c);made.push(c.id)});
+ ns.forEach(n=>{const c=cp(n);c.id=uid();c.name=n.name+" (copie)";["h","hu","pn","pu","o","ou","last","x","xt","xb","xr","xp"].forEach(f=>delete c[f]);(c.items||[]).forEach(i=>PFX.forEach(f=>delete i[f]));c.u=hlc();S.nodes.push(c);made.push(c.id)});
  save();render();undoX(made,made.length>1?made.length+" paquets dupliqués (progression remise à zéro)":"Paquet dupliqué (progression remise à zéro)")}
 function askReset(ids){const ns=ids.map(G).filter(n=>n&&!n.x);if(!ns.length)return;const ps=[...new Set(ns.flatMap(packsOf))].filter(p=>p.items),cnt=ps.reduce((a,p)=>a+p.items.length,0),name=ns.length==1?"« "+ns[0].name+" »":ns.length+" éléments";
- CF=()=>{const snap=ps.map(cp),now=Date.now();ps.forEach(p=>{p.items.forEach(i=>PFX.forEach(f=>delete i[f]));delete p.last;p.u=now});selm=false;selset.clear();save();render();undoS(snap,"Progression remise à zéro")};
+ CF=()=>{const snap=ps.map(cp),now=hlc();ps.forEach(p=>{p.items.forEach(i=>PFX.forEach(f=>delete i[f]));delete p.last;p.u=now});selm=false;selset.clear();save();render();undoS(snap,"Progression remise à zéro")};
  AS={k:"conf",title:"Remettre à zéro ?",text:"La progression de "+cnt+(cnt>1?" cartes ou questions":" carte ou question")+" de "+name+" sera effacée (calendrier de révision et taux de réussite). Le contenu reste intact.",ok:"Réinitialiser",danger:1};asRender()}
 // « Déjà révisé » (cours appris ou révisé hors de l'app) : les cartes jamais vues entrent directement en répétition espacée
 // (stabilité FSRS de « Bien », prochaine révision après l'intervalle correspondant) ; celles à revoir aujourd'hui sont notées « Bien ».
@@ -1785,10 +1785,10 @@ function askKnown(ids){const ns=ids.map(G).filter(n=>n&&!n.x);if(!ns.length)retu
  if(!nw.length&&!du.length){flash("Rien à marquer dans "+name+" : aucune carte jamais vue ni à revoir aujourd\'hui");return}
  const cnt=(l,a1,a2)=>{const f=l.filter(x=>x[0].k=="fc").length,q=l.length-f;return[f?pl(f,"carte "+a1,"cartes "+a2):"",q?pl(q,"question "+a1,"questions "+a2):""].filter(Boolean).join(" et ")},
   st=FW[2],iv=fI(st),
-  grad=(i,sv,t,now)=>{i.st=2;i.s=+sv.toFixed(4);i.df=+(i.df||fD0(3)).toFixed(3);i.l=t;i.d=t+fz(fI(sv));i.t=now;delete i.k;delete i.b};
- CF=()=>{const snap=ps.map(cp),now=Date.now(),t=day(),tp=new Set();
+  grad=(i,sv,t,now)=>{i.st=2;i.s=+sv.toFixed(4);i.df=+(i.df||fD0(3)).toFixed(3);i.l=t;i.d=t+fz(fI(sv));i.t=now;i.w=DEV;delete i.k;delete i.b};
+ CF=()=>{const snap=ps.map(cp),now=hlc(),t=day(),tp=new Set();
   nw.forEach(([p,i])=>{grad(i,st,t,now);tp.add(p)});
-  du.forEach(([p,i])=>{fsInit(i);if(i.st==2){applyP(i,opts(i)[2]);i.t=now}else grad(i,Math.max(i.s||0,st),t,now);tp.add(p)});
+  du.forEach(([p,i])=>{fsInit(i);if(i.st==2){applyP(i,opts(i)[2]);i.t=now;i.w=DEV}else grad(i,Math.max(i.s||0,st),t,now);tp.add(p)});
   tp.forEach(p=>{p.u=now});selm=false;selset.clear();TDv++;save();render();const all=nw.concat(du),nq=all.filter(x=>x[0].k=="qcm").length,nt=all.length;undoS(snap,nq==nt?pl(nt,"question marquée comme révisée","questions marquées comme révisées"):nq?nt+" cartes et questions marquées comme révisées":pl(nt,"carte marquée comme révisée","cartes marquées comme révisées"))};
  const tx=[];
  if(nw.length)tx.push(cnt(nw,"jamais vue","jamais vues")+" : "+(nw.length>1?"elles passent":"elle passe")+" directement en répétition espacée, comme si tu "+(nw.length>1?"les avais réussies":"l\'avais réussie")+" (première révision dans "+pl(iv,"jour","jours")+" environ).");
@@ -1798,7 +1798,7 @@ const ikey2=i=>String(i.q||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").t
 function askMerge(){const ns=[...selset].map(G).filter(n=>n&&!n.x&&isPack(n));if(ns.length<2||!ns.every(n=>n.k==ns[0].k))return;const t=ns[0],o=ns.slice(1);
  CF=()=>{const snap=ns.map(cp),seen=new Set(t.items.map(ikey2));let add=0,dup=0;
   o.forEach(p=>p.items.forEach(i=>{const k=ikey2(i);if(seen.has(k)){dup++;return}seen.add(k);t.items.push(cp(i));add++}));
-  t.u=Date.now();killIds(o.map(p=>p.id));selm=false;selset.clear();render();
+  t.u=hlc();killIds(o.map(p=>p.id));selm=false;selset.clear();render();
   undoS(snap,add+(t.k=="fc"?(add>1?" cartes ajoutées":" carte ajoutée"):(add>1?" questions ajoutées":" question ajoutée"))+" à « "+t.name+" »"+(dup?", "+dup+(dup>1?" doublons ignorés":" doublon ignoré"):""))};
  AS={k:"conf",title:"Fusionner "+ns.length+" paquets ?",text:"Le contenu de « "+o.map(p=>p.name).join(" », « ")+" » sera ajouté à « "+t.name+" » (les questions en double sont ignorées). Les autres paquets iront à la corbeille.",ok:"Fusionner"};asRender()}
 function trashHTML(){const rs=trashRoots(),now=Date.now(),pl=(k,a,b)=>k+" "+(k>1?b:a);
@@ -1860,6 +1860,11 @@ function seedS(){let o=null;try{o=JSON.parse(localStorage.getItem("revis-v1"))}c
   {id:4,p:2,k:"qcm",name:"QCM",items:Q.map(([q,o])=>({q,o:o.map(([t,k])=>({t,k}))}))}];
  return s}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),nid=v=>v=="0"?0:v;
+/* 21/10/2026 (étape 2) : horloge hybride (HLC) pour toutes les versions (u des nœuds, t des cartes, hu/pu/ou des drapeaux).
+   hlc() = max(heure locale, dernière valeur + 1) : jamais en arrière, même si l'horloge système recule ; hlcSee(v) intègre toute version vue
+   (données locales au démarrage, nœuds reçus à la synchro), donc une écriture locale est toujours postérieure à ce qu'on a observé. */
+let HLCv=0;const hlc=()=>{const n=Date.now();HLCv=n>HLCv?n:HLCv+1;return HLCv},hlcSee=v=>{v=+v||0;if(v>HLCv&&v<9e15)HLCv=v};
+const hlcNode=n=>{if(!n)return;hlcSee(n.u);hlcSee(n.hu);hlcSee(n.pu);hlcSee(n.ou);if(n.items)n.items.forEach(i=>hlcSee(i&&i.t))};
 // anciens identifiants numériques → identifiants texte ; gid = identité de ce jeu de données (la synchro repart de zéro s'il change)
 function normS(s){if(s.nodes.some(n=>typeof n.id=="number")){const m={0:0};s.nodes.forEach(n=>m[n.id]=n.id<=4?"s"+n.id:uid());s.nodes.forEach(n=>{n.id=m[n.id];n.p=m[n.p]??0})}if(!s.gid)s.gid=uid();return s}
 // ---- stockage ----
@@ -1890,7 +1895,7 @@ async function loadS(){let ls=null;try{ls=JSON.parse(localStorage.getItem(K))}ca
 function bootErr(){$("app").innerHTML='<div class="done"><h1>Données momentanément illisibles</h1><p class="help">Safari n\'a pas pu ouvrir la base de données de l\'app. Tes données ne sont pas effacées. Ferme complètement l\'app, puis rouvre-la.</p><button class="b ok" type="button" onclick="location.reload()">Réessayer</button></div>'}
 async function boot(){const w=setTimeout(()=>{if(!booted)$("app").innerHTML='<div class="empty">Chargement de tes données…</div>'},700);
  let s=null;try{s=await loadS()}catch(e){stErr=String(e)}clearTimeout(w);if(!s)return bootErr();
- S=s;booted=true;setPull();persist();trashSweep();render();
+ S=s;S.nodes.forEach(hlcNode);booted=true;setPull();persist();trashSweep();render();
  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{})}catch(e){}
  iload().then(()=>{ready=true;render();sync();rt()})}
 if(typeof addEventListener=="function"){addEventListener("pagehide",()=>{stFlush()});document.addEventListener("visibilitychange",()=>{if(document.hidden)stFlush()})}
@@ -1900,12 +1905,12 @@ const iput=async(k,v)=>{try{(await idb()).transaction("i","readwrite").objectSto
 const idel=async k=>{try{(await idb()).transaction("i","readwrite").objectStore("i").delete(k)}catch(e){}};
 const iload=()=>new Promise(res=>{idb().then(db=>{const c=db.transaction("i").objectStore("i").openCursor();c.onsuccess=()=>{const r=c.result;if(r){IMG.set(r.key,r.value);r.continue()}else res()};c.onerror=()=>res()}).catch(()=>res());setTimeout(res,4000)});
 const imgH=id=>IMG.has(id)?'<img class="qim" src="'+IMG.get(id)+'" alt="" draggable="false">':'<div class="qim ph">Image en cours de synchronisation…</div>';
-const newImg=src=>{const id="img-"+uid();S.nodes.push({id,p:"-",k:"img",u:Date.now()});IMG.set(id,src);iput(id,src);return id};
-const gc=()=>{const u=new Set();S.nodes.forEach(n=>{if((!n.x||trashed(n))&&n.items)n.items.forEach(i=>["qi","ai","im"].forEach(f=>i[f]&&u.add(i[f])))});S.nodes.forEach(n=>{if(n.k=="img"&&!n.x&&!u.has(n.id)){n.x=1;n.u=Date.now();IMG.delete(n.id);idel(n.id)}})};
+const newImg=src=>{const id="img-"+uid();S.nodes.push({id,p:"-",k:"img",u:hlc()});IMG.set(id,src);iput(id,src);return id};
+const gc=()=>{const u=new Set();S.nodes.forEach(n=>{if((!n.x||trashed(n))&&n.items)n.items.forEach(i=>["qi","ai","im"].forEach(f=>i[f]&&u.add(i[f])))});S.nodes.forEach(n=>{if(n.k=="img"&&!n.x&&!u.has(n.id)){n.x=1;n.u=hlc();IMG.delete(n.id);idel(n.id)}})};
 const loadImg=f=>new Promise((res,rej)=>{const url=URL.createObjectURL(f),im=new Image();im.onload=()=>{const M=1200,k=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL("image/jpeg",.72))};im.onerror=()=>{URL.revokeObjectURL(url);rej()};im.src=url});
 // ---- statistiques ----
-const LG=()=>{const id="log-"+DEV;let L=G(id);if(!L){L={id,p:"-",k:"log",h:{},u:Date.now()};S.nodes.push(L)}if(!L.h)L.h={};return L};
-const rec=(i,ok)=>{i.n=(i.n||0)+1;if(!ok)i.m=(i.m||0)+1;i.t=Date.now();const L=LG(),d=day();L.h[d]=(L.h[d]||0)+1;L.u=Date.now();tc(i);pace()};
+const LG=()=>{const id="log-"+DEV;let L=G(id);if(!L){L={id,p:"-",k:"log",h:{},u:hlc()};S.nodes.push(L)}if(!L.h)L.h={};return L};
+const rec=(i,ok)=>{i.n=(i.n||0)+1;if(!ok)i.m=(i.m||0)+1;i.t=hlc();i.w=DEV;const L=LG(),d=day();L.h[d]=(L.h[d]||0)+1;L.u=hlc();tc(i);pace()};
 const packsOf=n=>n.k=="f"?desc(n.id).filter(x=>x.k!="f"):[n],allPacks=()=>cur?packsOf(G(cur)):desc(0).filter(x=>x.k!="f");
 const hardList=()=>allPacks().flatMap(p=>p.items.filter(i=>(i.m||0)>=2).map(i=>({i,p}))).sort((a,b)=>b.i.m/b.i.n-a.i.m/a.i.n||b.i.m-a.i.m);
 const lbl=(i,p)=>i.im?p.name+", zone "+(i.t+1)+(i.a?" ("+i.a+")":""):i.q;
@@ -1985,7 +1990,7 @@ const applyP=(i,p)=>{const nw=i.d==null;fsInit(i);i.st=p.st;i.s=+p.s.toFixed(4);
 // Données synchronisées : dossier.xd (jour de l'examen), nœud « opt » (date pour tout, plan de rattrapage cu), i.f (jour de première vue).
 const GM=8,MORE=20,CU_MIN=100;let TDv=0,TDc=null;
 const optN=()=>G("opt");
-const optMk=()=>{let o=optN();if(!o){o={id:"opt",p:"-",k:"opt",u:Date.now()};S.nodes.push(o)}return o};
+const optMk=()=>{let o=optN();if(!o){o={id:"opt",p:"-",k:"opt",u:hlc()};S.nodes.push(o)}return o};
 // ---- réglages communs à tous les appareils : nœud « set » synchronisé comme les autres (la version la plus récente gagne) ----
 // Restent propres à l'appareil : le code de synchro, le panneau latéral ouvert ou fermé, et deux compteurs internes.
 // Créé avec u=1 : tant qu'aucun réglage n'est modifié, chaque appareil garde les siens ; le premier changement se propage partout.
@@ -1994,7 +1999,7 @@ const setSnap=()=>{const c={};Object.keys(cfg).forEach(k=>{if(!SETL.includes(k)&
 const setU=()=>{try{return+localStorage.getItem("revis-setu")||0}catch(e){return 0}},setUW=u=>{try{localStorage.setItem("revis-setu",String(u))}catch(e){}};
 let setLock=false;
 function setPush(){if(setLock||!booted||!S||!S.nodes)return;const v=setSnap(),n=G("set");if(n&&!n.x&&canon({c:n.c||{},th:n.th||"",ac:n.ac||""})==canon(v))return;
- const u=Date.now();if(n){n.c=v.c;n.th=v.th;n.ac=v.ac;n.u=u;delete n.x}else S.nodes.push({id:"set",p:"-",k:"set",u,...v});setUW(u);save()}
+ const u=hlc();if(n){n.c=v.c;n.th=v.th;n.ac=v.ac;n.u=u;delete n.x}else S.nodes.push({id:"set",p:"-",k:"set",u,...v});setUW(u);save()}
 function setPull(){if(!booted||!S||!S.nodes)return;const n=G("set");
  if(!n){S.nodes.push({id:"set",p:"-",k:"set",u:1,...setSnap()});return}
  if(n.x||(n.u||0)<=setU())return;setUW(n.u||0);
@@ -2043,7 +2048,7 @@ function pace(){if(view!="study"||!deck)return;const k=deck.k,now=Date.now(),P=p
 const odMin=()=>{const T=TD(),P=paceGet(),f=P.fc,q=P.qcm;if((T.odf&&!(f&&f[1]>=20))||(T.odq&&!(q&&q[1]>=20)))return null;return Math.max(1,Math.round(((T.odf?T.odf*f[0]:0)+(T.odq?T.odq*q[0]:0))/60))};
 const fmtMin=m=>m<60?m+" min":Math.floor(m/60)+" h"+(m%60?" "+String(m%60).padStart(2,"0"):"");
 // mémorisation réelle : révisions de cartes déjà apprises (état « révision » avant la note), par jour, dans le journal de l'appareil
-const recR=(i,ok)=>{if(!(i.st==2||(i.st==null&&i.d!=null)))return;const L=LG(),d=day();if(!L.r)L.r={};const a=L.r[d]||[0,0];a[0]++;if(ok)a[1]++;L.r[d]=a;L.u=Date.now()};
+const recR=(i,ok)=>{if(!(i.st==2||(i.st==null&&i.d!=null)))return;const L=LG(),d=day();if(!L.r)L.r={};const a=L.r[d]||[0,0];a[0]++;if(ok)a[1]++;L.r[d]=a;L.u=hlc()};
 // examen en cours : conservé si Safari recharge la page
 const EXK="revis-exam",exGet=()=>{try{return JSON.parse(localStorage.getItem(EXK))}catch(e){return null}},exClr=()=>{try{localStorage.removeItem(EXK)}catch(e){}};
 const exSave=()=>{if(view!="exam"||!ex||ex.done||!deck||!deck.own)return;try{localStorage.setItem(EXK,JSON.stringify({it:deck.items.map(i=>{const p=deck.own.get(i);return[p?p.id:null,p?p.items.indexOf(i):-1,ikey(i)]}),s:ex.s,i:ex.i,t0:ex.t0,end:ex.end,sd:QSD}))}catch(e){}};
@@ -2054,10 +2059,10 @@ const hash=async c=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new 
 const rpc=async(f,b)=>{const r=await fetch(SB+"/rest/v1/rpc/"+f,{method:"POST",headers:{apikey:SK,Authorization:"Bearer "+SK,"Content-Type":"application/json"},body:JSON.stringify(b)});if(!r.ok)throw new Error(r.status);const x=await r.text();return x?JSON.parse(x):null};
 // ---- fusion de synchro : contenu par paquet (le plus récent), progression carte par carte (la révision la plus récente) ----
 let mDirty=false;
-const PF=["st","s","df","l","k","d","b","n","m","t","f"];
+const PF=["st","s","df","l","k","d","b","n","m","t","f","w"];
 const ikey=i=>String(i.q||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
-const better=(x,y)=>{const a=[x.t||0,x.n||0,x.l||0],b=[y.t||0,y.n||0,y.l||0];for(let j=0;j<3;j++)if(a[j]!==b[j])return a[j]>b[j];
- return PF.map(f=>x[f]).join("|")>PF.map(f=>y[f]).join("|")};
+const better=(x,y)=>{const a=x.t||0,b=y.t||0;if(a!==b)return a>b;const wx=x.w||"",wy=y.w||"";if(wx!==wy)return wx>wy;
+ if(!wx){const c=[x.n||0,x.l||0],d=[y.n||0,y.l||0];for(let j=0;j<2;j++)if(c[j]!==d[j])return c[j]>d[j]}return false};
 const copyP=(to,from)=>{PF.forEach(f=>{if(from[f]===undefined)delete to[f];else to[f]=from[f]})};
 const pairs=(bi,oi)=>{const idx=new Map();(oi||[]).forEach(i=>{const k=ikey(i);if(!idx.has(k))idx.set(k,[]);idx.get(k).push(i)});const used=new Map();
  return bi.map(i=>{const k=ikey(i),arr=idx.get(k);if(!arr)return null;const c=used.get(k)||0;used.set(k,c+1);return arr[c]||null})};
@@ -2130,6 +2135,7 @@ async function sync(){
  busy=true;clearTimeout(tm);sm="Synchronisation…";ui();
  try{const h=await H(),st=syGet(h);let r;
   try{r=await rpc("revis_n_pull",{p_hash:h,p_since:st.rev||0})}catch(e){if(e.message=="404"){V2=false;busy=false;return sync1()}throw e}
+  ((r&&r.nodes)||[]).forEach(hlcNode);
   const dirty=new Set(),rm=new Map(((r&&r.nodes)||[]).map(n=>{if(n.k=="img"&&n.d){if(!IMG.has(n.id)){IMG.set(n.id,n.d);iput(n.id,n.d)}dirty.add(n.id);const{d,...o}=n;n=o}return[n.id,n]})),ln=new Map(S.nodes.map(n=>[n.id,n]));
   const keep=new Set(view=="study"||view=="exam"?(deck.virt?[...deck.own.values()].map(n=>n.id):[deck.id]):view=="edit"?[ed.id]:[]);
   mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep,dirty);setPull();TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
@@ -2139,7 +2145,8 @@ async function sync(){
   persist();
   await imgSync(h);
   // envoi par lots (300 nœuds ou environ 1,5 Mo) ; la version envoyée est notée au moment de l'envoi
-  const out=S.nodes.filter(n=>dirty.has(n.id)||(n.u||0)>(st.sv[n.id]??-1));let lot=[],sz=0;
+  const out=S.nodes.filter(n=>dirty.has(n.id)||(n.u||0)>(st.sv[n.id]??-1));let lot=[],sz=0,bu=false;
+  out.forEach(n=>{const k=st.sv[n.id];if(k!=null&&(n.u||0)<=k){hlcSee(k);n.u=hlc();bu=true}});if(bu)persist();
   const send=async()=>{if(!lot.length)return;const us=lot.map(n=>[n.id,n.u||0]),p=rpc("revis_n_push",{p_hash:h,p_nodes:lot});lot=[];sz=0;await p;us.forEach(([id,u])=>{st.sv[id]=u});sySet(st)};
   for(const n of out){const k=JSON.stringify(n).length;if(lot.length&&(lot.length>=300||sz+k>15e5))await send();lot.push(n);sz+=k}
   await send();if(out.length)ping();
@@ -2178,9 +2185,9 @@ function dupAsk(name,what,go,ren){CF=go;AS={k:"conf",title:"Ce nom existe déjà
 const unflash=()=>{document.querySelectorAll&&document.querySelectorAll(".ts").forEach(x=>x.remove())};
 const flash=(m,u)=>{if(!document.createElement||!document.body)return;unflash();const d=document.createElement("div");d.className="ts";d.setAttribute&&d.setAttribute("role","status");d.innerHTML="<span>"+esc(m)+"</span>"+(u?'<button data-a="undo">Annuler</button>':"");document.body.appendChild(d);setTimeout(()=>d.remove(),u?5500:2200)};
 const moveIds=(ids,to)=>{const mv=[];ids.forEach(i=>{const n=G(i);if(!n||n.p==to||i==to||(to&&(!G(to)||G(to).x))||desc(i).some(x=>x.id==to))return;mv.push(n)});
- if(mv.length){const snap=snapF(mv,["p"]);mv.forEach(n=>{n.p=to;n.u=Date.now()});save();undoP(snap,mv.length+(mv.length>1?" éléments déplacés":" élément déplacé"),true)}
+ if(mv.length){const snap=snapF(mv,["p"]);mv.forEach(n=>{n.p=to;n.u=hlc()});save();undoP(snap,mv.length+(mv.length>1?" éléments déplacés":" élément déplacé"),true)}
  selm=false;selset.clear();render()};
-const killIds=ids=>{const b=uid(),now=Date.now(),ds=new Map(ids.map(i=>[i,new Set(desc(i).map(n=>n.id))])),a=new Set([...ids,...[...ds.values()].flatMap(x=>[...x])]);
+const killIds=ids=>{const b=uid(),now=hlc(),ds=new Map(ids.map(i=>[i,new Set(desc(i).map(n=>n.id))])),a=new Set([...ids,...[...ds.values()].flatMap(x=>[...x])]);
  S.nodes.forEach(n=>{if(a.has(n.id)&&!n.x){n.x=1;n.xt=now;n.xb=b;n.u=now;if(ids.includes(n.id)&&!ids.some(j=>j!=n.id&&ds.get(j).has(n.id)))n.xr=1}});
  save();clearTimeout(gct);gct=setTimeout(()=>{gc();save()},8000);return b};
 const vis=()=>{const z=fq.trim();let l=z?desc(cur).filter(n=>nm(n.name).includes(nm(z))):kidsS(cur);if(ft=="f"||ft=="fc"||ft=="qcm")l=l.filter(n=>n.k==ft);else if(ft=="due")l=l.filter(n=>dn(n)>0);return l};
@@ -2199,7 +2206,7 @@ const selDock=()=>{const n=selset.size,dis=n?"":" disabled",allH=n&&[...selset].
  const t=(a,ic_,l,x)=>'<button type="button" class="rqt'+(x||"")+'" data-a="'+a+'"'+dis+'>'+ic(ic_,22)+'<span>'+l+'</span></button>';
  return '<div class="dock sdk rqsd">'+(cfg.nx?'':'<div class="hd"><span>'+n+' sélectionné'+(n>1?"s":"")+'</span><span class="bt"><button class="b sm" data-a="selall">Tout</button><button class="b sm" data-a="sel">Terminer</button></span></div>')+'<div class="rqtl">'+t("smv","move","Déplacer")+t("shid",allH?"eye":"eyeoff",allH?"Afficher":"Cacher")+t("spl","more","Plus")+t("sdel","trash","Supprimer"," dg")+'</div></div>'};
 const nxSelTop=()=>{const n=selset.size,all=vis().length>0&&vis().every(x=>selset.has(x.id));return '<div class="rqselb"><button type="button" class="rqcap" data-a="sel">Annuler</button><b role="status">'+n+' sélectionné'+(n>1?"s":"")+'</b><button type="button" class="rqcap" data-a="selall" aria-label="'+(all?"Tout désélectionner":"Tout sélectionner")+'"><span class="rqfull">'+(all?"Tout désélectionner":"Tout sélectionner")+'</span><span class="rqshort">'+(all?"Aucun":"Tout")+'</span></button></div>'};
-const tc=i=>{(deck.virt?deck.own.get(i):deck).u=Date.now()},bar=(k,n)=>'<div class="bar"><i style="width:'+(n?k/n*100:0)+'%"></i></div>';
+const tc=i=>{(deck.virt?deck.own.get(i):deck).u=hlc()},bar=(k,n)=>'<div class="bar"><i style="width:'+(n?k/n*100:0)+'%"></i></div>';
 const delB=fc=>'<button class="tg dl" data-a="qdel" aria-label="'+(fc?"Supprimer cette carte":"Supprimer cette question")+'" title="'+(fc?"Supprimer cette carte":"Supprimer cette question")+'">'+ic("trash",18)+'</button>';
 const delH=()=>{if(view!="study"||nodue||!deck)return"";const fc=deck.k=="fc";return(fc?!!(q&&q.length):!!(order&&idx<order.length))?delB(fc):""};
 const edH=()=>{if(view!="study"||nodue||!deck)return"";const on=deck.k=="fc"?!!(q&&q.length):!!(order&&idx<order.length);return on?'<button class="tg" data-a="qed" aria-label="Modifier" title="Modifier">'+ic("edit",18)+'</button>':""};
@@ -2287,7 +2294,7 @@ const A={
  sren(){ed={m:"ren",id:[...selset][0]};view="name";render()},
  scol(){ed={ids:[...selset].filter(i=>G(i)&&G(i).k=="f")};view="col";render()},
  col(id){ed={ids:[id]};view="col";render()},
- setc(c){const ns=ed.ids.map(G).filter(Boolean),snap=snapF(ns,['c']);ns.forEach(n=>{if(c)n.c=c;else delete n.c;n.u=Date.now()});save();A.cd(cur);undoP(snap,'Couleur modifiée',true)},
+ setc(c){const ns=ed.ids.map(G).filter(Boolean),snap=snapF(ns,['c']);ns.forEach(n=>{if(c)n.c=c;else delete n.c;n.u=hlc()});save();A.cd(cur);undoP(snap,'Couleur modifiée',true)},
  hide(id){const n=G(id);if(!n||n.x)return;const val=!n.h;flagSet([n],'h','hu',val,(n.k=='f'?'Dossier ':'Paquet ')+(val?'caché':'affiché'))},
  shid(){const ns=[...selset].map(G).filter(n=>n&&!n.x);if(!ns.length)return;const val=!ns.every(n=>n.h);selm=false;selset.clear();flagSet(ns,'h','hu',val,ns.length>1?ns.length+(val?' éléments cachés':' éléments affichés'):(val?'Élément caché':'Élément affiché'))},
  sdel(){const k=selset.size;if(!k)return;const b=killIds([...selset]);selm=false;selset.clear();pend=null;render();undoB(b,k>1?k+' éléments supprimés':'Élément supprimé')},
@@ -2331,8 +2338,8 @@ const A={
  ok(){const fv=ed.force;ed.force=null;const v=fv!=null?fv:$("nm").value.trim();if(!v){$("msg").textContent="Donne un nom.";return}
   if(fv==null){const p0=ed.m=="ren"?(G(ed.id)||{}).p:cur,k0=ed.m=="ren"?(G(ed.id)||{}).k:"f",d=dupOf(p0,v,k0=="f"?["f"]:["fc","qcm"],ed.m=="ren"?ed.id:null);
    if(d&&!(ed.m=="ren"&&nm(G(ed.id).name.trim())==nm(v))){const e0=ed;dupAsk(d.name,d.k=="f"?"un dossier":"un paquet",()=>{if(ed!==e0||view!="name")return;ed.force=v;A.ok()},ed.m=="ren");return}}
-  if(ed.m=="ren"){const n0=G(ed.id);if(n0&&n0.name!=v){const snap=snapF([n0],["name"]);n0.name=v;n0.u=Date.now();save();A.cd(cur);undoP(snap,"Renommé",true);return}}
-  if(ed.m=="new")S.nodes.push({id:uid(),p:cur,k:"f",name:v,u:Date.now()});else{const n=G(ed.id);n.name=v;n.u=Date.now()}save();A.cd(cur)},
+  if(ed.m=="ren"){const n0=G(ed.id);if(n0&&n0.name!=v){const snap=snapF([n0],["name"]);n0.name=v;n0.u=hlc();save();A.cd(cur);undoP(snap,"Renommé",true);return}}
+  if(ed.m=="new")S.nodes.push({id:uid(),p:cur,k:"f",name:v,u:hlc()});else{const n=G(ed.id);n.name=v;n.u=hlc()}save();A.cd(cur)},
  mv(id){ed={ids:[id]};view="move";render()},
  mvto(id){moveIds(ed.ids,nid(id));A.cd(cur)},
  imp(){view="imp";impStep=1;impCp=false;menu=pend=null;render()},
@@ -2341,7 +2348,7 @@ const A={
  impb(){impStep=1;render();scrollTo(0,0)},
  add(f){const r=parseAll($("tx").value),nm=$("nm").value.trim()||"Nouveau paquet";
   if(!r.fc.length&&!r.qcm.length){$("msg").textContent="Rien de reconnu : vérifie le format indiqué.";return}
-  const both=r.fc.length&&r.qcm.length,now=Date.now(),pl=(n,a,b)=>n+" "+(n>1?b:a);
+  const both=r.fc.length&&r.qcm.length,now=hlc(),pl=(n,a,b)=>n+" "+(n>1?b:a);
   if(f!==true){const d=(r.fc.length&&dupOf(cur,both?nm+" · Flashcards":nm,["fc","qcm"]))||(r.qcm.length&&dupOf(cur,both?nm+" · QCM":nm,["fc","qcm"]));
    if(d){dupAsk(d.name,"un paquet",()=>{if(view=="imp"&&$("tx"))A.add(true)});return}}
   if(r.fc.length)S.nodes.push({id:uid(),p:cur,k:"fc",name:both?nm+" · Flashcards":nm,items:r.fc,u:now});
@@ -2355,21 +2362,21 @@ const A={
  no(){if(cfg.srs&&!deck.free)return A.rate(1);const i=deck.items[q[0]];if(cfg.hc<6){cfg.hc++;saveCfg()}if(!deck.free){rec(i,false);save()}q.push(q.shift());back=false;render()},
  rate(g){g=+g;const i=deck.items[q[0]];if(!i)return;if(cfg.hc<6){cfg.hc++;saveCfg()}rec(i,g>1);recR(i,g>1);const p=opts(i)[g-1];applyP(i,p);save();const c=q.shift();
   if(p.m){q.splice(Math.min(q.length,p.m<=1?2:p.m<=6?4:p.m<=10?7:9),0,c)}else known++;
-  back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=Date.now();save()}render()},
- yes(){if(cfg.srs&&!deck.free)return A.rate(3);const i=deck.items[q[0]];if(cfg.hc<6){cfg.hc++;saveCfg()}if(!deck.free){rec(i,true);save()}q.shift();known++;back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=Date.now();save()}render()},
+  back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=hlc();save()}render()},
+ yes(){if(cfg.srs&&!deck.free)return A.rate(3);const i=deck.items[q[0]];if(cfg.hc<6){cfg.hc++;saveCfg()}if(!deck.free){rec(i,true);save()}q.shift();known++;back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=hlc();save()}render()},
  opt(i){if(val)return;sel[i]=!sel[i];render()},
  val(){if(val||!qvOk())return;val=true;const it=deck.items[order[idx]],ok=po(it).every((o,i)=>!!sel[i]===!!o.k);if(ok)score++;else wrong.push(order[idx]);if(!deck.free){rec(it,ok);if(cfg.srs){recR(it,ok);vprev=ok?cp(it):null;hesd=false;let p=opts(it)[ok?2:0];if(ok&&p.m)p={...p,st:2,k:null,m:0,iv:fI(p.s)};applyP(it,p)}save()}
   anp=!!(cfg.an&&ok);render();if(anp){const t=++ant,i0=idx,o0=order;setTimeout(()=>{if(t===ant&&anp&&view=="study"&&val&&idx===i0&&order===o0)A.next()},1500)}},
  qskip(){if(view!="study"||!deck||deck.k!="qcm"||val||!order||idx>=order.length)return;anp=false;ant++;idx++;sel={};vprev=null;hesd=false;render()},
  qfx(){A.fx();render()},
- next(){anp=false;ant++;idx++;sel={};val=false;vprev=null;hesd=false;if(idx>=order.length&&!deck.virt&&order.length==deck.items.length){deck.last=score+"/"+order.length;deck.u=Date.now();save()}render()},
+ next(){anp=false;ant++;idx++;sel={};val=false;vprev=null;hesd=false;if(idx>=order.length&&!deck.virt&&order.length==deck.items.length){deck.last=score+"/"+order.length;deck.u=hlc();save()}render()},
  redo(){startQ(wrong.slice())},
  restart(){if(deck&&deck.free)return A.fre();A.st(0,rmode)},
  stats(){view="stats";menu=pend=null;hmSel=null;om=false;render();scrollTo(0,0);if(cfg.code)setTimeout(sync,0)},
  hard(t){const own=new Map(),items=[];hardList().forEach(({i,p})=>{if(p.k==t){own.set(i,p);items.push(i)}});if(!items.length)return;deck={virt:1,own,name:"Ce que tu rates souvent",k:t,items};A.st(1)},
  edit(id){ed={id};view="edit";menu=pend=null;render();scrollTo(0,0)},
  pimg(v){const[i,f]=v.split(":");pk={t:"card",id:ed.id,i:+i,f};$("fi").click()},
- rimg(v){const[i,f]=v.split(":"),n=G(ed.id);delete n.items[+i][f];n.u=Date.now();gc();save();render()},
+ rimg(v){const[i,f]=v.split(":"),n=G(ed.id);delete n.items[+i][f];n.u=hlc();gc();save();render()},
  exs(){xs={ids:new Set(desc(cur).filter(n=>n.k=="qcm").map(n=>n.id)),n:20,t:60};view="exs";menu=pend=null;render();scrollTo(0,0)},
  xp(id){xs.ids.has(id)?xs.ids.delete(id):xs.ids.add(id);render()},
  xn(v){xs.n=+v;render()},
@@ -2388,22 +2395,22 @@ const A={
  more(){if(XB.d!=day())XB={d:day(),n:{}};const ks=new Set();dkPacks().forEach(p=>{const o=ownOf(p);if(o!=null&&p.items.some(isNew)&&!gLeft(o,p.k))ks.add(o+"|"+p.k)});ks.forEach(gk=>{XB.n[gk]=(XB.n[gk]||0)+MORE});TDv++;A.st(0,"new");scrollTo(0,0)},
  xd(id){AS={k:"goal",id:String(id)};asRender()},
  xds(id){const e=$("xdi"),v=e?e.value:"",d=pd(v);if(d==null||d<day()){AS={k:"goal",id,v};asRender();const p=$("xdp");if(p)p.textContent=d==null?"Choisis le premier jour de l\'examen.":"Choisis une date à venir.";return}
-  const x=id=="0"?optMk():G(id);if(!x)return;x.xd=d;x.u=Date.now();save();render();flash("Date d\'examen enregistrée : "+dstr(d))},
- xdr(id){const x=id=="0"?optN():G(id);if(!x)return;delete x.xd;x.u=Date.now();save();render();flash("Date d\'examen retirée")},
+  const x=id=="0"?optMk():G(id);if(!x)return;x.xd=d;x.u=hlc();save();render();flash("Date d\'examen enregistrée : "+dstr(d))},
+ xdr(id){const x=id=="0"?optN():G(id);if(!x)return;delete x.xd;x.u=hlc();save();render();flash("Date d\'examen retirée")},
  cpv(v){const k=String(v).lastIndexOf("#");AS={k:"card",pid:String(v).slice(0,k),i:+String(v).slice(k+1)};asRender()},
  cpe(v){const k=String(v).lastIndexOf("#"),n=G(String(v).slice(0,k)),i=+String(v).slice(k+1);if(n&&n.items&&n.items[i]&&window.cardEd)window.cardEd(n,i)},
  cpc(){const c=cfg.code?fc4(cfg.code):"",ko=()=>flash("Copie impossible : recopie le code affiché dans Réglages.");if(!c)return;if(!navigator.clipboard||!navigator.clipboard.writeText)return ko();navigator.clipboard.writeText(c).then(()=>{try{localStorage.setItem("revis-codeok","1")}catch(e){}render();flash("Code copié : colle-le dans tes notes")}).catch(ko)},
  cok(){try{localStorage.setItem("revis-codeok","1")}catch(e){}render()},
- cuall(){const o=optN();if(cuAct()){delete o.cu;o.u=Date.now();save()}else{cfg.cud=day();saveCfg()}render();flash("Tout ton retard est proposé dans « Réviser »")},
- cusp(){const o=optMk();o.cu={d0:day(),n:3};o.u=Date.now();save();render();const k=rvLeft();flash("Retard étalé sur 3 jours : "+k+(k>1?" révisions":" révision")+" aujourd\'hui")},
+ cuall(){const o=optN();if(cuAct()){delete o.cu;o.u=hlc();save()}else{cfg.cud=day();saveCfg()}render();flash("Tout ton retard est proposé dans « Réviser »")},
+ cusp(){const o=optMk();o.cu={d0:day(),n:3};o.u=hlc();save();render();const k=rvLeft();flash("Retard étalé sur 3 jours : "+k+(k>1?" révisions":" révision")+" aujourd\'hui")},
  hes(){if(!val||!vprev||hesd||!deck||deck.free||!cfg.srs)return;const it=deck.items[order[idx]];if(!it)return;copyP(it,vprev);applyP(it,opts(it)[1]);hesd=true;anp=false;ant++;save();render()},
  fs(v){cfg.fs=+v;saveCfg();setFs();render()},
- fx(){const it=curIt();if(!it)return;const own=deck.virt&&deck.own?deck.own.get(it):deck;if(!own||!own.items)return;if(it.fx)delete it.fx;else it.fx=1;own.u=Date.now();save();
+ fx(){const it=curIt();if(!it)return;const own=deck.virt&&deck.own?deck.own.get(it):deck;if(!own||!own.items)return;if(it.fx)delete it.fx;else it.fx=1;own.u=hlc();save();
   const b=document.querySelector(".fxb");if(b){b.classList.toggle("on",!!it.fx);b.setAttribute("aria-pressed",String(!!it.fx));b.setAttribute("aria-label",fxL(it.fx));b.title=fxL(it.fx)}
   flash(it.fx?(deck.k=="fc"?"Carte marquée à corriger":"Question marquée à corriger"):"Retirée de « À corriger »")},
  fxl(){AS={k:"fix"};asRender()},
  fxe(v){AS={k:"fix"};A.cpe(v)},
- fxo(v){AS={k:"fix"};const k=String(v).lastIndexOf("#"),n=G(String(v).slice(0,k)),it=n&&n.items?n.items[+String(v).slice(k+1)]:null;if(!it||!it.fx)return;delete it.fx;n.u=Date.now();save();render();flash("Retirée de « À corriger »")},
+ fxo(v){AS={k:"fix"};const k=String(v).lastIndexOf("#"),n=G(String(v).slice(0,k)),it=n&&n.items?n.items[+String(v).slice(k+1)]:null;if(!it||!it.fx)return;delete it.fx;n.u=hlc();save();render();flash("Retirée de « À corriger »")},
  lt(){cfg.nolt=!cfg.nolt;saveCfg();setLt();render()},
  sk(){cfg.nosk=!cfg.nosk;saveCfg();render()},
  xres(){const o=exGet();if(!o||!o.it)return;const own=new Map(),items=[],sv=[];
@@ -2417,7 +2424,7 @@ const A={
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);bkMark();bm="Sauvegarde exportée : "+name;render()},
  rst(){$("fb").click()},
  rsx(){rs=null;bm="";render()},
- rsok(){if(!rs)return;const now=Date.now(),ids=new Set(rs.nodes.map(n=>n.id));
+ rsok(){if(!rs)return;const now=hlc(),ids=new Set(rs.nodes.map(n=>n.id));
   S.nodes.forEach(n=>{if(n.k!="log"&&!n.x&&!ids.has(n.id)){n.x=1;n.u=now;delete n.items;if(n.k=="img"){IMG.delete(n.id);idel(n.id)}}});
   rs.nodes.forEach(b=>{if(b.k=="log")return;const c={...b,u:now};if(c.k=="img"){if(c.d){IMG.set(c.id,c.d);iput(c.id,c.d)}delete c.d}const i=S.nodes.findIndex(n=>n.id==c.id);if(i>=0)S.nodes[i]=c;else S.nodes.push(c)});
   rs=null;cur=0;bm="Sauvegarde restaurée.";save();render()}
@@ -2524,8 +2531,8 @@ document.addEventListener("pointerup",dgEnd);document.addEventListener("pointerc
 document.addEventListener("touchmove",e=>{if(dg&&dg.on)e.preventDefault()},{passive:false});
 document.addEventListener("input",e=>{if(e.target.id=="fq"){fq=e.target.value;const l=$("lst");if(l)l.innerHTML=listHTML()}else if(e.target.id=="sq"){sq=e.target.value;const l=$("sres");if(l)l.innerHTML=searchResultsHTML()}else if(e.target.dataset&&e.target.dataset.lb!=null&&oc)oc.r[+e.target.dataset.lb].l=e.target.value});
 document.addEventListener("change",e=>{const t=e.target;
- if(t.dataset&&t.dataset.ex!=null&&view=="edit"){const n=G(ed.id),it=n.items[+t.dataset.ex],v=t.value.trim();if(v)it.e=v;else delete it.e;n.u=Date.now();save();flash("Explication enregistrée")}
- else if(t.id=="fi"){const f=t.files[0];t.value="";if(!f||!pk)return;flash("Préparation de l'image…");loadImg(f).then(src=>{const n=G(pk.id),it=n.items[pk.i];it[pk.f]=newImg(src);n.u=Date.now();gc();save();render();pk=null}).catch(()=>flash("Image illisible : essaie une photo JPEG ou PNG."))}
+ if(t.dataset&&t.dataset.ex!=null&&view=="edit"){const n=G(ed.id),it=n.items[+t.dataset.ex],v=t.value.trim();if(v)it.e=v;else delete it.e;n.u=hlc();save();flash("Explication enregistrée")}
+ else if(t.id=="fi"){const f=t.files[0];t.value="";if(!f||!pk)return;flash("Préparation de l'image…");loadImg(f).then(src=>{const n=G(pk.id),it=n.items[pk.i];it[pk.f]=newImg(src);n.u=hlc();gc();save();render();pk=null}).catch(()=>flash("Image illisible : essaie une photo JPEG ou PNG."))}
  else if(t.id=="fb"){const f=t.files[0];t.value="";if(!f)return;f.text().then(x=>{const o=JSON.parse(x);if(!o||!Array.isArray(o.nodes)||!o.nodes.every(n=>n&&n.id!=null&&n.k))throw 0;AS={k:"nxp",w:"bk"};rs={nodes:o.nodes.filter(n=>!n.x),np:o.nodes.filter(n=>!n.x&&(n.k=="fc"||n.k=="qcm")).length,date:o.date?new Date(o.date).toLocaleDateString("fr",{day:"numeric",month:"long",year:"numeric"}):"date inconnue"};bm="";render()}).catch(()=>{bm="Ce fichier n'est pas une sauvegarde de rev.";AS={k:"nxp",w:"bk"};render()})}});
 document.addEventListener("click",e=>{if(sw||dd){sw=false;dd=false;return}const t=e.target.closest("[data-a]");if(t&&A[t.dataset.a]){const sv=AS,inS=!!(sv&&t.closest("#asd"));if(inS)AS=null;A[t.dataset.a](t.dataset.v);
  /* feuilles-pages (Synchronisation, Sauvegarde, Corbeille) : une action dans la feuille la laisse ouverte ; une confirmation ouverte depuis elle y revient */
@@ -3260,14 +3267,14 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   var isNew=S2.isNew,it,wasFx=false;
   if(isNew){it=k==="fc"?{c:"",q:c.q.trim(),a:c.a.trim()}:{q:c.q.trim(),o:c.o};n.items.push(it)}
   else{it=n.items[S2.idx];it.q=c.q.trim();if(k==="fc")it.a=c.a.trim();else it.o=c.o;if(it.fx){wasFx=true;delete it.fx}}
-  n.u=Date.now();save();closeSheet();render();
+  n.u=hlc();save();closeSheet();render();
   if(isNew){var l=document.querySelectorAll("#app .er");if(l.length&&l[l.length-1].scrollIntoView)l[l.length-1].scrollIntoView({block:"center"})}
   flash(isNew?(k==="fc"?"Carte ajoutée":"Question ajoutée"):wasFx?"Corrigée, retirée de « À corriger »":"Modifications enregistrées");
  };
  A.cdel=function(){
   if(!S2)return;var n=S2.n,idx=S2.idx,it=n.items[idx];if(!it)return;
-  n.items.splice(idx,1);n.u=Date.now();save();
-  cUs={t:Date.now(),msg:n.k==="fc"?"Carte restaurée":"Question restaurée",fn:function(){if(n.items.indexOf(it)<0)n.items.splice(Math.min(idx,n.items.length),0,it);n.u=Date.now();save();render()}};
+  n.items.splice(idx,1);n.u=hlc();save();
+  cUs={t:Date.now(),msg:n.k==="fc"?"Carte restaurée":"Question restaurée",fn:function(){if(n.items.indexOf(it)<0)n.items.splice(Math.min(idx,n.items.length),0,it);n.u=hlc();save();render()}};
   clearTimeout(gct);gct=setTimeout(function(){gc();save()},8000);
   closeSheet();render();flash(n.k==="fc"?"Carte supprimée":"Question supprimée",true);
  };
@@ -3285,7 +3292,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   var it=dk.items[j];if(!it)return;
   var own=dk.virt&&dk.own?dk.own.get(it):dk;if(!own||!own.items)return;
   var oi=own.items.indexOf(it);if(oi<0)return;
-  var shared=own.items===dk.items,card=dk.k==="fc",now=Date.now(),empty=false,sn={};
+  var shared=own.items===dk.items,card=dk.k==="fc",now=hlc(),empty=false,sn={};
   own.items.splice(oi,1);if(!shared)dk.items.splice(j,1);own.u=now;
   if(inEx){
    sn={ex:ex,sv:ex.s.splice(j,1)[0]};
@@ -3303,7 +3310,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   pend=null;save();if(inEx&&!empty)exSave();
   cUs={t:Date.now(),msg:card?"Carte restaurée":"Question restaurée",fn:function(){
    if(own.items.indexOf(it)<0)own.items.splice(Math.min(oi,own.items.length),0,it);
-   own.u=Date.now();
+   own.u=hlc();
    var live=deck===dk;
    if(live&&!shared&&dk.items.indexOf(it)<0)dk.items.splice(Math.min(j,dk.items.length),0,it);
    if(live){
@@ -3392,8 +3399,8 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   items.forEach(function(i){var k=nm(i.q.trim());if(seen.has(k))dup++;else{seen.add(k);fresh.push(i)}});
   var pl=function(x,a,b){return x+" "+(x>1?b:a)};
   if(!fresh.length){bad(dup>1?"Tout existe déjà dans ce paquet ("+dup+" doublons).":"Cet élément existe déjà dans ce paquet.");return}
-  Array.prototype.push.apply(n.items,fresh);n.u=Date.now();save();
-  cUs={t:Date.now(),msg:"Ajout annulé",fn:function(){n.items=n.items.filter(function(x){return fresh.indexOf(x)<0});n.u=Date.now();save();render()}};
+  Array.prototype.push.apply(n.items,fresh);n.u=hlc();save();
+  cUs={t:Date.now(),msg:"Ajout annulé",fn:function(){n.items=n.items.filter(function(x){return fresh.indexOf(x)<0});n.u=hlc();save();render()}};
   A.cd(cur);
   flash(pl(fresh.length,n.k==="fc"?"carte ajoutée":"question ajoutée",n.k==="fc"?"cartes ajoutées":"questions ajoutées")+(dup?", "+pl(dup,"doublon ignoré","doublons ignorés"):""),true);
  };
