@@ -2677,6 +2677,24 @@ function nxBbRender(){let d=document.getElementById("bbd");
  if(tp+h>vh-12&&rc.top-10-h>=12){tp=rc.top-10-h;up=true}else if(tp+h>vh-12)m.style.maxHeight=Math.max(150,Math.floor(vh-tp-12))+"px";
  m.style.top=tp+"px";m.style.transformOrigin=Math.round(Math.max(20,Math.min(cx-l,w-20)))+"px "+(up?"100%":"0");m.classList.toggle("up",up);a.style.left=Math.max(20,Math.min(cx-l,w-20))+"px";
  if(fresh)try{m.focus({preventScroll:true})}catch(e){}}
+/* 21/10/2026 — direction C — étape 2 : feuilles et menus ⋯ qui naissent du bouton touché et s'y rétractent (morphing de forme et de position, sans View Transitions) */
+let RQO=null,RQOT=0,RQPV=null;
+const rqCalm=()=>{try{return matchMedia("(prefers-reduced-motion:reduce)").matches}catch(e){return false}};
+if(typeof document!="undefined")document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest("button,[data-a]");if(b&&!b.closest(".shd")){RQO=b.getBoundingClientRect();RQOT=performance.now()}},true);
+function rqMorph(el,o,open){const r=el.getBoundingClientRect();if(!r.width||!o)return null;
+ const dx=(o.left+o.width/2)-(r.left+r.width/2),dy=(o.top+o.height/2)-(r.top+r.height/2),sx=Math.max(.08,o.width/r.width),sy=Math.max(.05,o.height/r.height);
+ const a={transform:"translate("+dx+"px,"+dy+"px) scale("+sx+","+sy+")",opacity:.35},z={transform:"none",opacity:1};
+ return el.animate(open?[a,{opacity:1,offset:.35},z]:[z,a],open?{duration:540,easing:"cubic-bezier(.25,1.18,.4,1)"}:{duration:260,easing:"cubic-bezier(.4,0,.8,.4)",fill:"forwards"})}
+{const oAs=asRender;asRender=function(){
+ const el0=document.getElementById("asd"),sh0=el0&&el0.querySelector(".sh"),o0=el0&&el0._rqo;
+ let ghost=null;if(sh0&&o0&&!rqCalm()){ghost=el0.cloneNode(true);ghost.removeAttribute("id");ghost.classList.add("rqghost");ghost.classList.remove("asd")}
+ const r=oAs.apply(this,arguments);
+ const el=document.getElementById("asd"),sh=el&&el.querySelector(".sh");
+ if(!el&&ghost){document.body.appendChild(ghost);const g=ghost.querySelector(".sh"),v=ghost.querySelector(".shb");g.style.animation="none";if(v)v.animate([{opacity:1},{opacity:0}],{duration:240,fill:"forwards"});const an=rqMorph(g,o0,false);if(an)an.onfinish=()=>ghost.remove();else ghost.remove()}
+ else if(sh&&!sh0&&!rqCalm()&&RQO&&performance.now()-RQOT<700){el._rqo=RQO;sh.style.animation="none";rqMorph(sh,RQO,true);[...sh.children].forEach((c,i)=>c.animate([{opacity:0},{opacity:1}],{duration:260,delay:150+i*30,fill:"backwards"}))}
+ else if(sh&&!sh0)el._rqo=null;
+ return r}}
+function rqPv(){const m=document.querySelector("#app .pvm");if(PV&&PV!==RQPV&&m&&!rqCalm()&&RQO&&performance.now()-RQOT<700){m.style.animation="none";rqMorph(m,RQO,true)}RQPV=PV}
 /* 20/10/2026 (style B) : une ligne qui apparaît dans la liste monte doucement (rqnew) ; seulement si le nombre de lignes augmente sur le même écran */
 let RQI=null,RQK="";
 function nxNew(){const it=[...document.querySelectorAll('#app #lst .item[data-id]')],k=view+"|"+cur,ids=new Set(it.map(e=>e.dataset.id));
@@ -2858,7 +2876,7 @@ function nxFd(c){const own=deck.virt&&deck.own?deck.own.get(c):deck,f=own&&own.p
  return '<span class="nxfd"'+(col?' style="--fc:'+esc(col)+'"':'')+'><i class="dt" aria-hidden="true"></i><span class="vh">Dossier : </span><span class="fn">'+esc(f?f.name:"Accueil")+'</span>'+(c.c?'<span class="vh">, catégorie : </span><span class="cat">'+esc(c.c)+'</span>':'')+'</span><span class="vh">. </span>'}
 function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}
 
- nxNew();if(cfg.nx){nxFit();requestAnimationFrame(nxFit)}else nxBbRender()}
+ nxNew();rqPv();if(cfg.nx){nxFit();requestAnimationFrame(nxFit)}else nxBbRender()}
 // nouvelle apparence : si le mot du bouton retour serait coupé (« Réglag… »), on n'affiche que le chevron (le mot reste lu par VoiceOver)
 function nxBk(){const b=document.querySelector("#app .tb .crw .bk"),t=b&&b.querySelector(":scope>span");if(!t)return;b.classList.remove("ico");if(!cfg.nx)return;const r=document.createRange();r.selectNodeContents(t);const w=b.closest(".crw");const br=b.getBoundingClientRect();if(r.getBoundingClientRect().right>br.right-(parseFloat(getComputedStyle(b).paddingRight)||0)+.5||b.scrollWidth>b.clientWidth||t.scrollWidth>t.clientWidth+1||r.getBoundingClientRect().width>t.getBoundingClientRect().width+.5||b.getBoundingClientRect().right>(w?w.getBoundingClientRect().right:innerWidth)+.5)b.classList.add("ico")}
 if(typeof addEventListener=="function"){addEventListener("resize",()=>requestAnimationFrame(nxFit));if(document.fonts&&document.fonts.ready)document.fonts.ready.then(nxFit)}
@@ -4085,6 +4103,16 @@ html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app[data-view=study] .car
 /* 21/10/2026 : la case « Autre… » ne bouge pas à l'appui (le sélecteur natif s'ancre sur le champ) */
 #app .pcc:active{scale:1;transform:none}
 #app .pcc{transition:none}
+
+/* 21/10/2026 — direction C (choix d'Idriss) — étape 1 : verre plus visible, seulement sur ce qui flotte (capsule et bouton retour du haut, « + » du bas, menus ⋯, feuilles, bulle). Le contenu reste opaque. Mac (data-desk) et « réduire la transparence » : inchangés (opaques). */
+:root{--rq-gl:rgba(255,253,248,.52);--rq-gm:rgba(255,253,248,.76);--rq-gh:rgba(255,255,255,.6);--rq-ge:rgba(255,255,255,.92);--rq-gd:rgba(23,61,50,.10);--rq-gs:rgba(15,42,34,.24)}
+:root[data-theme="dark"]{--rq-gl:rgba(26,44,37,.5);--rq-gm:rgba(26,44,37,.76);--rq-gh:rgba(255,255,255,.10);--rq-ge:rgba(255,255,255,.17);--rq-gd:rgba(0,0,0,.32);--rq-gs:rgba(0,0,0,.55)}
+html[data-nx="1"]:not([data-desk="1"]) body #app :is(.tb .tgs,.tb .bk,.tb>.sbt,.dock.nxd .nxad,.nxrh .nxrbk,.nxrh .nxtg){background-color:var(--rq-gl);background-image:linear-gradient(180deg,var(--rq-gh),transparent 55%);-webkit-backdrop-filter:blur(18px) saturate(1.7);backdrop-filter:blur(18px) saturate(1.7);border-color:var(--rq-ge);box-shadow:inset 0 1px 0 var(--rq-ge),inset 0 -1px 0 var(--rq-gd),0 10px 28px -12px var(--rq-gs)}
+html[data-nx="1"]:not([data-desk="1"]) body .shd .sh,html[data-nx="1"]:not([data-desk="1"]) body #app .pvm,html[data-nx="1"]:not([data-desk="1"]) body #bbd .bbm{background-color:var(--rq-gm);background-image:linear-gradient(180deg,var(--rq-gh),transparent 140px);-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);border-color:var(--rq-ge);box-shadow:inset 0 1px 0 var(--rq-ge),0 24px 56px -20px var(--rq-gs)}
+@media (prefers-reduced-transparency:reduce){html[data-nx="1"] body #app :is(.tb .tgs,.tb .bk,.tb>.sbt,.dock.nxd .nxad,.nxrh .nxrbk,.nxrh .nxtg),html[data-nx="1"] body .shd .sh,html[data-nx="1"] body #app .pvm,html[data-nx="1"] body #bbd .bbm{background-color:var(--g-sol);background-image:none;-webkit-backdrop-filter:none;backdrop-filter:none}}
+.rqghost{pointer-events:none!important}
+/* intitulés des menus ⋯ sur verre : un peu plus contrastés (en sombre ils passaient de 4,79 à 3,98:1) */
+html[data-nx="1"]:not([data-desk="1"]) body #asd.shd .sh .nxpb .help,html[data-nx="1"]:not([data-desk="1"]) body .shd .sh .help,html[data-nx="1"]:not([data-desk="1"]) body #app .pvm .pvh{color:color-mix(in srgb,var(--mut) 55%,var(--ink))}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
