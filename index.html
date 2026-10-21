@@ -517,11 +517,11 @@ html.qz #app{-webkit-user-select:none;user-select:none;-webkit-touch-callout:non
  .b,.tg,.chip,.bk,.cbtn,.seg button,.pc,.dots,.sd,.cw,.xn,.xc,.pvr,.cmenu button,.asr,button.opt,.resume,.item,.tile,.card,.item.row{transition:scale .62s var(--spring-pop),transform .62s var(--spring)}
  :is(.b,.tg,.chip,.bk,.cbtn,.seg button,.pc,.dots,.sd,.cw,.xn,.xc,.pvr,.cmenu button,.asr,button.opt,.resume,.item.row,.card):active,
  .item:has(>.main:active),.tile:has(>.main:active){transition:scale .09s var(--snap),transform .12s var(--snap)}
- .b:active,.tg:active,.chip:active,.bk:active,.cbtn:active,.seg button:active,.pc:active,.dots:active,.sd:active,.cw:active,.xn:active,.xc:active,.pvr:active,.cmenu button:active{scale:.93;transform:none}
- .asr:active,button.opt:active,.resume:active,.item.row:active{scale:.972}
- .item:has(>.main:active){scale:.972}
+ .b:active,.tg:active,.chip:active,.bk:active,.cbtn:active,.seg button:active,.pc:active,.dots:active,.sd:active,.cw:active,.xn:active,.xc:active,.pvr:active,.cmenu button:active{scale:var(--pr-1);transform:none}
+ .asr:active,button.opt:active,.resume:active,.item.row:active{scale:var(--pr-2)}
+ .item:has(>.main:active){scale:var(--pr-2)}
  .tile:has(>.main:active){scale:.94}
- .card:active{scale:.985}
+ .card:active{scale:var(--pr-3)}
  .b.cta:active{scale:.965}
  button:disabled:active,button.opt[aria-disabled="true"]:active{scale:1}
 
@@ -4015,24 +4015,21 @@ html[data-nx="1"] #app .dock.rqsd button.rqt::before,html[data-nx="1"] #app .doc
 @keyframes rqbb{from{transform:scale(.82)}}
 @keyframes rqrise{from{opacity:0;transform:translateY(14px)}}
 .rqnew{animation:rqrise .5s cubic-bezier(.16,1,.3,1) backwards}
-.rqbtn,.rqcap,.rqt,.rqbadge,.rqinfo,.nxq,.nxrbk,.fxb,.syd,.lnk{transition:scale .62s var(--spring-pop),border-radius .5s var(--spring)}
-.rqbtn:active,.rqcap:active,.rqt:active,.rqbadge:active,.rqinfo:active,.nxrbk:active,.fxb:active,.syd:active{scale:.93;transition:scale .09s var(--snap),border-radius .12s var(--snap)}
-.nxq:active,.lnk:active{scale:.975;transition:scale .09s var(--snap)}
+/* 21/10/2026 — harmonisation du toucher : trois niveaux d'écrasement (jetons ci-dessous), même retour en ressort partout. Niveau 1 = commandes (boutons, puces, icônes) ; niveau 2 = lignes et grands champs ; niveau 3 = grandes surfaces (carte). */
+:root{--pr-1:.93;--pr-2:.975;--pr-3:.985;--pr-in:.09s var(--snap);--pr-out:.62s var(--spring-pop)}
+.rqbtn,.rqcap,.rqt,.rqbadge,.rqinfo,.nxq,.nxrbk,.fxb,.syd,.lnk{transition:scale var(--pr-out),border-radius .5s var(--spring)}
+.rqbtn:active,.rqcap:active,.rqt:active,.rqbadge:active,.rqinfo:active,.nxrbk:active,.fxb:active,.syd:active{scale:var(--pr-1);transition:scale var(--pr-in),border-radius .12s var(--snap)}
+.nxq:active,.lnk:active{scale:var(--pr-2);transition:scale var(--pr-in)}
 html[data-nx="1"] #app .dock.rqsd button.rqt:active{border-radius:22px 14px 20px 13px/14px 22px 13px 20px}
-html[data-nx="1"] #app .rqbtn:active{border-radius:14px 9px 13px 10px/10px 14px 9px 13px}
 
 /* 20/10/2026 (2e passe, audit « appui forcé » sur tous les écrans) : style A étendu aux éléments qui n'avaient aucun effet (recherche, réglages, interrupteur de thème, lignes de liste, boutons des feuilles) et réponse au focus des champs */
 .nxths,.nxsq,.nxsr,.nxsw,.nxsqa,.nxsqx,#asd .nxpb button,#app .nxpb button{transition:scale .62s var(--spring-pop),border-radius .5s var(--spring),background-color .15s}
-.nxths:active,.nxsq:active,.nxsqa:active,.nxsqx:active{scale:.92;transition:scale .09s var(--snap),border-radius .12s var(--snap)}
-.nxsr:active,.nxsw:active,#asd .nxpb button:active,#app .nxpb button:active{scale:.975;transition:scale .09s var(--snap),border-radius .12s var(--snap),background-color .15s}
-html[data-nx="1"] #app .nxsr:active{border-radius:22px 14px 20px 15px/15px 22px 14px 20px}
+.nxths:active,.nxsq:active,.nxsqa:active,.nxsqx:active{scale:var(--pr-1);transition:scale var(--pr-in),border-radius .12s var(--snap)}
+.nxsr:active,.nxsw:active,#asd .nxpb button:active,#app .nxpb button:active{scale:var(--pr-2);transition:scale var(--pr-in),border-radius .12s var(--snap),background-color .15s}
 html[data-nx="1"] #app #lst .nxg:not(.tiles) .item:not(.dragging){transition:scale .62s var(--spring-pop),border-radius .5s var(--spring),background-color .15s}
-html[data-nx="1"] #app #lst .nxg:not(.tiles) .item:not(.sel):not(.ins-a):not(.ins-b):not(.dragging):has(>.main:active){scale:.978;border-radius:22px 14px 20px 15px/15px 22px 14px 20px;transition:scale .09s var(--snap),border-radius .12s var(--snap),background-color .15s}
+html[data-nx="1"] #app #lst .nxg:not(.tiles) .item:not(.sel):not(.ins-a):not(.ins-b):not(.dragging):has(>.main:active){scale:var(--pr-2);border-radius:22px 14px 20px 15px/15px 22px 14px 20px;transition:scale .09s var(--snap),border-radius .12s var(--snap),background-color .15s}
 html[data-nx="1"] #app .nxsqf,html[data-nx="1"] #app .nxq{transition:scale .5s var(--spring)}
 html[data-nx="1"] #app .nxsqf:focus-within{scale:1.012}
-:is(#app,#asd) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(#sq),textarea){transition:scale .5s var(--spring)}
-:is(#app,#asd) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(#sq),textarea):focus{scale:1.01}
-:is(#app,#asd) textarea:focus{scale:1.005}
 
 /* 20/10/2026 : révision et examen sur iPad (hors Mac) : le contenu occupe toute la hauteur de l'écran au lieu de laisser du vide en bas (cartes : hauteur calculée pour tenir avec la ligne d'aide et la barre de notes, identique au recto et au verso, donc la carte ne saute pas au retournement ; QCM : le bloc question + propositions s'étire, les propositions se répartissent) */
 html[data-ipad="1"]:not([data-desk="1"]) body #app:is([data-view="study"],[data-view="exam"]){min-height:calc(100vh - 28px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:calc(100dvh - 28px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
