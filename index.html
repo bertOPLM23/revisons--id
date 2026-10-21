@@ -3453,19 +3453,19 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   var P=[["","Par défaut"],["#d04a4a","Rouge"],["#d9694a","Corail"],["#e09a2b","Orange"],["#c9a227","Jaune"],["#8fb339","Lime"],["#4aa36a","Vert"],["#2f8f6a","Forêt"],["#4fbf9f","Menthe"],["#2fa3a3","Turquoise"],["#4fb3e8","Ciel"],["#4a86e0","Bleu"],["#3a66c0","Marine"],["#5a5bd6","Indigo"],["#8a6fd6","Violet"],["#d867a6","Rose"],["#c73c8d","Fuchsia"],["#a8734a","Brun"],["#7c8aa0","Ardoise"]];
   PAL.length=0;PN.length=0;P.forEach(function(x){PAL.push(x[0]);PN.push(x[1])});
  })();
- A.colpk=function(v){/* 20/10/2026 : le sélecteur natif est sur <body>, hors de #app, que render() reconstruit : sinon il se fermait tout seul */
-  var i=document.getElementById("colpk");if(!i){i=document.createElement("input");i.type="color";i.id="colpk";i.setAttribute("aria-label","Choisir une couleur personnalisée");
-   i.style.cssText="position:fixed;left:50%;bottom:0;width:1px;height:1px;opacity:0;border:0;padding:0";
-   i.addEventListener("change",function(e){A.setc(e.target.value)});document.body.appendChild(i)}
-  i.value=/^#[0-9a-f]{6}$/i.test(v)?v:"#d9694a";i.click()};
+ var COLP=false,COLPEND=false,oRender=render;render=function(){if(COLP&&view==='col'){COLPEND=true;return}return oRender.apply(this,arguments)};
  function colUI(){
   if(view!=="col")return;var pal=$q("#app .pal");if(!pal)return;
   var n0=ed&&ed.ids&&ed.ids.length?G(ed.ids[0]):null,cur0=n0&&n0.c?n0.c:"";
   [].forEach.call(pal.querySelectorAll(".pc"),function(b){if(b.dataset.v===cur0)b.classList.add("cur")});
   if(pal.querySelector(".pcc"))return;
-  var known=PAL.indexOf(cur0)>=0,t=document.createElement("button");t.type="button";t.className="pc pcc"+(cur0&&!known?" cur":"");t.setAttribute("data-a","colpk");t.setAttribute("data-v",cur0&&!known&&/^#[0-9a-f]{6}$/i.test(cur0)?cur0:"#d9694a");
-  t.setAttribute("aria-label","Choisir une couleur personnalisée");
-  t.innerHTML='<span class="cwheel"></span><span>Autre…</span>';
+  var known=PAL.indexOf(cur0)>=0,t=document.createElement("div");t.className="pc pcc"+(cur0&&!known?" cur":"");
+  t.innerHTML='<span class="cwheel"></span><span>Autre…</span><input type="color" aria-label="Choisir une couleur personnalisée" value="'+(cur0&&!known&&/^#[0-9a-f]{6}$/i.test(cur0)?cur0:"#d9694a")+'">';
+  /* 21/10/2026 : le toucher doit tomber directement sur le vrai champ (un clic() programmatique ne marche pas sur iPad : le bouton paraissait mort) ; pendant que le sélecteur est ouvert, render() est différé pour ne pas détruire le champ */
+  var ci=t.querySelector("input");
+  ci.addEventListener("focus",function(){COLP=true});
+  ci.addEventListener("change",function(e){COLP=false;A.setc(e.target.value)});
+  ci.addEventListener("blur",function(){setTimeout(function(){if(COLP){COLP=false;if(COLPEND){COLPEND=false;render()}}},400)});
   pal.appendChild(t);
  }
 
@@ -4081,6 +4081,10 @@ html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app[data-view=study] .car
  html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app .dock.nxd .nxad{height:46px;min-height:46px}
  html[data-nx="1"]:not([data-z1]):not([data-z2]):not([data-z3]) #app .dock.nxd{padding-top:5px;padding-bottom:5px}
 }
+
+/* 21/10/2026 : la case « Autre… » ne bouge pas à l'appui (le sélecteur natif s'ancre sur le champ) */
+#app .pcc:active{scale:1;transform:none}
+#app .pcc{transition:none}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
