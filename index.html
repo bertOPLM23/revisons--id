@@ -4082,6 +4082,11 @@ html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app[data-view=study] .car
 /* 21/10/2026 : la case « Autre… » ne bouge pas à l'appui (le sélecteur natif s'ancre sur le champ) */
 #app .pcc:active{scale:1;transform:none}
 #app .pcc{transition:none}
+
+/* 21/10/2026 — direction C, étape 3 : reflet qui suit le doigt, SEULEMENT sur la barre du bas (Réviser et +). Le reflet existait (lumière sous le doigt : --gx/--gy posées par le script, rayon blanc à l'appui) mais il était quasi invisible sur « Réviser » en sombre (blanc sur bouton clair) et sur « + » en sombre : on ne change que son intensité (sur « Réviser » en sombre, reflet blanc plus franc : il éclaircit le fond du texte foncé, donc le contraste ne baisse pas). Coupé sur Mac (data-desk), si la lumière sous le doigt est désactivée (html.nolt) et par « réduire les animations » (règle globale). */
+:root[data-theme="dark"][data-nx="1"]:not([data-desk="1"]):not(.nolt) #app .dock.nxd .b.nxrv:not(.an)::after{background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgb(255 255 255/.95),transparent 62%)}
+html[data-nx="1"]:not([data-desk="1"]):not(.nolt) #app .dock.nxd .b.nxad:not(.an)::after{background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgb(255 255 255/.6),transparent 62%)}
+:root[data-theme="dark"][data-nx="1"]:not([data-desk="1"]):not(.nolt) #app .dock.nxd .b.nxad:not(.an)::after{background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgb(255 255 255/.14),transparent 62%)}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
