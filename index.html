@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8">
+<html lang="fr"><head><meta charset="utf-8"><meta name="rev-build" content="2026-10-21.2">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>rev.</title>
 <meta name="theme-color" content="#f7f3ea" media="(prefers-color-scheme: light)">
@@ -2678,6 +2678,8 @@ function nxBbRender(){let d=document.getElementById("bbd");
  m.style.top=tp+"px";m.style.transformOrigin=Math.round(Math.max(20,Math.min(cx-l,w-20)))+"px "+(up?"100%":"0");m.classList.toggle("up",up);a.style.left=Math.max(20,Math.min(cx-l,w-20))+"px";
  if(fresh)try{m.focus({preventScroll:true})}catch(e){}}
 /* 21/10/2026 — direction C — étape 2 : feuilles et menus ⋯ qui naissent du bouton touché et s'y rétractent (morphing de forme et de position, sans View Transitions) */
+/* 21/10/2026 : identifiant de version, affiché en bas des Réglages (si la ligne « version » manque, c'est une ancienne version du site qui est servie). À changer à chaque livraison (même valeur dans <meta name="rev-build">). */
+const REV_BUILD="2026-10-21.2";
 let RQO=null,RQOT=0,RQPV=null;
 const rqCalm=()=>{try{return matchMedia("(prefers-reduced-motion:reduce)").matches}catch(e){return false}};
 if(typeof document!="undefined")document.addEventListener("pointerdown",e=>{const b=e.target.closest&&e.target.closest("button,[data-a]");if(b&&!b.closest(".shd")){RQO=b.getBoundingClientRect();RQOT=performance.now()}},true);
@@ -2801,7 +2803,7 @@ function nxSetHTML(){let sp=SETP;const C=NXC;if(sp=="sync"||sp=="bk"){AS={k:"nxp
   val("Sauvegarde",esc(bkInfo()),"","nxsp","bk","down",C.grn),
   '<div class="nxsr">'+I("info",C.gry)+'<span class="nxst"><b>Stockage sur cet appareil</b><small id="sti">'+stoTx+'</small></span></div>',
   val("Corbeille","Conservés 30 jours",nt?nt+(nt>1?" éléments":" élément"):"Vide","tr",null,"trash",C.gry)]);
- return crumbs()+'<h1>Réglages</h1><div class="sgrid nxset"><section class="sgc">'+rev+home+'</section><section class="sgc">'+app+'</section><section class="sgc">'+data+'</section></div><div id="contrast-settings" hidden></div>'}  // le sélecteur de couleur vit dans sa sous-page : cet emplacement vide empêche son script de l'ajouter ici
+ return crumbs()+'<h1>Réglages</h1><div class="sgrid nxset"><section class="sgc">'+rev+home+'</section><section class="sgc">'+app+'</section><section class="sgc">'+data+'</section></div><p class="rqver">rev. · version '+REV_BUILD+'</p><div id="contrast-settings" hidden></div>'}  // le sélecteur de couleur vit dans sa sous-page : cet emplacement vide empêche son script de l'ajouter ici
 // feuille de choix d'une valeur
 function nxValHTML(){const w=AS.w,r=(a,v,l,on)=>'<button type="button" class="asr nxck" role="menuitemradio" aria-checked="'+on+'" data-a="'+a+'" data-v="'+v+'"><span>'+l+'</span>'+(on?'<i aria-hidden="true">'+CK+'</i>':'')+'</button>',
  p=t=>'<p class="help nxh">'+t+'</p>';
@@ -4113,6 +4115,9 @@ html[data-nx="1"]:not([data-desk="1"]) body .shd .sh,html[data-nx="1"]:not([data
 .rqghost{pointer-events:none!important}
 /* intitulés des menus ⋯ sur verre : un peu plus contrastés (en sombre ils passaient de 4,79 à 3,98:1) */
 html[data-nx="1"]:not([data-desk="1"]) body #asd.shd .sh .nxpb .help,html[data-nx="1"]:not([data-desk="1"]) body .shd .sh .help,html[data-nx="1"]:not([data-desk="1"]) body #app .pvm .pvh{color:color-mix(in srgb,var(--mut) 55%,var(--ink))}
+
+/* 21/10/2026 : ligne de version en bas des Réglages */
+html[data-nx="1"] #app .rqver{margin:18px 0 0;text-align:center;font-size:12.5px;letter-spacing:.02em;color:color-mix(in srgb,var(--mut) 60%,var(--ink))}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
