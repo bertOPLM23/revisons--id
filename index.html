@@ -131,7 +131,7 @@ html[data-ipad="1"] .qb{padding:26px}
 .eb{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .ei{display:flex;gap:8px;align-items:center}
 .th{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
-textarea.ext{min-height:72px;font-size:15px}
+textarea.ext{min-height:72px;font-size:16px}
 .pn{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
 .hm{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:3px}
 .hm i,.lgs i{display:block;aspect-ratio:1;border-radius:3px;background:color-mix(in srgb,var(--ink) 7%,var(--card))}
@@ -4115,6 +4115,15 @@ html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app[data-view=study] .car
 :root[data-theme="dark"][data-nx="1"]:not([data-desk="1"]):not(.nolt) #app .dock.nxd .b.nxrv:not(.an)::after{background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgb(255 255 255/.95),transparent 62%)}
 html[data-nx="1"]:not([data-desk="1"]):not(.nolt) #app .dock.nxd .b.nxad:not(.an)::after{background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgb(255 255 255/.6),transparent 62%)}
 :root[data-theme="dark"][data-nx="1"]:not([data-desk="1"]):not(.nolt) #app .dock.nxd .b.nxad:not(.an)::after{background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgb(255 255 255/.14),transparent 62%)}
+/* Audit apple-design du 21/10/2026 */
+/* cible tactile >= 44 pt pour les segments de la recherche (38 px avant) ; souris inchangée */
+@media (pointer:coarse){html[data-nx="1"] #app .nxsg2 button{min-height:44px}}
+/* « Augmenter le contraste » (iOS/macOS) : bords marqués, surfaces pleines, plus de flou */
+@media (prefers-contrast:more){
+:root,:root[data-theme="dark"]{--line:color-mix(in srgb,var(--ink) 60%,transparent);--g-edge:color-mix(in srgb,var(--ink) 60%,transparent);--lq-rim:color-mix(in srgb,var(--ink) 55%,transparent);--lq-edge-hi:color-mix(in srgb,var(--ink) 55%,transparent);--g-fill:var(--g-sol);--g-dockfill:var(--g-sol)}
+.tgs::before,.bt::before,.dock::before{background:var(--g-sol);-webkit-backdrop-filter:none;backdrop-filter:none}
+#app :is(.pn,.item,.card,.rqcard,.nxog){border-color:color-mix(in srgb,var(--ink) 55%,transparent)}
+}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
