@@ -2403,7 +2403,7 @@ const A={
  cok(){try{localStorage.setItem("revis-codeok","1")}catch(e){}render()},
  cuall(){const o=optN();if(cuAct()){delete o.cu;o.u=hlc();save()}else{cfg.cud=day();saveCfg()}render();flash("Tout ton retard est proposé dans « Réviser »")},
  cusp(){const o=optMk();o.cu={d0:day(),n:3};o.u=hlc();save();render();const k=rvLeft();flash("Retard étalé sur 3 jours : "+k+(k>1?" révisions":" révision")+" aujourd\'hui")},
- hes(){if(!val||!vprev||hesd||!deck||deck.free||!cfg.srs)return;const it=deck.items[order[idx]];if(!it)return;copyP(it,vprev);applyP(it,opts(it)[1]);hesd=true;anp=false;ant++;save();render()},
+ hes(){if(!val||!vprev||hesd||!deck||deck.free||!cfg.srs)return;const it=deck.items[order[idx]];if(!it)return;copyP(it,vprev);applyP(it,opts(it)[1]);it.t=hlc();it.w=DEV;tc(it);hesd=true;anp=false;ant++;save();render()},
  fs(v){cfg.fs=+v;saveCfg();setFs();render()},
  fx(){const it=curIt();if(!it)return;const own=deck.virt&&deck.own?deck.own.get(it):deck;if(!own||!own.items)return;if(it.fx)delete it.fx;else it.fx=1;own.u=hlc();save();
   const b=document.querySelector(".fxb");if(b){b.classList.toggle("on",!!it.fx);b.setAttribute("aria-pressed",String(!!it.fx));b.setAttribute("aria-label",fxL(it.fx));b.title=fxL(it.fx)}
@@ -3116,7 +3116,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
    if(inUndo)return o.call(A,v);
    var s=snap();inUndo=true;
    try{o.call(A,v)}finally{inUndo=false}
-   if(s){U.push(s);if(U.length>15)U.shift()}
+   if(s){if(!s.deck.free){var L2=LG();s.lh2=L2.h[s.ld];s.lr2=L2.r&&L2.r[s.ld]?L2.r[s.ld].slice():null}U.push(s);if(U.length>15)U.shift()}
    sync();
   };
  });
@@ -3124,9 +3124,14 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   var s=U.pop();
   if(!s||s.q!==q||!isFc()){U.length=0;sync();return}
   q.length=0;Array.prototype.push.apply(q,s.qs);
+  /* 21/10/2026 (étape 3) : l'état d'avant la note est restauré, mais comme une NOUVELLE version (t, w, u du paquet et du journal par hlc()),
+     sinon l'écho de l'envoi de la note la rétablissait ; le journal ne perd que ce que cette note avait ajouté */
   Object.keys(s.it).forEach(function(k){delete s.it[k]});Object.assign(s.it,s.ic);
-  known=s.known;s.deck.last=s.dl;s.deck.u=s.du;if(s.own)s.own.u=s.ou;
-  if(!s.deck.free){var L=LG();if(s.lh==null)delete L.h[s.ld];else L.h[s.ld]=s.lh;if(L.r){if(s.lr==null)delete L.r[s.ld];else L.r[s.ld]=s.lr}L.u=s.lu;
+  known=s.known;s.deck.last=s.dl;s.deck.u=s.du;
+  if(!s.deck.free){s.it.t=hlc();s.it.w=DEV;if(s.own)s.own.u=hlc();
+   var L=LG(),dh=(s.lh2||0)-(s.lh||0),h=(L.h[s.ld]||0)-dh;if(h>0)L.h[s.ld]=h;else delete L.h[s.ld];
+   if(L.r&&L.r[s.ld]){var a=L.r[s.ld],p0=s.lr||[0,0],p1=s.lr2||p0,c0=a[0]-(p1[0]-p0[0]),c1=a[1]-(p1[1]-p0[1]);if(c0>0)L.r[s.ld]=[c0,Math.max(0,c1)];else delete L.r[s.ld]}
+   L.u=hlc();
   try{if(s.nw==null)localStorage.removeItem("revis-new");else localStorage.setItem("revis-new",s.nw)}catch(e){}}
   back=true;if(!s.deck.free)save();render();
  };
