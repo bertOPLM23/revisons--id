@@ -1975,7 +1975,10 @@ function plan(i0,g){const i=fsInit({...i0}),t=day();
  return g==1?{st:3,s,df,l:t,m:10}:{st:2,s,df,l:t,iv:fI(s)}}
 function opts(i){const P=[1,2,3,4].map(g=>plan(i,g));
  if(P[1].iv!=null&&P[2].iv!=null){P[1].iv=Math.min(P[1].iv,P[2].iv);P[2].iv=Math.max(P[2].iv,P[1].iv+1)}
- if(P[3].iv!=null&&P[2].iv!=null)P[3].iv=Math.max(P[3].iv,P[2].iv+1);return P}
+ if(P[3].iv!=null&&P[2].iv!=null)P[3].iv=Math.max(P[3].iv,P[2].iv+1);
+ /* 21/10/2026 : plafond d'examen, les intervalles affichés et appliqués ne dépassent pas la veille de l'examen (stabilité et difficulté inchangées) */
+ const c=capOf(i);if(c!=null){const lim=c-day();if(lim>=1)P.forEach(p=>{if(p.iv!=null)p.iv=Math.min(p.iv,lim)})}
+ return P}
 const ivTxt=p=>p.m?p.m+" min":p.iv<30?p.iv+" j":p.iv<365?(Math.round(p.iv/3)/10).toString().replace(".",",")+" mois":(Math.round(p.iv/36.5)/10).toString().replace(".",",")+" an"+(p.iv>=730?"s":"");
 const applyP=(i,p)=>{const nw=i.d==null;fsInit(i);i.st=p.st;i.s=+p.s.toFixed(4);i.df=+p.df.toFixed(3);i.l=p.l;if(p.k!=null)i.k=p.k;else delete i.k;i.d=p.iv!=null?day()+fz(p.iv):day();delete i.b;if(nw)i.f=day()};
 // ===== objectifs vers une date d'examen, rattrapage étalé, comptes du jour =====
@@ -2003,6 +2006,14 @@ function setPull(){if(!booted||!S||!S.nodes)return;const n=G("set");
 const xdAct=x=>!!x&&!x.x&&x.xd!=null&&x.xd>=day();
 const gOwn=p=>{for(let x=p.p?G(p.p):null;x;x=x.p?G(x.p):null){if(x.k=="f"&&xdAct(x))return x.id}return xdAct(optN())?"0":null};
 const ownOf=p=>hidRel(p,0)?null:gOwn(p);
+/* 21/10/2026 — plafond d'examen (demande d'Idriss) : une carte ou un QCM en révision (st 2) n'est jamais planifié après la veille de l'examen qui le concerne (dossier le plus proche avec une date, sinon la date des Réglages : même règle que gOwn). Les cartes déjà planifiées plus tard sont ramenées à la veille. Seule la date i.d change : stabilité, difficulté, dernière révision (l) et horodatage de fusion (t) ne sont pas touchés, u du paquet non plus (chaque appareil applique le même plafond, de façon déterministe). Pas de plafond le jour de l'examen ni après, ni pour une carte déjà révisée la veille (sinon elle reviendrait sans fin). */
+let CAPP=new Map();
+const capOf=i=>{for(const p of S.nodes)if(isPack(p)&&!p.x&&p.items&&p.items.includes(i))return CAPP.has(p.id)?CAPP.get(p.id):null;return null};
+const capDay=p=>{const o=gOwn(p);if(o==null)return null;const x=o=="0"?optN():G(o);if(!xdAct(x)||x.xd<=day())return null;return x.xd-1};
+function capAll(){const m=new Map();let n=0;if(!cfg.srs||!S||!S.nodes){CAPP=m;return 0}
+ for(const p of S.nodes){if(!isPack(p)||p.x||!p.items)continue;const c=capDay(p);if(c==null)continue;m.set(p.id,c);
+  for(const i of p.items)if(i.d!=null&&i.d>c&&i.st==2&&!((i.l??-1e9)>=c)){i.d=c;n++}}
+ CAPP=m;if(n){TDv++;try{persist()}catch(e){}}return n}
 function TD(){const d0=day(),k=d0+"|"+TDv;if(TDc&&TDc.k==k)return TDc;const o={k,seen:0,rev:0,due:0,odf:0,odq:0,g:new Map()};
  S.nodes.forEach(p=>{if(!isPack(p)||p.x||!p.items)return;const hid=hidRel(p,0),ow=hid?null:gOwn(p);let g=null;if(ow!=null){const gk=ow+"|"+p.k;g=o.g.get(gk);if(!g)o.g.set(gk,g={u:0,s:0})}
   p.items.forEach(i=>{const fd=i.f==d0;if(fd)o.seen++;else if(!hid&&i.l==d0)o.rev++;if(g){if(isNew(i))g.u++;else if(fd)g.s++}
@@ -2856,7 +2867,7 @@ function nxStats(logs,d0,cells,t30,k,today){const pl=(n,a,b)=>n+" "+(n>1?b:a);
 /* nouvelle apparence : dossier de la carte en haut à gauche (point de couleur + nom), catégorie à droite */
 function nxFd(c){const own=deck.virt&&deck.own?deck.own.get(c):deck,f=own&&own.p?G(own.p):null,col=f&&f.c?f.c:"";
  return '<span class="nxfd"'+(col?' style="--fc:'+esc(col)+'"':'')+'><i class="dt" aria-hidden="true"></i><span class="vh">Dossier : </span><span class="fn">'+esc(f?f.name:"Accueil")+'</span>'+(c.c?'<span class="vh">, catégorie : </span><span class="cat">'+esc(c.c)+'</span>':'')+'</span><span class="vh">. </span>'}
-function render(){RM={k:new Map(),c:new Map()};try{render0()}finally{RM=null}
+function render(){RM={k:new Map(),c:new Map()};try{capAll()}catch(e){}try{render0()}finally{RM=null}
 
  nxNew();if(cfg.nx){nxFit();requestAnimationFrame(nxFit)}else nxBbRender()}
 // nouvelle apparence : si le mot du bouton retour serait coupé (« Réglag… »), on n'affiche que le chevron (le mot reste lu par VoiceOver)
