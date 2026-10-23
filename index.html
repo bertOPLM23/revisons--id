@@ -2078,7 +2078,8 @@ const mergeNode=(l,r,remoteWins,kp)=>{
  if(remoteWins?m.chg:m.lead)mDirty=true;
  return m.chg?{...w,items:m.items}:w};
 const FLG=[["h","hu"],["pn","pu"],["o","ou"]];
-const fixHide=(res,l,r)=>{FLG.forEach(([f,t])=>{const src=(r[t]||0)>(l[t]||0)?r:l;if(src[f]!==undefined)res[f]=src[f];else delete res[f];if(src[t])res[t]=src[t];else delete res[t];if((l[t]||0)>(r[t]||0))mDirty=true});return res};
+/* 23/10/2026 : les journaux (k:"log") stockent leur historique par jour dans « h » ; ce n'est pas le drapeau « caché » : on les laisse suivre mergeNode (version la plus récente, un seul auteur par journal) */
+const fixHide=(res,l,r)=>{if(res.k=="log"||l.k=="log"||r.k=="log")return res;FLG.forEach(([f,t])=>{const src=(r[t]||0)>(l[t]||0)?r:l;if(src[f]!==undefined)res[f]=src[f];else delete res[f];if(src[t])res[t]=src[t];else delete res[t];if((l[t]||0)>(r[t]||0))mDirty=true});return res};
 const merge=(a,b,keep,dset)=>{const m=new Map();a.forEach(n=>m.set(n.id,n));
  b.forEach(r=>{const l=m.get(r.id);if(!l){m.set(r.id,r);return}
   const kp=keep.has(r.id),rw=(r.u||0)>(l.u||0)&&!kp,was=mDirty;mDirty=false;m.set(r.id,fixHide(mergeNode(l,r,rw,kp),l,r));if(mDirty&&dset)dset.add(r.id);mDirty=was||mDirty});

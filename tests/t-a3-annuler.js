@@ -66,7 +66,7 @@ async function run(b) {
 
   // 7) séquence mixte sur deux appareils : notes, hésitations, annulations, puis synchro → cohérence progression / journal
   const sum = async d => d.page.evaluate(() => S.nodes.filter(n => n.k == 'fc' || n.k == 'qcm').flatMap(n => n.items).reduce((a, i) => a + (i.n || 0), 0));
-  // journal de chaque appareil lu chez son propriétaire (voir plus bas : les autres appareils n'en voient pas les mises à jour, défaut préexistant)
+  // journal de chaque appareil lu chez son propriétaire 
   const own = d => d.page.evaluate(() => Object.values(LG().h || {}).reduce((x, y) => x + y, 0));
   const tot = async () => (await own(d1)) + (await own(d2));
   const n0 = await sum(d1), l0b = await tot();
@@ -80,7 +80,7 @@ async function run(b) {
   const sj = id => Object.values((e.srv.T.get(id) || { data: {} }).data.h || {}).reduce((x, y) => x + y, 0);
   t.ok(sj('log-dev1') === await own(d1) && sj('log-dev2') === await own(d2), 'journaux sur le serveur = journaux de leurs appareils');
   const seen = await d1.page.evaluate(() => Object.values((G('log-dev2') || {}).h || {}).reduce((x, y) => x + y, 0));
-  t.known(seen === await own(d2), 'journal de l\'appareil 2 vu par l\'appareil 1 (défaut préexistant : fixHide() traite le champ h du journal comme le drapeau « caché », la copie reste figée)', 'vu par d1 : ' + seen + ', réel : ' + await own(d2));
+  t.ok(seen === await own(d2), 'journal de l\'appareil 2 vu par l\'appareil 1 à jour (défaut fixHide corrigé le 23/10/2026, voir t-journaux.js)', 'vu par d1 : ' + seen + ', réel : ' + await own(d2));
   const n1 = e.srv.log.length; for (let k = 0; k < 5; k++) await e.both(1);
   t.ok(e.srv.log.length === n1, '10 synchros au repos : 0 écriture', (e.srv.log.length - n1) + ' écriture(s)');
   t.ok(!d1.errs.length && !d2.errs.length, 'aucune erreur JavaScript', d1.errs.concat(d2.errs).join(' | '));
