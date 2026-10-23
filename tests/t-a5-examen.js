@@ -62,14 +62,17 @@ async function run(b) {
   t.ok(/Aucune question notée/.test(z.t) && !/NaN|Infinity/.test(z.t), '« Aucune question notée » sans NaN ni division par zéro');
 
   await H.leave(d1); await d1.page.waitForTimeout(300);
-  // 5) « Refaire mes erreurs » : révision classique, FSRS mis à jour normalement
+  // 5) « Refaire mes erreurs » : révision classique, chemin FSRS normal, effets exacts
   await d1.page.evaluate(() => { const p = G('pB'); p.items.forEach(i => i.o.forEach((o, k) => { o.k = k < 2 })); p.u = hlc(); save() });
   await exam(d1, (j, it, o) => Object.fromEntries(o.map((x, k) => [k, !x.k]))); await d1.page.evaluate(() => A.xfin());
-  const before = await H.item(d1, 'pB', 'QQ1');
-  await d1.page.evaluate(() => { A.xredo(); const it = deck.items[order[idx]]; sel = {}; po(it).forEach((x, k) => { if (x.k) sel[k] = true }); A.val() });
-  const qq = await d1.page.evaluate(() => deck.items[order[idx]].q), after = await H.item(d1, 'pB', qq);
-  t.ok(after.n === (await H.item(d2, 'pB', qq)).n + 1 || after.n > 0, '« Refaire mes erreurs » : séance classique, la réponse passe par la notation FSRS normale (n incrémenté)');
-  t.ok(after.t > before.t - 1 && H.fsr(after) !== 'absente', '« Refaire mes erreurs » : t, w et FSRS mis à jour comme pour toute révision');
+  const q0 = await d1.page.evaluate(() => { A.xredo(); return deck.items[order[idx]].q }), before = await H.item(d1, 'pB', q0), evB = JSON.stringify(before.ev);
+  const planned = await d1.page.evaluate(q => { const it = deck.items.find(x => x.q == q); return opts(it)[2] }, q0);   // ce que le chemin FSRS normal doit appliquer pour une bonne réponse
+  await d1.page.evaluate(() => { const it = deck.items[order[idx]]; sel = {}; po(it).forEach((x, k) => { if (x.k) sel[k] = true }); A.val() });
+  const after = await H.item(d1, 'pB', q0);
+  t.ok(after.n === (before.n || 0) + 1 && after.m === before.m, '« Refaire mes erreurs » : n augmente exactement de 1 (m inchangé : réponse juste)', 'n ' + before.n + ' → ' + after.n);
+  t.ok(after.t > before.t && after.w === 'dev1', '« Refaire mes erreurs » : t strictement supérieur et w = appareil (version nouvelle)', 't ' + before.t + ' → ' + after.t);
+  t.ok(after.s !== before.s && after.d !== before.d && after.s === +planned.s.toFixed(4) && after.st === planned.st, '« Refaire mes erreurs » : s et d changent exactement comme le prévoit le calcul FSRS normal (opts « Bien »)', 's ' + before.s + ' → ' + after.s + ' (attendu ' + planned.s.toFixed(4) + '), d ' + before.d + ' → ' + after.d);
+  t.ok(JSON.stringify(after.ev) === evB, '« Refaire mes erreurs » : les compteurs d\'examen ev ne bougent pas (la réponse est une révision, pas un examen)');
   t.ok(!d1.errs.length && !d2.errs.length, 'aucune erreur JavaScript', d1.errs.concat(d2.errs).join(' | '));
   await e.close();
   return t;

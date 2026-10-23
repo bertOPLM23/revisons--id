@@ -2071,7 +2071,12 @@ const copyP=(to,from)=>{PF.forEach(f=>{if(from[f]===undefined)delete to[f];else 
 const pairs=(bi,oi)=>{const idx=new Map();(oi||[]).forEach(i=>{const k=ikey(i);if(!idx.has(k))idx.set(k,[]);idx.get(k).push(i)});const used=new Map();
  return bi.map(i=>{const k=ikey(i),arr=idx.get(k);if(!arr)return null;const c=used.get(k)||0;used.set(k,c+1);return arr[c]||null})};
 // base = items du gagnant ; other = items de l'autre version. Renvoie la même liste si rien ne change.
-const evPairs=(bi,oi,P)=>{const used=new Set(P.filter(Boolean)),bk=new Set(bi.map(ikey)),R=P.slice();if(bi.length===(oi||[]).length)R.forEach((o,j)=>{if(!o){const c=oi[j];if(c&&!used.has(c)&&!bk.has(ikey(c)))R[j]=c}});return R};
+/* appariement de secours des ev (carte dont le texte a été modifié ailleurs) : jamais par la seule position. Il faut le même rang ET la même « signature » de contenu (propositions du QCM avec leur état vrai/faux, ou réponse de la carte), non vide, et une seule candidate de chaque côté ; sinon aucun transfert (une carte neuve ne reçoit jamais les compteurs d'une carte supprimée) */
+const evSig=i=>{if(!i)return"";if(Array.isArray(i.o))return i.o.map(o=>nm(String(o&&o.t||"").trim())+(o&&o.k?"*":"")).join("|");return nm(String(i.a||"").trim())};
+const evPairs=(bi,oi,P)=>{const used=new Set(P.filter(Boolean)),bk=new Set(bi.map(ikey)),R=P.slice(),ub=[],uo=[];
+ bi.forEach((i,j)=>{if(!P[j])ub.push(j)});(oi||[]).forEach((c,j)=>{if(!used.has(c)&&!bk.has(ikey(c)))uo.push(j)});
+ const cnt=(a,src)=>{const m=new Map();a.forEach(j=>{const g=evSig(src[j]);if(g)m.set(g,(m.get(g)||0)+1)});return m},cb=cnt(ub,bi),co=cnt(uo,oi||[]);
+ ub.forEach(j=>{const c=(oi||[])[j];if(!c||used.has(c)||bk.has(ikey(c)))return;const g=evSig(bi[j]);if(g&&g===evSig(c)&&cb.get(g)===1&&co.get(g)===1)R[j]=c});return R};
 const mergeItems=(base,other)=>{const P=pairs(base,other),E=evPairs(base,other,P);let chg=false,lead=false;
  const res=base.map((i,j)=>{const o=P[j],eo=E[j];let r=i;
   if(eo&&(eo.ev||i.ev)){const em=evMerge(i.ev,eo.ev);if(!evSame(em,i.ev)){chg=true;r={...r,ev:em}}if(evMore(i.ev,eo.ev))lead=true}

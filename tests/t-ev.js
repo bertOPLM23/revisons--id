@@ -69,6 +69,37 @@ async function run(b) {
     t.ok(await d2.page.evaluate(() => { const it = G('pB').items.find(x => x.q == 'QQ4'); return nOf(it) === 7 && mOf(it) === 3 && it.n === 4 && it.m === 1 }), 'les anciens compteurs n et m sont conservés tels quels et les mêmes chiffres s\'affichent sur l\'autre appareil');
     await e.close();
   }
+
+  // 5) R1 : appariement de secours des ev — jamais par la seule position
+  const setEv = (d, pid, i, v) => d.page.evaluate(([pid, i, v]) => { const p = G(pid); p.items[i].ev = v; p.u = hlc(); save() }, [pid, i, v]);
+  const evOfQ = (d, pid, q) => d.page.evaluate(([pid, q]) => { const it = G(pid).items.find(x => x.q == q); return it ? (it.ev || null) : 'absente' }, [pid, q]);
+  {  // suppression d'une carte, puis création d'une autre au même rang (flashcard, puis QCM)
+    const e = await M.setup({ browser: b }), { d1, d2 } = e;
+    await setEv(d1, 'pD', 3, { dev1: [5, 3] }); await setEv(d1, 'pB', 3, { dev1: [4, 1] }); await e.both(3);
+    await d2.page.evaluate(() => { const p = G('pD'); p.items[3] = { q: 'Carte neuve', a: 'x' }; const b = G('pB'); b.items[3] = { q: 'QCM neuf', o: [0, 1, 2, 3, 4].map(j => ({ t: 'autre' + j, k: j == 0 })), e: '' }; p.u = hlc(); b.u = hlc(); save() }); await e.both(3);
+    const r = [await evOfQ(d1, 'pD', 'Carte neuve'), await evOfQ(d2, 'pD', 'Carte neuve'), await evOfQ(d1, 'pB', 'QCM neuf'), await evOfQ(d2, 'pB', 'QCM neuf'), srvEv(e, 'pD', 'Carte neuve'), srvEv(e, 'pB', 'QCM neuf')];
+    t.ok(r.every(x => x === null), 'carte supprimée puis carte neuve au même rang (flashcard et QCM) : les compteurs ev ne passent pas à la carte neuve', J(r));
+    t.ok(await M.packsJSON(d1) === await M.packsJSON(d2), 'appareils identiques');
+    await e.close();
+  }
+  {  // ambiguïté : deux cartes modifiées dont la réponse est identique (impossible de savoir laquelle est laquelle) : aucun transfert, jamais d'échange
+    const e = await M.setup({ browser: b }), { d1, d2 } = e;
+    await d1.page.evaluate(() => { const p = G('pD'); p.items[5].a = 'Oui'; p.items[6].a = 'Oui'; p.u = hlc(); save() }); await e.both(3);
+    d2.offline = true; await d2.page.evaluate(() => { const p = G('pD'); p.items[5].q = 'Q6 réécrite'; p.items[6].q = 'Q7 réécrite'; p.u = hlc() + 10; save() });
+    await setEv(d1, 'pD', 5, { dev1: [2, 0] }); await setEv(d1, 'pD', 6, { dev1: [7, 7] }); await H.sync(d1);
+    d2.offline = false; await e.both(3);
+    const a = await evOfQ(d1, 'pD', 'Q6 réécrite'), c = await evOfQ(d1, 'pD', 'Q7 réécrite');
+    t.ok(a === null && c === null && await M.packsJSON(d1) === await M.packsJSON(d2), 'identité ambiguë (deux cartes réécrites, même réponse) : aucun compteur n\'est transféré, aucun échange', J([a, c]));
+    await e.close();
+  }
+  {  // cas fiable : l'ancien client corrige le texte d'une flashcard, sa réponse est unique : les ev suivent
+    const e = await M.setup({ browser: b, d2: { html: OLD } }), { d1, d2 } = e;
+    d2.offline = true; await d2.page.evaluate(() => { const p = G('pD'); p.items.find(x => x.q == 'Q3').q = 'Q3 corrigée'; p.u = Date.now() + 5000; save() }); await H.leave(d2);
+    await setEv(d1, 'pD', 2, { dev1: [3, 1] }); await H.sync(d1);
+    d2.offline = false; await H.sync(d2); await H.sync(d1); await H.sync(d2); await H.sync(d1);
+    t.ok(J(await evOfQ(d1, 'pD', 'Q3 corrigée')) === J({ dev1: [3, 1] }) && J(srvEv(e, 'pD', 'Q3 corrigée')) === J({ dev1: [3, 1] }), 'flashcard dont le texte est corrigé par un ancien client (réponse unique, même rang) : les ev suivent la carte', J(await evOfQ(d1, 'pD', 'Q3 corrigée')));
+    await e.close();
+  }
   return t;
 }
 module.exports = { run };
