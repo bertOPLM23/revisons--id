@@ -20,6 +20,8 @@ Ce dossier **ne se déploie pas** : il ne fait pas partie des 8 fichiers du site
 | `t-fsrs.js` | Régression du calcul FSRS : il doit rester identique à `fsrs-reference.json`, enregistrée sur la version `1f6cb44`. Vérifie aussi les invariants sur 60 000 notes. |
 | `t-sim45.js` | Cohérence entre progression, journal et compteurs sur 45 jours simulés. |
 | `t-a1-seance.js` | Perte de cartes ajoutées ou modifiées ailleurs pendant une séance ; synchros répétées. |
+| `t-a1-fusion.js` | A1 : fusion du contenu à trois versions (ajouts, corrections, suppressions des deux appareils, hors ligne, deux ordres de reconnexion) ; suppression jamais annulée ; conflits (même carte, même question) avec copie de récupération `conflit-contenu` ; conflits avec remise à zéro et restauration (A2) ; coupures de connexion (envoi échoué, retours croisés) ; base `S.baseH` (instantané, absence de base) ; paquet ouvert en séance (ajouts adoptés, suppressions et corrections différées). |
+| `t-a1-fuzz.js` | A1 : tirages pseudo-aléatoires rejouables (5 graines fixes) d'ajouts, corrections, suppressions, notes et envois échoués sur deux appareils ; convergence, aucun doublon, aucune perte, aucune résurrection, 0 écriture au repos. |
 | `t-a2-generation.js` | Réinitialisation ou restauration annulée par la synchro (cas de base). |
 | `t-a2-generations.js` | A2 : générations `gn`/`gw`/`gc`, copie de récupération locale (`REC`), `S.base`, anciens clients (`b91e359`) avec horloges +24 h / 0 / −1 h, horloges décalées, paquet ouvert en séance, échecs de stockage, redémarrage. |
 | `t-ev.js`, `t-drapeaux.js`, `t-journaux.js`, `t-hlc.js` | `ev` d'examen, drapeaux seuls, journaux, horloge hybride. |

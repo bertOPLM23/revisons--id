@@ -19,7 +19,7 @@ async function run(b) {
     await H.sync(x); await H.sync(y); await e.both(3);
     const p1 = await H.pack(d1, 'pD'), p2 = await H.pack(d2, 'pD');
     t.ok(await M.packsJSON(d1) === await M.packsJSON(d2) && await M.packsJSON(d1) === M.serverPacks(e.srv), 'appareils et serveur identiques [' + order + ']');
-    t.known(p1.items.some(i => i.q == 'Ajout D2'), 'ajout hors ligne d\'un appareil à l\'horloge en retard, en concurrence avec une note ailleurs (contenu hors séance : dernier « u » gagnant) [' + order + ']', e.srv.log.filter(l => l[0] == 'refus').length + ' écriture(s) refusée(s) par le serveur');
+    t.ok(p1.items.some(i => i.q == 'Ajout D2'), 'ajout hors ligne d\'un appareil à l\'horloge en retard, en concurrence avec une note ailleurs : gardé (fusion du contenu à trois versions, A1) [' + order + ']', e.srv.log.filter(l => l[0] == 'refus').length + ' écriture(s) refusée(s) par le serveur');
     res.push(H.fsr(p1.items.find(i => i.q == 'Q1')));
     // écho retardé : l'ancienne version du paquet revient dans une réponse
     const before = await M.packsJSON(d1); e.srv.inject.push(old); await H.sync(d1); await e.both();

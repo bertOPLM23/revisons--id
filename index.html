@@ -2086,7 +2086,9 @@ const mergeItems=(base,other)=>{const P=pairs(base,other),E=evPairs(base,other,P
 const mergeNode=(l,r,remoteWins,kp)=>{
  const w=remoteWins?r:l;
  if(!l.items||!r.items||l.x||r.x||(w.k!="fc"&&w.k!="qcm"))return w;
- if(kp){const P=pairs(l.items,r.items),E=evPairs(l.items,r.items,P);l.items.forEach((i,j)=>{const eo=E[j];if(eo&&(eo.ev||i.ev)){const em=evMerge(i.ev,eo.ev);if(!evSame(em,i.ev))i.ev=em;if(evMore(i.ev,eo.ev))mDirty=true}const o=P[j];if(!o)return;if(better(o,i))copyP(i,o);else if(better(i,o))mDirty=true});return l}
+ if(kp){const pl=cPlan(l,r,false);if(pl){if(pl.pend){PENDG.add(l.id);return l}cAdopt(l,r,pl,false)}
+  const P=pairs(l.items,r.items),E=evPairs(l.items,r.items,P);l.items.forEach((i,j)=>{const eo=E[j];if(eo&&(eo.ev||i.ev)){const em=evMerge(i.ev,eo.ev);if(!evSame(em,i.ev))i.ev=em;if(evMore(i.ev,eo.ev))mDirty=true}const o=P[j];if(!o)return;if(better(o,i))copyP(i,o);else if(better(i,o))mDirty=true});return l}
+ const cm=cMergeNode(l,r,remoteWins);if(cm)return cm;
  const m=mergeItems(w.items,remoteWins?l.items:r.items);
  if(remoteWins?m.chg:m.lead)mDirty=true;
  return m.chg?{...w,items:m.items}:w};
@@ -2102,16 +2104,72 @@ const grp=l=>{const m=new Map();(l||[]).forEach(i=>{const k=ikey(i);if(!m.has(k)
 /* appariement prudent : clé (texte de question) non vide, et même nombre de cartes de chaque côté (1:1, ou k:k dans l'ordre) ; sinon aucune carte du groupe n'est appariée */
 const safePairs=(bi,oi)=>{const go=grp(oi),gb=grp(bi),used=new Map();return bi.map(i=>{const k=ikey(i);if(!k)return null;const a=gb.get(k),b=go.get(k);if(!b||a.length!==b.length)return null;const c=used.get(k)||0;used.set(k,c+1);return b[c]})};
 const wipeProg=i=>{PF.forEach(f=>delete i[f]);delete i.ev},takeProg=(i,e)=>{PF.forEach(f=>{if(e[f]===undefined)delete i[f];else i[f]=e[f]});if(e.ev===undefined)delete i.ev;else i.ev=e.ev};
+/* ===== 23/10/2026 (A1) : fusion du CONTENU des cartes à trois versions =====
+   Avant : le contenu d'un paquet suivait la version la plus récente (u) en bloc, donc les cartes ajoutées ou corrigées sur un appareil disparaissaient si l'autre appareil avait un u plus récent (ex. il venait de noter une carte).
+   Maintenant : trois versions = locale (L), distante (R) et base (dernière synchronisation entièrement réussie, S.baseH : par paquet, par texte de question, empreintes du contenu des cartes). Par texte de question : seul L a changé -> L ; seul R a changé -> R ; les deux pareil -> L ;
+   les deux différemment -> conflit : suppression d'un côté + modification de l'autre = la suppression l'emporte (aucune progression supprimée ne ressuscite) ; deux modifications = la version du paquet le plus récent (u) ; la version écartée est mise dans la copie de récupération (REC, « conflit-contenu »).
+   Le contenu = tout sauf la progression (PF) et ev ; la progression de chaque carte continue de suivre better() (la révision la plus récente), y compris pour une carte dont le texte a été corrigé ailleurs (appariement de secours par rang + signature, evPairs).
+   Pas de base (paquet jamais synchronisé, ancienne version) : ancienne logique inchangée. Paquet ouvert en séance (kp) : seuls les ajouts purs sont adoptés sur place ; tout autre changement distant (modification, suppression) est différé (PENDG) jusqu'à la fin de la séance. */
+const cobj=i=>{const o={};Object.keys(i).sort().forEach(k=>{if(PF.indexOf(k)<0&&k!="ev")o[k]=i[k]});return o};
+const chash=i=>recHash(JSON.stringify(cobj(i)));
+const chs=a=>a.map(chash).sort(),sameH=(a,b)=>a.length===b.length&&a.every((x,j)=>x===b[j]);
+const bmap=items=>{const m={};grp(items).forEach((a,k)=>{m["k"+k]=chs(a)});return m};
+let CSV=null;
+function cPlan(l,r,rw){
+ if(!V2||!l||!r||!isPack(l)||!isPack(r)||!l.items||!r.items||l.x||r.x)return null;
+ const bs=(S.baseH||{})[l.id];if(!bs)return null;
+ if(CSV&&CSV[l.id]!=null&&vers(r)<CSV[l.id])return null; /* version distante plus ancienne que celle déjà connue du serveur (écho tardif) : ce n'est pas une suppression, on garde l'ancienne règle (la locale l'emporte) */
+ const gl=grp(l.items),gr=grp(r.items),dec=new Map(),mm=new Map(),add=new Set(),drop=[];let pend=false;
+ const cnt=a=>{const m={};a.forEach(x=>m[x]=(m[x]||0)+1);return m},dr=(c,ex)=>c.filter(x=>ex.indexOf(chash(x))<0);
+ new Set([...gl.keys(),...gr.keys()]).forEach(k=>{const A=gl.get(k)||[],R=gr.get(k)||[],b=bs["k"+k]||[],ha=chs(A),hr=chs(R),cl=!sameH(ha,b),cr=!sameH(hr,b);let d=rw?"R":"L";
+  if(!sameH(ha,hr)){
+   if(!cr)d="L";
+   else if(!cl)d="R";
+   else if(k&&b.length<=1){
+    if(!A.length){d="L";drop.push(...dr(R,b))}
+    else if(!R.length){d="R";drop.push(...dr(A,b))}
+    else{d=rw?"R":"L";drop.push(...(rw?dr(A,hr):dr(R,ha)))}}
+   else{d="M";const cb=cnt(b),cL=cnt(ha),cR=cnt(hr),pool=[...A.map(c=>[c,"L",chash(c)]),...R.map(c=>[c,"R",chash(c)])],out=[];
+    new Set([...b,...ha,...hr]).forEach(x=>{const bx=cb[x]||0,a1=(cL[x]||0)-bx,a2=(cR[x]||0)-bx,n=bx+(a1>=0&&a2>=0?Math.max(a1,a2):a1<=0&&a2<=0?Math.min(a1,a2):a1+a2);
+     pool.filter(q=>q[2]==x).slice(0,Math.max(0,n)).forEach(q=>out.push(q))});mm.set(k,out)}
+   if(cr){if(!b.length&&!A.length)add.add(k);else pend=true}}
+  dec.set(k,d)});
+ return{gl,gr,dec,mm,add,drop,pend}}
+/* liste fusionnée des cartes ; np = true : cartes telles quelles, sans fusion de progression (chemin des générations, où la progression vient d'ailleurs) */
+function cBuild(l,r,pl,rw,np){
+ const W=rw?r.items:l.items,O=rw?l.items:r.items,own=rw?"R":"L",cpl=new Map(),cpr=new Map();
+ if(!np){const P=pairs(l.items,r.items),E=evPairs(l.items,r.items,P);l.items.forEach((i,j)=>{const o=E[j];if(o){cpl.set(i,o);cpr.set(o,i)}})}
+ const fin=(c,s)=>{if(np)return c;const o=(s=="L"?cpl:cpr).get(c);if(!o)return c;let x=c;
+  if(o.ev||c.ev){const em=evMerge(c.ev,o.ev);if(!evSame(em,c.ev))x={...x,ev:em}}
+  if(better(o,c)){if(x===c)x={...c};copyP(x,o)}return x};
+ const res=k=>{const d=pl.dec.get(k);if(d=="M")return pl.mm.get(k).map(([c,s])=>fin(c,s));return(d=="L"?pl.gl:pl.gr).get(k)?.map(c=>fin(c,d))||[]};
+ const out=[],done=new Set(),wk=new Set(W.map(ikey));
+ W.forEach(c=>{const k=ikey(c);if(pl.dec.get(k)==own){out.push(fin(c,own));return}if(done.has(k))return;done.add(k);out.push(...res(k))});
+ O.forEach(c=>{const k=ikey(c);if(wk.has(k)||done.has(k))return;done.add(k);out.push(...res(k))});
+ return out}
+const cMergeNode=(l,r,rw)=>{const pl=cPlan(l,r,rw);if(!pl)return null;const it=cBuild(l,r,pl,rw),js=canon(it),w=rw?r:l;
+ if(js!==canon(r.items))mDirty=true;
+ return js===canon(w.items)?w:{...w,items:it}};
+/* paquet ouvert en séance : adopte sur place les cartes ajoutées ailleurs (à la fin, les index de séance restent valides) */
+const cAdopt=(l,r,pl,wipe)=>{if(!pl.add.size)return;r.items.forEach(c=>{if(pl.add.has(ikey(c))){const x=cp(c);if(wipe)wipeProg(x);l.items.push(x)}})};
+/* copie de récupération des cartes que la fusion va écarter (conflit) : faite AVANT la fusion */
+const cDrops=(l,r,g)=>{if(g!==0){const E=g>0?l:r;if(E.gc||E.x)return null}const pl=cPlan(l,r,(r.u||0)>(l.u||0));
+ return pl&&pl.drop.length?recEntry("conflit-contenu",[recPack(l,pl.drop)],"Cartes écartées : modifiées différemment sur deux appareils, ou supprimées sur l'un et modifiées sur l'autre"):null};
 let PENDG=new Set();
 function genMerge(l,r,sg,kp){const E=sg>0?l:r,O=sg>0?r:l;let res;
  const whole=!isPack(E)||!isPack(O)||!E.items||!O.items||E.x||O.x;
  if(kp&&E===r){ /* paquet ouvert en séance : on ne remplace ni le contenu ni les index ; adoption différée si le contenu change */
   if(whole||E.gc){PENDG.add(l.id);return l}
+  const pl=cPlan(l,E,false);if(pl){if(pl.pend){PENDG.add(l.id);return l}cAdopt(l,E,pl,false)}
   const P=safePairs(l.items,E.items);l.items.forEach((i,j)=>{const e=P[j];if(e)takeProg(i,e);else wipeProg(i)});l.gn=E.gn;l.gw=E.gw;delete l.gc;if(canon(l)!==canon(r))mDirty=true;return l}
+ if(kp&&E===l&&!whole&&!E.gc){const pl=cPlan(l,O,false);if(pl){if(pl.pend){PENDG.add(l.id);return l}cAdopt(l,O,pl,true);if(canon(l)!==canon(r))mDirty=true;return l}}
  if(whole)res=E;
- else{const src=E.gc?E:((r.u||0)>(l.u||0)?r:l);
+ else{const rw=(r.u||0)>(l.u||0),pl=E.gc?null:cPlan(l,r,rw);
+  if(pl){const M=cBuild(l,r,pl,rw,true),own=new Set(E.items),P=safePairs(M,E.items);res={...(rw?r:l),gn:E.gn,gw:E.gw};delete res.gc;
+   res.items=M.map((c,j)=>{if(own.has(c))return c;const x={...c},e=P[j];if(e)takeProg(x,e);else wipeProg(x);return x})}
+  else{const src=E.gc?E:(rw?r:l);
   if(src===E)res=E;
-  else{const P=safePairs(src.items,E.items);res={...src,gn:E.gn,gw:E.gw};delete res.gc;res.items=src.items.map((i,j)=>{const c={...i},e=P[j];if(e)takeProg(c,e);else wipeProg(c);return c})}}
+  else{const P=safePairs(src.items,E.items);res={...src,gn:E.gn,gw:E.gw};delete res.gc;res.items=src.items.map((i,j)=>{const c={...i},e=P[j];if(e)takeProg(c,e);else wipeProg(c);return c})}}}
  if(res!==r&&canon(res)!==canon(r))mDirty=true;return res}
 
 /* ===== copie de récupération locale : jamais synchronisée, jamais réinjectée automatiquement =====
@@ -2135,10 +2193,14 @@ const recCand=(l,r)=>{const gr=grp(r.x?[]:r.items||[]),bs=(S.base||{})[l.id],out
  grp(l.items).forEach((a,k)=>{if(!k){out.push(...a);return}const nr=(gr.get(k)||[]).length;if(a.length<=nr)return;if(bs&&a.length-(bs[k]||0)<=0)return;out.push(...a)});
  return out.length?recEntry("ancienne-generation",[recPack(l,out)],"Ajouts ou modifications faits hors ligne avant l'opération qui a remplacé ce paquet"):null};
 /* S.base : par paquet, nombre de cartes par texte de question tel qu'il était à la dernière synchronisation entièrement réussie ; sert seulement à repérer ce qui a été ajouté depuis (jamais d'identité de carte) */
-function baseUp(){const B=S.base||(S.base={});let ch=false;const ids=new Set();
+/* instantané des empreintes de contenu pris juste APRÈS la fusion (avant tout await) : une modification faite pendant l'envoi ne doit pas entrer dans la base sans être partie */
+function baseSnap(){const m=new Map();S.nodes.forEach(n=>{if(isPack(n)&&!n.x&&n.items&&!PENDG.has(n.id))m.set(n.id,bmap(n.items))});return m}
+function baseUp(sn){const B=S.base||(S.base={}),BH=S.baseH||(S.baseH={});let ch=false;const ids=new Set();
+ if(sn)sn.forEach((m,id)=>{if(JSON.stringify(m)!==JSON.stringify(BH[id])){BH[id]=m;ch=true}});
+ S.nodes.forEach(n=>{if(isPack(n)&&!n.items&&BH[n.id]){delete BH[n.id];ch=true}});
  S.nodes.forEach(n=>{if(!isPack(n))return;ids.add(n.id);if(n.x||!n.items||PENDG.has(n.id)){if(!n.items&&B[n.id]){delete B[n.id];ch=true}return}
   const m={};n.items.forEach(i=>{const k=ikey(i);m[k]=(m[k]||0)+1});if(JSON.stringify(m)!==JSON.stringify(B[n.id])){B[n.id]=m;ch=true}});
- Object.keys(B).forEach(id=>{if(!ids.has(id)){delete B[id];ch=true}});if(ch)persist()}
+ Object.keys(B).forEach(id=>{if(!ids.has(id)){delete B[id];ch=true}});Object.keys(BH).forEach(id=>{if(!ids.has(id)){delete BH[id];ch=true}});if(ch)persist()}
 const FLG=[["h","hu"],["pn","pu"],["o","ou"]];
 /* 23/10/2026 : les journaux (k:"log") stockent leur historique par jour dans « h » ; ce n'est pas le drapeau « caché » : on les laisse suivre mergeNode (version la plus récente, un seul auteur par journal) */
 const fixHide=(res,l,r)=>{if(res.k=="log"||l.k=="log"||r.k=="log")return res;FLG.forEach(([f,t])=>{const src=(r[t]||0)>(l[t]||0)?r:l;if(src[f]!==undefined)res[f]=src[f];else delete res[f];if(src[t])res[t]=src[t];else delete res[t];if((l[t]||0)>(r[t]||0))mDirty=true});return res};
@@ -2197,7 +2259,7 @@ async function sync(){
  if(!cfg.code||busy||!ready)return;
  if(!V2)return sync1();
  busy=true;clearTimeout(tm);sm="Synchronisation…";ui();
- try{const h=await H(),st=syGet(h);let r;
+ try{const h=await H(),st=syGet(h);let r;CSV=st.sv;
   try{r=await rpc("revis_n_pull",{p_hash:h,p_since:st.rev||0})}catch(e){if(e.message=="404"){V2=false;busy=false;return sync1()}throw e}
   ((r&&r.nodes)||[]).forEach(hlcNode);
   const dirty=new Set(),rm=new Map(((r&&r.nodes)||[]).map(n=>{if(n.k=="img"&&n.d){if(!IMG.has(n.id)){IMG.set(n.id,n.d);iput(n.id,n.d)}dirty.add(n.id);const{d,...o}=n;n=o}return[n.id,n]})),ln=new Map(S.nodes.map(n=>[n.id,n]));
@@ -2205,8 +2267,8 @@ async function sync(){
   /* A2 : avant d'adopter une génération supérieure qui remplace le contenu, copie de récupération des ajouts/modifications locaux ; si elle échoue, rien n'est adopté (erreur « rec ») */
   {const rc=[];for(const r of rm.values()){const l=G(r.id);if(!l||!isPack(l)||!isPack(r))continue;const g=gcmp(l,r);
    /* version locale écartée par une génération distante qui fait foi pour le contenu, ou version distante (ancien client, ancienne génération) écartée par la nôtre */
-   const c=g<0&&l.items&&!l.x&&(r.gc||r.x)?recCand(l,r):g>0&&r.items&&!r.x&&(l.gc||l.x)?recCand(r,l):null;if(c)rc.push(c)}if(rc.length&&!(await recSave(rc)))throw new Error("rec")}
-  PENDG=new Set();mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep,dirty);setPull();TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
+   const c=g<0&&l.items&&!l.x&&(r.gc||r.x)?recCand(l,r):g>0&&r.items&&!r.x&&(l.gc||l.x)?recCand(r,l):null;if(c)rc.push(c);const cd=keep.has(r.id)?null:cDrops(l,r,g);if(cd)rc.push(cd)}if(rc.length&&!(await recSave(rc)))throw new Error("rec")}
+  PENDG=new Set();mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep,dirty);const bsn=baseSnap();setPull();TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
   rm.forEach(n=>{if(!PENDG.has(n.id))st.sv[n.id]=vers(n)});
   const ch=S.nodes.some(n=>ln.get(n.id)!==n);
   if(cur&&(!G(cur)||G(cur).x))cur=0;
@@ -2220,7 +2282,7 @@ async function sync(){
   await send();if(out.length)ping();
   if(!PENDG.size)st.rev=Math.max(st.rev||0,+(r&&r.rev)||0);sySet(st);
   lastV=await rpc("revis_n_ver",{p_hash:h});
-  baseUp();
+  baseUp(bsn);
   sm=syOkMsg();
   busy=false;ui(ch);if(PENDG.size)setTimeout(sync,3000);return
  }catch(e){sm=syErr(e)}
@@ -2856,7 +2918,7 @@ const NXHELP={
  ipad:"Désactivée : la version téléphone est affichée, centrée.",
  fcst:"Désactivé : le graphique est masqué dans les statistiques."};
 const bkUI=()=>(rs?'<p class="help">Sauvegarde du '+esc(rs.date)+' : '+rs.np+' paquet'+(rs.np>1?"s":"")+'. Elle remplacera toutes tes données actuelles'+(cfg.code?', y compris sur tes autres appareils synchronisés':'')+'.</p><div class="menu"><button data-a="rsx">Annuler</button><button class="dg" data-a="rsok">Remplacer mes données</button></div>':'<p class="help">Un fichier JSON avec tous tes dossiers, paquets, images et ta progression. '+bkInfo()+'</p><div class="menu"><button data-a="exp">Exporter</button><button data-a="rst">Restaurer</button></div>')+(bm?'<p class="help">'+esc(bm)+'</p>':'')+(rs?'':recHTML());
-const recLbl=e=>({"avant-restauration":"Avant une restauration","avant-remise-a-zero":"Avant une remise à zéro","ancienne-generation":"Ajouts hors ligne écartés"})[e.kind]||e.kind;
+const recLbl=e=>({"avant-restauration":"Avant une restauration","avant-remise-a-zero":"Avant une remise à zéro","ancienne-generation":"Ajouts hors ligne écartés","conflit-contenu":"Modifications écartées (conflit)"})[e.kind]||e.kind;
 const recHTML=()=>!REC.length?"":'<h2 class="h2">Récupération ('+REC.length+')</h2><p class="help">Copies de sécurité gardées sur cet appareil seulement : jamais synchronisées, jamais réinjectées automatiquement.</p>'+REC.slice().reverse().map(e=>'<p class="help"><b>'+esc(recLbl(e))+'</b><br>'+esc(new Date(e.at).toLocaleDateString("fr",{day:"numeric",month:"long",year:"numeric"}))+' · '+e.packs.length+(e.packs.length>1?" paquets":" paquet")+', '+e.n+(e.n>1?" cartes":" carte")+(e.packs.length==1?' · '+esc(e.packs[0].name):'')+'</p><div class="menu"><button data-a="rcx" data-v="'+esc(e.k)+'">Exporter</button><button data-a="rca" data-v="'+esc(e.k)+'">Ajouter comme paquets</button><button class="dg" data-a="rcd" data-v="'+esc(e.k)+'">Supprimer</button></div>').join("");
 function nxSetHTML(){let sp=SETP;const C=NXC;if(sp=="sync"||sp=="bk"){AS={k:"nxp",w:sp};SETP=sp=null}
  const I=(n,c)=>'<span class="nxsi" style="--c:'+c+'" aria-hidden="true">'+ic(n,18)+'</span>';
