@@ -32,9 +32,9 @@ async function run(b) {
   t.ok(await d2.page.evaluate(() => G('pD').h === 1 && G('pD').hu > 0), 'drapeau « caché » (avec mise à jour du paquet) propagé');
   await d2.page.evaluate(() => { const n = G('pD'); flagSet([n], 'h', 'hu', false, 'affiché'); n.u = hlc(); save() }); await e.both(3);
   t.ok(await d1.page.evaluate(() => G('pD').h === undefined), 'drapeau « caché » retiré : propagé aussi');
-  // défaut préexistant (reproduit sur 1f6cb44, hors périmètre) : un drapeau seul ne change pas « u », donc n'est pas envoyé
+  // drapeau seul : corrigé le 23/10/2026 (voir t-drapeaux.js)
   await d1.page.evaluate(() => { flagSet([G('pC')], 'pn', 'pu', true, 'épinglé') }); await e.both(3);
-  t.known(await d2.page.evaluate(() => G('pC').pn === 1), 'drapeau « épinglé » seul (sans autre modification du nœud) propagé à l\'autre appareil');
+  t.ok(await d2.page.evaluate(() => G('pC').pn === 1), 'drapeau « épinglé » seul propagé à l\'autre appareil');
   const n0 = e.srv.log.length; for (let k = 0; k < 5; k++) await e.both(1);
   t.ok(e.srv.log.length === n0, '10 synchros au repos : 0 écriture', (e.srv.log.length - n0) + ' écriture(s)');
   t.ok(!d1.errs.length && !d2.errs.length, 'aucune erreur JavaScript', d1.errs.concat(d2.errs).join(' | '));

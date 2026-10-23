@@ -1864,6 +1864,8 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),nid=
    hlc() = max(heure locale, dernière valeur + 1) : jamais en arrière, même si l'horloge système recule ; hlcSee(v) intègre toute version vue
    (données locales au démarrage, nœuds reçus à la synchro), donc une écriture locale est toujours postérieure à ce qu'on a observé. */
 let HLCv=0;const hlc=()=>{const n=Date.now();HLCv=n>HLCv?n:HLCv+1;return HLCv},hlcSee=v=>{v=+v||0;if(v>HLCv&&v<9e15)HLCv=v};
+/* 23/10/2026 (D4) : version d'un nœud pour l'envoi = la plus grande de u (contenu) et des horodatages de drapeaux hu/pu/ou ; un drapeau modifié seul (flagSet, applyOrder) ne change pas u mais doit être envoyé. Le u envoyé au serveur reste celui du contenu (le serveur compare u : inchangé, accepté). */
+const vers=n=>Math.max(n.u||0,n.hu||0,n.pu||0,n.ou||0);
 const hlcNode=n=>{if(!n)return;hlcSee(n.u);hlcSee(n.hu);hlcSee(n.pu);hlcSee(n.ou);if(n.items)n.items.forEach(i=>hlcSee(i&&i.t))};
 // anciens identifiants numériques → identifiants texte ; gid = identité de ce jeu de données (la synchro repart de zéro s'il change)
 function normS(s){if(s.nodes.some(n=>typeof n.id=="number")){const m={0:0};s.nodes.forEach(n=>m[n.id]=n.id<=4?"s"+n.id:uid());s.nodes.forEach(n=>{n.id=m[n.id];n.p=m[n.p]??0})}if(!s.gid)s.gid=uid();return s}
@@ -2140,15 +2142,15 @@ async function sync(){
   const dirty=new Set(),rm=new Map(((r&&r.nodes)||[]).map(n=>{if(n.k=="img"&&n.d){if(!IMG.has(n.id)){IMG.set(n.id,n.d);iput(n.id,n.d)}dirty.add(n.id);const{d,...o}=n;n=o}return[n.id,n]})),ln=new Map(S.nodes.map(n=>[n.id,n]));
   const keep=new Set(view=="study"||view=="exam"?(deck.virt?[...deck.own.values()].map(n=>n.id):[deck.id]):view=="edit"?[ed.id]:[]);
   mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep,dirty);setPull();TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
-  rm.forEach(n=>{st.sv[n.id]=n.u||0});
+  rm.forEach(n=>{st.sv[n.id]=vers(n)});
   const ch=S.nodes.some(n=>ln.get(n.id)!==n);
   if(cur&&(!G(cur)||G(cur).x))cur=0;
   persist();
   await imgSync(h);
   // envoi par lots (300 nœuds ou environ 1,5 Mo) ; la version envoyée est notée au moment de l'envoi
-  const out=S.nodes.filter(n=>dirty.has(n.id)||(n.u||0)>(st.sv[n.id]??-1));let lot=[],sz=0,bu=false;
-  out.forEach(n=>{const k=st.sv[n.id];if(k!=null&&(n.u||0)<=k){hlcSee(k);n.u=hlc();bu=true}});if(bu)persist();
-  const send=async()=>{if(!lot.length)return;const us=lot.map(n=>[n.id,n.u||0]),p=rpc("revis_n_push",{p_hash:h,p_nodes:lot});lot=[];sz=0;await p;us.forEach(([id,u])=>{st.sv[id]=u});sySet(st)};
+  const out=S.nodes.filter(n=>dirty.has(n.id)||vers(n)>(st.sv[n.id]??-1));let lot=[],sz=0,bu=false;
+  out.forEach(n=>{const k=st.sv[n.id];if(k!=null&&vers(n)<=k){hlcSee(k);n.u=hlc();bu=true}});if(bu)persist();
+  const send=async()=>{if(!lot.length)return;const us=lot.map(n=>[n.id,vers(n)]),p=rpc("revis_n_push",{p_hash:h,p_nodes:lot});lot=[];sz=0;await p;us.forEach(([id,u])=>{st.sv[id]=u});sySet(st)};
   for(const n of out){const k=JSON.stringify(n).length;if(lot.length&&(lot.length>=300||sz+k>15e5))await send();lot.push(n);sz+=k}
   await send();if(out.length)ping();
   st.rev=Math.max(st.rev||0,+(r&&r.rev)||0);sySet(st);
