@@ -29,6 +29,7 @@ Ce dossier **ne se déploie pas** : il ne fait pas partie des 8 fichiers du site
 | `t-a4-qcm.js` | QCM validé sans réponse. |
 | `t-a5-examen.js` | L'examen ne doit pas modifier FSRS, ni directement ni par la synchro. |
 | `t-a6-jour.js` | Bascule de la journée à 4 h ; compteurs au retour au premier plan. |
+| `t-a6-effets.js` | A6 (suite) : bornes 23:59 / 00:00 / 03:59 / 04:00, fins de mois et d'année, 29 février, changements d'heure, 4 fuseaux, journal, échéances et écoulé FSRS, série, limite de nouvelles cartes, calendrier d'activité, redessin à la bascule (jamais en séance). |
 | `t-horloges.js` | Horloge décalée, ordre de reconnexion, écho retardé ; 0 écriture au repos. |
 
 ## Lire les résultats

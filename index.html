@@ -1638,7 +1638,8 @@ IC.flame='<path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.4 2.6-5.3 3.5-8.3.6 1.5 1.5
 IC.cal='<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>';
 let cfg={srs:true,ipad:true,nl:20,hc:0,rt:.9,vw:"list"};try{Object.assign(cfg,JSON.parse(localStorage.getItem("revis-cfg")))}catch(e){}cfg.nx=true;
 const saveCfg=()=>{try{localStorage.setItem("revis-cfg",JSON.stringify(cfg))}catch(e){}try{setPush()}catch(e){}};
-const INT=[1,3,7,14,30],day=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5),isDue=i=>i.d==null||i.d<=day(),ms=new Set();
+/* 23/10/2026 (A6) : la journée de révision commence à 4 h, heure locale (DSH = 4 h) ; un numéro de jour = la date du calendrier où elle a commencé */
+let RDAY=0;const INT=[1,3,7,14,30],DSH=144e5,day=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4-DSH)/864e5),isDue=i=>i.d==null||i.d<=day(),ms=new Set();
 const sched=(i,ok)=>{if(i.d==null)bumpNew();if(ok){i.b=(i.b||0)+1;i.d=day()+INT[Math.min(i.b,INT.length)-1]}else{i.b=0;i.d=day()}};
 const isNew=i=>i.d==null,isRev=i=>i.d!=null&&i.d<=day();
 // limite globale : comptée sur les données synchronisées (i.f = jour de première vue), donc commune à tous les appareils
@@ -1692,7 +1693,7 @@ const pinI=z=>'<span class="pinI" title="Épinglé" aria-label="Épinglé">'+ic(
 const sortMode=()=>{const m=cfg.so;return m=="recent"||m=="due"||m=="manual"||m=="created"?m:"name"};
 // date de création : lue dans l'identifiant (uid() commence par Date.now() en base 36), 0 si inconnue (données de démonstration)
 const crAt=n=>{if(!n)return 0;if(n.cr)return n.cr;const m=/^([0-9a-z]{7,9})[0-9a-z]{5}$/.exec(String(n.id));if(!m)return 0;const t=parseInt(m[1],36);return t>1577836800000&&t<Date.now()+864e5?t:0};
-const lastDay=n=>{let m=-1;packsOf(n).forEach(p=>(p.items||[]).forEach(i=>{const d=i.l!=null?i.l:(i.t&&i.d!=null?Math.floor((i.t-new Date().getTimezoneOffset()*6e4)/864e5):-1);if(d>m)m=d}));return m};
+const lastDay=n=>{let m=-1;packsOf(n).forEach(p=>(p.items||[]).forEach(i=>{const d=i.l!=null?i.l:(i.t&&i.d!=null?Math.floor((i.t-new Date().getTimezoneOffset()*6e4-DSH)/864e5):-1);if(d>m)m=d}));return m};
 const dueOf=n=>{const c=cnN(n);return c.r*1000+Math.min(c.w,newLeft())};
 const kidsS=p=>{const a=kids(p),m=sortMode();if(m=="name")return a;
  const srt=l=>{const ix=l.map((n,i)=>[n,i]);
@@ -1940,7 +1941,7 @@ function fcHTML(){
  let b="";for(let k=0;k<N;k++)b+='<div class="fcb'+(c[k]?"":" z")+(k==0?" t":"")+'"><span class="fcn">'+c[k]+'</span><i style="height:'+(c[k]?Math.max(4,Math.round(c[k]/mx*64)):3)+'px"></i><span class="fcl">'+lab(k)+'</span></div>';
  return '<h2 class="h2">À revoir ces 7 prochains jours</h2><div class="pn"><div class="fc7" role="img" aria-label="Révisions prévues sur 7 jours : '+c.join(", ")+'">'+b+'</div><p class="hmd">'+(tot?tot+" à revoir cette semaine"+(late?", dont "+late+" en retard (comptée"+(late>1?"s":"")+" aujourd\'hui)":"")+".":"Rien à revoir ces 7 prochains jours.")+' Les cartes jamais vues ne sont pas comptées.</p></div>'}
 function statsHTML(){
- const logs=S.nodes.filter(n=>n.k=="log"&&!n.x),cnt=d=>logs.reduce((s,l)=>s+((l.h||{})[d]||0),0),d0=day(),wd=(new Date().getDay()+6)%7,W=(typeof innerWidth=="number"&&innerWidth>=700)?26:18,st=d0-wd-(W-1)*7;
+ const logs=S.nodes.filter(n=>n.k=="log"&&!n.x),cnt=d=>logs.reduce((s,l)=>s+((l.h||{})[d]||0),0),d0=day(),wd=(new Date(d0*864e5).getUTCDay()+6)%7,W=(typeof innerWidth=="number"&&innerWidth>=700)?26:18,st=d0-wd-(W-1)*7;
  let cells="";for(let d=st;d<st+W*7;d++){if(d>d0){cells+='<i class="fu"></i>';continue}const c=cnt(d),l=!c?0:c<10?1:c<30?2:c<60?3:4;cells+='<i class="l'+l+(d==(hmSel??d0)?" on":"")+'" data-a="hmd" data-v="'+d+'" title="'+dstr(d)+' : '+c+' révision'+(c>1?"s":"")+'"></i>'}
  let t30=0;for(let d=d0-29;d<=d0;d++)t30+=cnt(d);let k=0,d=cnt(d0)?d0:d0-1;while(cnt(d)>0){k++;d--}
  const today=cnt(d0);
@@ -3025,7 +3026,7 @@ function nxStats(logs,d0,cells,t30,k,today){const pl=(n,a,b)=>n+" "+(n>1?b:a);
 /* nouvelle apparence : dossier de la carte en haut à gauche (point de couleur + nom), catégorie à droite */
 function nxFd(c){const own=deck.virt&&deck.own?deck.own.get(c):deck,f=own&&own.p?G(own.p):null,col=f&&f.c?f.c:"";
  return '<span class="nxfd"'+(col?' style="--fc:'+esc(col)+'"':'')+'><i class="dt" aria-hidden="true"></i><span class="vh">Dossier : </span><span class="fn">'+esc(f?f.name:"Accueil")+'</span>'+(c.c?'<span class="vh">, catégorie : </span><span class="cat">'+esc(c.c)+'</span>':'')+'</span><span class="vh">. </span>'}
-function render(){RM={k:new Map(),c:new Map()};try{capAll()}catch(e){}try{render0()}finally{RM=null}
+function render(){RDAY=day();RM={k:new Map(),c:new Map()};try{capAll()}catch(e){}try{render0()}finally{RM=null}
 
  nxNew();if(cfg.nx){nxFit();requestAnimationFrame(nxFit)}else nxBbRender()}
 // nouvelle apparence : si le mot du bouton retour serait coupé (« Réglag… »), on n'affiche que le chevron (le mot reste lu par VoiceOver)
@@ -3155,6 +3156,9 @@ function render0(){
 }
 let rzt;if(typeof addEventListener=="function")addEventListener("resize",()=>{clearTimeout(rzt);rzt=setTimeout(()=>{if(view=="browse"&&cfg.vw=="cols")render()},150)});
 setTh();setIp();setDens();setFs();setLt();setDesk();setNx();boot();document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync();else if(cfg.code&&tm){clearTimeout(tm);sync()}});
+/* A6 : si le jour logique a changé depuis le dernier dessin (RDAY) — app restée ouverte, retour au premier plan, changement d'heure — l'accueil et les statistiques sont redessinés ; jamais pendant une séance, un examen ou une édition (saisie en cours) */
+const dayChk=()=>{if(day()===RDAY)return;if(typeof ready!="undefined"&&ready&&(view=="browse"||view=="stats"))render()};
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)dayChk()});addEventListener("focus",dayChk);addEventListener("pageshow",dayChk);setInterval(dayChk,30000);
 /* thème automatique (aucun choix enregistré : TH vide) : suit le système en direct, sans rendu complet ni écriture (stockage, synchro) ; un choix manuel (TH) reste prioritaire */
 if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: dark)"),f=()=>{if(TH)return;const R=document.documentElement,o=R.dataset.theme;setTh();if(R.dataset.theme===o)return;const d=dark();
  document.querySelectorAll(".nxths").forEach(b=>{b.setAttribute("aria-checked",String(d));[...b.children].forEach((e,n)=>{e.classList.toggle("on",n?d:!d);if(!e.className)e.removeAttribute("class")})});
