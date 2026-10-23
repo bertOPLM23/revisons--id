@@ -55,7 +55,9 @@ async function run(b) {
     await d1.page.evaluate(nodes => { view = 'browse'; rs = { date: 'x', np: 1, nodes }; A.rsok() }, backup); await H.sync(d1);
     await e.both(3);
     const v = [J(await evOf(d1, 'pB', 'QQ1')), J(await evOf(d2, 'pB', 'QQ1')), J(srvEv(e, 'pB', 'QQ1'))];
-    t.ok(v.every(x => x === J({ dev2: [1, 0] })), 'restauration d\'une sauvegarde ancienne (sans ev) par ' + who + ' : les compteurs d\'examen enregistrés par l\'autre appareil sont conservés', v.join(' / '));
+    const gone = v.every(x => x === 'null'), kept = v.every(x => x === J({ dev2: [1, 0] }));
+    if (who == 'version récente') t.ok(gone, 'restauration d\'une sauvegarde ancienne (sans ev) par une version récente : elle fait autorité, les compteurs d\'examen d\'après la sauvegarde sont effacés partout (A2)', v.join(' / '));
+    else t.ok(kept, 'restauration par une ANCIENNE version : elle ne peut pas effacer les ev (limite documentée, pas de génération) : ils sont conservés par les appareils récents', v.join(' / '));
     await e.close();
   }
 

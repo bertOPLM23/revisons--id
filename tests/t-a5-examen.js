@@ -65,7 +65,8 @@ async function run(b) {
   // 5) « Refaire mes erreurs » : révision classique, chemin FSRS normal, effets exacts
   await d1.page.evaluate(() => { const p = G('pB'); p.items.forEach(i => i.o.forEach((o, k) => { o.k = k < 2 })); p.u = hlc(); save() });
   await exam(d1, (j, it, o) => Object.fromEntries(o.map((x, k) => [k, !x.k]))); await d1.page.evaluate(() => A.xfin());
-  const q0 = await d1.page.evaluate(() => { A.xredo(); return deck.items[order[idx]].q }), before = await H.item(d1, 'pB', q0), evB = JSON.stringify(before.ev);
+  // carte déterministe : QQ1 (déjà en révision), pas une carte tirée au hasard
+  const q0 = await d1.page.evaluate(() => { A.xredo(); idx = order.indexOf(deck.items.findIndex(x => x.q == 'QQ1')); return deck.items[order[idx]].q }), before = await H.item(d1, 'pB', q0), evB = JSON.stringify(before.ev);
   const planned = await d1.page.evaluate(q => { const it = deck.items.find(x => x.q == q); return opts(it)[2] }, q0);   // ce que le chemin FSRS normal doit appliquer pour une bonne réponse
   await d1.page.evaluate(() => { const it = deck.items[order[idx]]; sel = {}; po(it).forEach((x, k) => { if (x.k) sel[k] = true }); A.val() });
   const after = await H.item(d1, 'pB', q0);

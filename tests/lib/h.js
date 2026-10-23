@@ -4,7 +4,7 @@ const fs = require('fs'), path = require('path'), os = require('os'), cp = requi
 let pw; for (const n of ['playwright', '/opt/node-tools/node_modules/playwright', '/opt/node22/lib/node_modules/playwright']) { try { pw = require(n); break } catch (e) {} }
 if (!pw) throw new Error('Playwright introuvable');
 const ROOT = path.resolve(__dirname, '..', '..');
-const HTML = path.join(ROOT, 'index.html');
+const HTML = process.env.REV_HTML ? path.resolve(process.env.REV_HTML) : path.join(ROOT, 'index.html');   // REV_HTML=<fichier> : rejouer les tests sur une autre version
 const CODE = 'ABCDEFGHJKLMNPQRSTUV';
 
 // version d'origine (avant corrections) : sert de « client ancienne version »
@@ -42,6 +42,7 @@ function server(opts = {}) {
         while (inject.length) nodes.push(JSON.parse(JSON.stringify(inject.shift())));
         return ok({ rev: maxRev(), nodes });
       }
+      if (f == 'revis_n_push' && srv.failPush > 0) { srv.failPush--; return r.fulfill({ status: 500, body: '{}' }) }   // panne simulée : synchronisation interrompue
       if (f == 'revis_n_push') {
         for (const n of b.p_nodes) {
           const u = +n.u || 0, e = T.get(n.id), gn = +n.gn || 0, eg = e ? (+e.data.gn || 0) : 0;

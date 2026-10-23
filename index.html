@@ -1681,7 +1681,7 @@ function trashSweep(){let ch=false;S.nodes.forEach(n=>{if(n.x&&!n.xp&&n.xt&&Date
 const trashRoots=()=>S.nodes.filter(n=>n.x&&n.xr&&trashed(n)&&(n.k=="f"||isPack(n))).sort((a,b)=>b.xt-a.xt);
 function undoRun(){const u=U;U=null;if(!u||Date.now()-u.t>8000)return false;const now=hlc();
  if(u.k=="p"){u.snap.forEach(s=>{const n=G(s.id);if(!n)return;s.v.forEach(([f,had,val])=>{if(had)n[f]=val;else delete n[f]});if(u.bu)n.u=now;u.bump.forEach(t=>{n[t]=now})})}
- else if(u.k=="s"){u.nodes.forEach(o=>{const c={...cp(o),u:now},i=S.nodes.findIndex(n=>n.id==c.id);if(i>=0)S.nodes[i]=c;else S.nodes.push(c)})}
+ else if(u.k=="s"){u.nodes.forEach(o=>{const c={...cp(o),u:now};if(c.k!="log"){c.gn=now;c.gw=DEV;delete c.gc;if(isPack(c)&&c.items)c.items=c.items.map(x=>({...x,t:now,w:DEV}))}const i=S.nodes.findIndex(n=>n.id==c.id);if(i>=0)S.nodes[i]=c;else S.nodes.push(c)})}
  else if(u.k=="b")trashRestore(u.b);
  else if(u.k=="x")u.ids.forEach(purgeId);
  save();return true}
@@ -1692,7 +1692,7 @@ const pinI=z=>'<span class="pinI" title="Épinglé" aria-label="Épinglé">'+ic(
 const sortMode=()=>{const m=cfg.so;return m=="recent"||m=="due"||m=="manual"||m=="created"?m:"name"};
 // date de création : lue dans l'identifiant (uid() commence par Date.now() en base 36), 0 si inconnue (données de démonstration)
 const crAt=n=>{if(!n)return 0;if(n.cr)return n.cr;const m=/^([0-9a-z]{7,9})[0-9a-z]{5}$/.exec(String(n.id));if(!m)return 0;const t=parseInt(m[1],36);return t>1577836800000&&t<Date.now()+864e5?t:0};
-const lastDay=n=>{let m=-1;packsOf(n).forEach(p=>(p.items||[]).forEach(i=>{const d=i.l!=null?i.l:(i.t?Math.floor((i.t-new Date().getTimezoneOffset()*6e4)/864e5):-1);if(d>m)m=d}));return m};
+const lastDay=n=>{let m=-1;packsOf(n).forEach(p=>(p.items||[]).forEach(i=>{const d=i.l!=null?i.l:(i.t&&i.d!=null?Math.floor((i.t-new Date().getTimezoneOffset()*6e4)/864e5):-1);if(d>m)m=d}));return m};
 const dueOf=n=>{const c=cnN(n);return c.r*1000+Math.min(c.w,newLeft())};
 const kidsS=p=>{const a=kids(p),m=sortMode();if(m=="name")return a;
  const srt=l=>{const ix=l.map((n,i)=>[n,i]);
@@ -1774,7 +1774,8 @@ function dupNodes(ids){const ns=ids.map(G).filter(isPack).filter(n=>!n.x);if(!ns
  ns.forEach(n=>{const c=cp(n);c.id=uid();c.name=n.name+" (copie)";["h","hu","pn","pu","o","ou","last","x","xt","xb","xr","xp"].forEach(f=>delete c[f]);(c.items||[]).forEach(i=>PFX.forEach(f=>delete i[f]));c.u=hlc();S.nodes.push(c);made.push(c.id)});
  save();render();undoX(made,made.length>1?made.length+" paquets dupliqués (progression remise à zéro)":"Paquet dupliqué (progression remise à zéro)")}
 function askReset(ids){const ns=ids.map(G).filter(n=>n&&!n.x);if(!ns.length)return;const ps=[...new Set(ns.flatMap(packsOf))].filter(p=>p.items),cnt=ps.reduce((a,p)=>a+p.items.length,0),name=ns.length==1?"« "+ns[0].name+" »":ns.length+" éléments";
- CF=()=>{const snap=ps.map(cp),now=hlc();ps.forEach(p=>{p.items.forEach(i=>{PFX.forEach(f=>delete i[f]);delete i.ev});delete p.last;p.u=now});selm=false;selset.clear();save();render();undoS(snap,"Progression remise à zéro")};
+ CF=async()=>{if(!(await recSave([recEntry("avant-remise-a-zero",ps.map(p=>recPack(p)),"État des paquets avant la remise à zéro")]))){flash("Remise à zéro bloquée. "+recMsg);return}
+  const snap=ps.map(cp),now=hlc();ps.forEach(p=>{p.items.forEach(i=>{PFX.forEach(f=>delete i[f]);delete i.ev;i.t=now;i.w=DEV});delete p.last;p.gn=now;p.gw=DEV;delete p.gc;p.u=now});selm=false;selset.clear();save();render();undoS(snap,"Progression remise à zéro")};
  AS={k:"conf",title:"Remettre à zéro ?",text:"La progression de "+cnt+(cnt>1?" cartes ou questions":" carte ou question")+" de "+name+" sera effacée (calendrier de révision et taux de réussite). Le contenu reste intact.",ok:"Réinitialiser",danger:1};asRender()}
 // « Déjà révisé » (cours appris ou révisé hors de l'app) : les cartes jamais vues entrent directement en répétition espacée
 // (stabilité FSRS de « Bien », prochaine révision après l'intervalle correspondant) ; celles à revoir aujourd'hui sont notées « Bien ».
@@ -1866,7 +1867,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),nid=
 let HLCv=0;const hlc=()=>{const n=Date.now();HLCv=n>HLCv?n:HLCv+1;return HLCv},hlcSee=v=>{v=+v||0;if(v>HLCv&&v<9e15)HLCv=v};
 /* 23/10/2026 (D4) : version d'un nœud pour l'envoi = la plus grande de u (contenu) et des horodatages de drapeaux hu/pu/ou ; un drapeau modifié seul (flagSet, applyOrder) ne change pas u mais doit être envoyé. Le u envoyé au serveur reste celui du contenu (le serveur compare u : inchangé, accepté). */
 const vers=n=>Math.max(n.u||0,n.hu||0,n.pu||0,n.ou||0);
-const hlcNode=n=>{if(!n)return;hlcSee(n.u);hlcSee(n.hu);hlcSee(n.pu);hlcSee(n.ou);if(n.items)n.items.forEach(i=>hlcSee(i&&i.t))};
+const hlcNode=n=>{if(!n)return;hlcSee(n.u);hlcSee(n.gn);hlcSee(n.hu);hlcSee(n.pu);hlcSee(n.ou);if(n.items)n.items.forEach(i=>hlcSee(i&&i.t))};
 // anciens identifiants numériques → identifiants texte ; gid = identité de ce jeu de données (la synchro repart de zéro s'il change)
 function normS(s){if(s.nodes.some(n=>typeof n.id=="number")){const m={0:0};s.nodes.forEach(n=>m[n.id]=n.id<=4?"s"+n.id:uid());s.nodes.forEach(n=>{n.id=m[n.id];n.p=m[n.p]??0})}if(!s.gid)s.gid=uid();return s}
 // ---- stockage ----
@@ -1897,7 +1898,7 @@ async function loadS(){let ls=null;try{ls=JSON.parse(localStorage.getItem(K))}ca
 function bootErr(){$("app").innerHTML='<div class="done"><h1>Données momentanément illisibles</h1><p class="help">Safari n\'a pas pu ouvrir la base de données de l\'app. Tes données ne sont pas effacées. Ferme complètement l\'app, puis rouvre-la.</p><button class="b ok" type="button" onclick="location.reload()">Réessayer</button></div>'}
 async function boot(){const w=setTimeout(()=>{if(!booted)$("app").innerHTML='<div class="empty">Chargement de tes données…</div>'},700);
  let s=null;try{s=await loadS()}catch(e){stErr=String(e)}clearTimeout(w);if(!s)return bootErr();
- S=s;S.nodes.forEach(hlcNode);booted=true;setPull();persist();trashSweep();render();
+ S=s;S.nodes.forEach(hlcNode);try{await recLoad()}catch(e){}booted=true;setPull();persist();trashSweep();render();
  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{})}catch(e){}
  iload().then(()=>{ready=true;render();sync();rt()})}
 if(typeof addEventListener=="function"){addEventListener("pagehide",()=>{stFlush()});document.addEventListener("visibilitychange",()=>{if(document.hidden)stFlush()})}
@@ -2093,12 +2094,58 @@ const mergeNode=(l,r,remoteWins,kp)=>{
 const evSum=(i,k)=>{let a=0;const e=i&&i.ev;if(e&&typeof e=="object")for(const d in e){const v=e[d];if(Array.isArray(v))a+=+v[k]||0}return a},nOf=i=>(i.n||0)+evSum(i,0),mOf=i=>(i.m||0)+evSum(i,1);
 const evMerge=(a,b)=>{if(!a&&!b)return;const r={...(a||{})};for(const d in(b||{})){const v=b[d];if(Array.isArray(v)&&(!Array.isArray(r[d])||(+v[0]||0)>(+r[d][0]||0)))r[d]=v}return r},evMore=(a,b)=>{for(const d in(a||{})){const v=a[d];if(Array.isArray(v)&&(!b||!Array.isArray(b[d])||(+v[0]||0)>(+b[d][0]||0)))return true}return false};
 const evSame=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+/* ===== 23/10/2026 (A2) : générations de nœud (remise à zéro, restauration, annulation par instantané) =====
+   gn = horodatage hlc de l'opération, gw = appareil auteur, gc = « le contenu fait foi » (restauration). Comparaison (gn, gw) : ordre total, donc même gagnant sur tous les appareils quel que soit l'ordre d'arrivée.
+   La génération la plus élevée gagne le nœud ; pour un paquet, progression et ev viennent de ses cartes (appariées prudemment), jamais de l'ancienne génération. Les cartes remises à zéro / restaurées portent t=gn et w=auteur : une ancienne version, qui ne connaît pas gn, les respecte aussi (better() : t le plus récent). */
+const gcmp=(a,b)=>{const x=+a.gn||0,y=+b.gn||0;if(x!==y)return x>y?1:-1;const p=String(a.gw||""),q=String(b.gw||"");return p===q?0:p>q?1:-1};
+const grp=l=>{const m=new Map();(l||[]).forEach(i=>{const k=ikey(i);if(!m.has(k))m.set(k,[]);m.get(k).push(i)});return m};
+/* appariement prudent : clé (texte de question) non vide, et même nombre de cartes de chaque côté (1:1, ou k:k dans l'ordre) ; sinon aucune carte du groupe n'est appariée */
+const safePairs=(bi,oi)=>{const go=grp(oi),gb=grp(bi),used=new Map();return bi.map(i=>{const k=ikey(i);if(!k)return null;const a=gb.get(k),b=go.get(k);if(!b||a.length!==b.length)return null;const c=used.get(k)||0;used.set(k,c+1);return b[c]})};
+const wipeProg=i=>{PF.forEach(f=>delete i[f]);delete i.ev},takeProg=(i,e)=>{PF.forEach(f=>{if(e[f]===undefined)delete i[f];else i[f]=e[f]});if(e.ev===undefined)delete i.ev;else i.ev=e.ev};
+let PENDG=new Set();
+function genMerge(l,r,sg,kp){const E=sg>0?l:r,O=sg>0?r:l;let res;
+ const whole=!isPack(E)||!isPack(O)||!E.items||!O.items||E.x||O.x;
+ if(kp&&E===r){ /* paquet ouvert en séance : on ne remplace ni le contenu ni les index ; adoption différée si le contenu change */
+  if(whole||E.gc){PENDG.add(l.id);return l}
+  const P=safePairs(l.items,E.items);l.items.forEach((i,j)=>{const e=P[j];if(e)takeProg(i,e);else wipeProg(i)});l.gn=E.gn;l.gw=E.gw;delete l.gc;if(canon(l)!==canon(r))mDirty=true;return l}
+ if(whole)res=E;
+ else{const src=E.gc?E:((r.u||0)>(l.u||0)?r:l);
+  if(src===E)res=E;
+  else{const P=safePairs(src.items,E.items);res={...src,gn:E.gn,gw:E.gw};delete res.gc;res.items=src.items.map((i,j)=>{const c={...i},e=P[j];if(e)takeProg(c,e);else wipeProg(c);return c})}}
+ if(res!==r&&canon(res)!==canon(r))mDirty=true;return res}
+
+/* ===== copie de récupération locale : jamais synchronisée, jamais réinjectée automatiquement =====
+   IndexedDB (clé R de revis-data) + miroir localStorage ; {v,list} : la copie la plus récente fait foi. Déduplication par clé (nature + empreinte du contenu) ; plafond 300 entrées / 6 Mo :
+   au-delà, une nouvelle copie est REFUSÉE (rien n'est supprimé en silence) et l'opération destructive correspondante est bloquée. */
+const REC_LS="revis-rec",REC_MAXB=6e6,REC_MAXN=300;let REC=[],RSB=false;
+const recHash=t=>{let a=2166136261,b=5381;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);a^=c;a=Math.imul(a,16777619);b=(Math.imul(b,33)^c)>>>0}return(a>>>0).toString(36)+"-"+b.toString(36)+"-"+t.length};
+const recBytes=()=>REC.reduce((a,e)=>a+(e.b||0),0);
+async function recLoad(){let a=null,l=null;try{const v=await idbGet("R");if(typeof v=="string")a=JSON.parse(v)}catch(e){}try{const v=localStorage.getItem(REC_LS);if(v)l=JSON.parse(v)}catch(e){}
+ const c=[a,l].filter(x=>x&&Array.isArray(x.list)).sort((x,y)=>(y.v||0)-(x.v||0))[0];REC=c?c.list:[]}
+async function recPersist(){const js=JSON.stringify({v:Date.now(),list:REC});let ok=false;try{await idbPut("R",js);ok=true}catch(e){}try{if(js.length<=1e6){localStorage.setItem(REC_LS,js);ok=true}else localStorage.removeItem(REC_LS)}catch(e){}return ok}
+async function recSave(es){const add=[];es.forEach(e=>{if(e&&!REC.some(x=>x.k===e.k)&&!add.some(x=>x.k===e.k))add.push(e)});if(!add.length)return true;
+ if(REC.length+add.length>REC_MAXN||recBytes()+add.reduce((a,e)=>a+e.b,0)>REC_MAXB)return false;
+ const prev=REC;REC=[...REC,...add];if(await recPersist())return true;REC=prev;return false}
+const recPath=p=>{try{return path(p.p).map(n=>n.name).join(" › ")}catch(e){return""}};
+const recPack=(p,items)=>({pid:p.id,name:p.name,k:p.k,path:recPath(p),items:cp(items||p.items)});
+const recEntry=(kind,packs,note)=>{const js=JSON.stringify(packs);return{k:kind+"|"+recHash(js),kind,at:Date.now(),packs,n:packs.reduce((a,p)=>a+p.items.length,0),b:js.length,note:note||""}};
+const recMsg="La copie de sécurité n'a pas pu être enregistrée (espace plein ou stockage indisponible). Exporte ou supprime des éléments récupérables (Réglages › Sauvegarde) puis réessaie.";
+/* cartes d'une ancienne génération (locale) qui seraient écartées : absentes du gagnant et ajoutées/modifiées depuis la dernière synchronisation (S.base) ; en cas de doute (groupe de doublons, clé vide, base absente) on les garde toutes */
+const recCand=(l,r)=>{const gr=grp(r.x?[]:r.items||[]),bs=(S.base||{})[l.id],out=[];
+ grp(l.items).forEach((a,k)=>{if(!k){out.push(...a);return}const nr=(gr.get(k)||[]).length;if(a.length<=nr)return;if(bs&&a.length-(bs[k]||0)<=0)return;out.push(...a)});
+ return out.length?recEntry("ancienne-generation",[recPack(l,out)],"Ajouts ou modifications faits hors ligne avant l'opération qui a remplacé ce paquet"):null};
+/* S.base : par paquet, nombre de cartes par texte de question tel qu'il était à la dernière synchronisation entièrement réussie ; sert seulement à repérer ce qui a été ajouté depuis (jamais d'identité de carte) */
+function baseUp(){const B=S.base||(S.base={});let ch=false;const ids=new Set();
+ S.nodes.forEach(n=>{if(!isPack(n))return;ids.add(n.id);if(n.x||!n.items||PENDG.has(n.id)){if(!n.items&&B[n.id]){delete B[n.id];ch=true}return}
+  const m={};n.items.forEach(i=>{const k=ikey(i);m[k]=(m[k]||0)+1});if(JSON.stringify(m)!==JSON.stringify(B[n.id])){B[n.id]=m;ch=true}});
+ Object.keys(B).forEach(id=>{if(!ids.has(id)){delete B[id];ch=true}});if(ch)persist()}
 const FLG=[["h","hu"],["pn","pu"],["o","ou"]];
 /* 23/10/2026 : les journaux (k:"log") stockent leur historique par jour dans « h » ; ce n'est pas le drapeau « caché » : on les laisse suivre mergeNode (version la plus récente, un seul auteur par journal) */
 const fixHide=(res,l,r)=>{if(res.k=="log"||l.k=="log"||r.k=="log")return res;FLG.forEach(([f,t])=>{const src=(r[t]||0)>(l[t]||0)?r:l;if(src[f]!==undefined)res[f]=src[f];else delete res[f];if(src[t])res[t]=src[t];else delete res[t];if((l[t]||0)>(r[t]||0))mDirty=true});return res};
 const merge=(a,b,keep,dset)=>{const m=new Map();a.forEach(n=>m.set(n.id,n));
  b.forEach(r=>{const l=m.get(r.id);if(!l){m.set(r.id,r);return}
-  const kp=keep.has(r.id),rw=(r.u||0)>(l.u||0)&&!kp,was=mDirty;mDirty=false;m.set(r.id,fixHide(mergeNode(l,r,rw,kp),l,r));if(mDirty&&dset)dset.add(r.id);mDirty=was||mDirty});
+  const kp=keep.has(r.id),gs=gcmp(l,r);if(gs!==0){const w0=mDirty;mDirty=false;m.set(r.id,fixHide(genMerge(l,r,gs,kp),l,r));if(mDirty&&dset)dset.add(r.id);mDirty=w0||mDirty;return}
+  const rw=(r.u||0)>(l.u||0)&&!kp,was=mDirty;mDirty=false;m.set(r.id,fixHide(mergeNode(l,r,rw,kp),l,r));if(mDirty&&dset)dset.add(r.id);mDirty=was||mDirty});
  return[...m.values()]};
 const ui=f=>{if(view=="set"||(f&&(view=="browse"||view=="stats")))render();else sdu()};
 let lastV=null,hp=null,hc=null,ws,tp,wt;
@@ -2136,7 +2183,7 @@ let V2=true;
 const SYK="revis-sy2",syGet=h=>{let o=null;try{o=JSON.parse(localStorage.getItem(SYK))}catch(e){}return o&&o.h===h.slice(0,16)&&o.sv&&o.g===S.gid?o:{h:h.slice(0,16),g:S.gid,rev:0,sv:{}}},sySet=o=>{try{localStorage.setItem(SYK,JSON.stringify(o))}catch(e){}};
 // syF = échecs consécutifs : à partir de 2 sans raison réseau, on évoque la mise en pause du projet Supabase gratuit
 let syF=0,syOk=0;
-const syErr=e=>{syF++;if(e&&/^4\d\d$/.test(e.message)&&e.message!="404")return"Le serveur a refusé la synchronisation (données trop volumineuses ?). Exporte une sauvegarde par sécurité.";
+const syErr=e=>{syF++;if(e&&e.message=="rec")return"Synchronisation en pause : "+recMsg;if(e&&/^4\d\d$/.test(e.message)&&e.message!="404")return"Le serveur a refusé la synchronisation (données trop volumineuses ?). Exporte une sauvegarde par sécurité.";
  if(typeof navigator!="undefined"&&navigator.onLine===false)return"Pas de connexion Internet. Tes révisions restent enregistrées sur cet appareil et seront synchronisées au retour du réseau.";
  if(syF>=2)return"Le serveur ne répond pas alors que tu es connecté à Internet. Si l\'app n\'a été ouverte sur aucun appareil depuis plus de 7 jours, le serveur gratuit (Supabase) s\'est sans doute mis en pause : relance le projet « Mes révisions » depuis supabase.com (bouton « Restore »), puis touche « Synchroniser maintenant ». Tes données ne sont pas perdues.";
  return"Échec de la synchronisation (réseau ?). Réessaie."};
@@ -2155,22 +2202,27 @@ async function sync(){
   ((r&&r.nodes)||[]).forEach(hlcNode);
   const dirty=new Set(),rm=new Map(((r&&r.nodes)||[]).map(n=>{if(n.k=="img"&&n.d){if(!IMG.has(n.id)){IMG.set(n.id,n.d);iput(n.id,n.d)}dirty.add(n.id);const{d,...o}=n;n=o}return[n.id,n]})),ln=new Map(S.nodes.map(n=>[n.id,n]));
   const keep=new Set(view=="study"||view=="exam"?(deck.virt?[...deck.own.values()].map(n=>n.id):[deck.id]):view=="edit"?[ed.id]:[]);
-  mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep,dirty);setPull();TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
-  rm.forEach(n=>{st.sv[n.id]=vers(n)});
+  /* A2 : avant d'adopter une génération supérieure qui remplace le contenu, copie de récupération des ajouts/modifications locaux ; si elle échoue, rien n'est adopté (erreur « rec ») */
+  {const rc=[];for(const r of rm.values()){const l=G(r.id);if(!l||!isPack(l)||!isPack(r))continue;const g=gcmp(l,r);
+   /* version locale écartée par une génération distante qui fait foi pour le contenu, ou version distante (ancien client, ancienne génération) écartée par la nôtre */
+   const c=g<0&&l.items&&!l.x&&(r.gc||r.x)?recCand(l,r):g>0&&r.items&&!r.x&&(l.gc||l.x)?recCand(r,l):null;if(c)rc.push(c)}if(rc.length&&!(await recSave(rc)))throw new Error("rec")}
+  PENDG=new Set();mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep,dirty);setPull();TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
+  rm.forEach(n=>{if(!PENDG.has(n.id))st.sv[n.id]=vers(n)});
   const ch=S.nodes.some(n=>ln.get(n.id)!==n);
   if(cur&&(!G(cur)||G(cur).x))cur=0;
   persist();
   await imgSync(h);
   // envoi par lots (300 nœuds ou environ 1,5 Mo) ; la version envoyée est notée au moment de l'envoi
-  const out=S.nodes.filter(n=>dirty.has(n.id)||vers(n)>(st.sv[n.id]??-1));let lot=[],sz=0,bu=false;
+  const out=S.nodes.filter(n=>!PENDG.has(n.id)&&(dirty.has(n.id)||vers(n)>(st.sv[n.id]??-1)));let lot=[],sz=0,bu=false;
   out.forEach(n=>{const k=st.sv[n.id];if(k!=null&&vers(n)<=k){hlcSee(k);n.u=hlc();bu=true}});if(bu)persist();
   const send=async()=>{if(!lot.length)return;const us=lot.map(n=>[n.id,vers(n)]),p=rpc("revis_n_push",{p_hash:h,p_nodes:lot});lot=[];sz=0;await p;us.forEach(([id,u])=>{st.sv[id]=u});sySet(st)};
   for(const n of out){const k=JSON.stringify(n).length;if(lot.length&&(lot.length>=300||sz+k>15e5))await send();lot.push(n);sz+=k}
   await send();if(out.length)ping();
-  st.rev=Math.max(st.rev||0,+(r&&r.rev)||0);sySet(st);
+  if(!PENDG.size)st.rev=Math.max(st.rev||0,+(r&&r.rev)||0);sySet(st);
   lastV=await rpc("revis_n_ver",{p_hash:h});
+  baseUp();
   sm=syOkMsg();
-  busy=false;ui(ch);return
+  busy=false;ui(ch);if(PENDG.size)setTimeout(sync,3000);return
  }catch(e){sm=syErr(e)}
  busy=false;ui()}
 let lpt=0;async function poll(){if(!cfg.code||document.hidden||busy||!ready)return;if(Date.now()-lpt<(ws&&ws.readyState==1?3e4:2e4))return;lpt=Date.now();try{const v=await rpc(V2?"revis_n_ver":"revis_ver",{p_hash:await H()});if(v&&v!==lastV)sync()}catch(e){}}
@@ -2443,10 +2495,22 @@ const A={
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);bkMark();bm="Sauvegarde exportée : "+name;render()},
  rst(){$("fb").click()},
  rsx(){rs=null;bm="";render()},
- rsok(){if(!rs)return;const now=hlc(),ids=new Set(rs.nodes.map(n=>n.id));
-  S.nodes.forEach(n=>{if(n.k!="log"&&!n.x&&!ids.has(n.id)){n.x=1;n.u=now;delete n.items;if(n.k=="img"){IMG.delete(n.id);idel(n.id)}}});
-  rs.nodes.forEach(b=>{if(b.k=="log")return;const c={...b,u:now};if(c.k=="img"){if(c.d){IMG.set(c.id,c.d);iput(c.id,c.d)}delete c.d}const i=S.nodes.findIndex(n=>n.id==c.id);if(i>=0)S.nodes[i]=c;else S.nodes.push(c)});
-  rs=null;cur=0;bm="Sauvegarde restaurée.";save();render()}
+ async rsok(){if(!rs||RSB)return;RSB=true;try{const R=rs,cur0=S.nodes.filter(n=>isPack(n)&&!n.x&&n.items&&n.items.length).map(p=>recPack(p));
+  if(cur0.length&&!(await recSave([recEntry("avant-restauration",cur0,"État complet de cet appareil avant la restauration")]))){bm="Restauration bloquée. "+recMsg;render();return}
+  const g=hlc(),ids=new Set(R.nodes.map(n=>n.id));
+  S.nodes.forEach(n=>{if(n.k!="log"&&!n.x&&!ids.has(n.id)){n.x=1;n.u=g;n.gn=g;n.gw=DEV;n.gc=1;delete n.items;if(n.k=="img"){IMG.delete(n.id);idel(n.id)}}});
+  R.nodes.forEach(b=>{if(b.k=="log")return;const c={...b,u:g,gn:g,gw:DEV,gc:1,hu:g,pu:g,ou:g};if(isPack(c)&&c.items)c.items=c.items.map(x=>({...x,t:g,w:DEV}));if(c.k=="img"){if(c.d){IMG.set(c.id,c.d);iput(c.id,c.d)}delete c.d}const i=S.nodes.findIndex(n=>n.id==c.id);if(i>=0)S.nodes[i]=c;else S.nodes.push(c)});
+  rs=null;cur=0;bm="Sauvegarde restaurée.";save();render()}finally{RSB=false}},
+ /* récupération locale : export, ajout explicite comme nouveaux paquets, suppression explicite */
+ rcx(k){const e=REC.find(x=>x.k===k);if(!e)return;const data={app:"mes-revisions",type:"recuperation",date:new Date(e.at).toISOString(),nature:e.kind,note:e.note,paquets:e.packs},name="recuperation-"+new Date(e.at).toISOString().slice(0,10)+".json",blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+  try{const f=new File([blob],name,{type:"application/json"});if(navigator.maxTouchPoints>0&&navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f]}).catch(()=>{});return}}catch(x){}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)},
+ rca(k){const e=REC.find(x=>x.k===k);if(!e)return;const np=e.packs.length;
+  CF=()=>{e.packs.forEach(p=>{S.nodes.push({id:uid(),p:0,k:p.k,name:"Récupération · "+p.name,items:cp(p.items),u:hlc()})});save();render();flash(np+(np>1?" paquets ajoutés":" paquet ajouté")+" à la racine")};
+  AS={k:"conf",title:"Ajouter comme nouveaux paquets ?",text:np+(np>1?" paquets (":" paquet (")+e.n+" cartes ou questions) seront ajoutés à la racine, sous le nom « Récupération · … ». Rien n'est remplacé ; la copie reste disponible tant que tu ne la supprimes pas.",ok:"Ajouter",no:"Annuler"};asRender()},
+ rcd(k){const e=REC.find(x=>x.k===k);if(!e)return;
+  CF=async()=>{const prev=REC;REC=REC.filter(x=>x.k!==k);if(!(await recPersist())){REC=prev;flash("Suppression impossible : stockage indisponible.");return}render();asRender()};
+  AS={k:"conf",title:"Supprimer cette copie ?",text:"Cette copie de récupération sera supprimée définitivement de cet appareil.",ok:"Supprimer",no:"Annuler",danger:1};asRender()}
 };
 // ---- navigation : historique du navigateur (bouton retour, geste retour) ----
 let hs=[],hpop=false,hign=0;
@@ -2791,7 +2855,9 @@ const NXHELP={
  fh:"Tranche de la couleur du dossier sur chaque dossier, en liste, en icônes et en colonnes (grise pour un dossier sans couleur). Il suit sur tous tes appareils synchronisés.",
  ipad:"Désactivée : la version téléphone est affichée, centrée.",
  fcst:"Désactivé : le graphique est masqué dans les statistiques."};
-const bkUI=()=>(rs?'<p class="help">Sauvegarde du '+esc(rs.date)+' : '+rs.np+' paquet'+(rs.np>1?"s":"")+'. Elle remplacera toutes tes données actuelles'+(cfg.code?', y compris sur tes autres appareils synchronisés':'')+'.</p><div class="menu"><button data-a="rsx">Annuler</button><button class="dg" data-a="rsok">Remplacer mes données</button></div>':'<p class="help">Un fichier JSON avec tous tes dossiers, paquets, images et ta progression. '+bkInfo()+'</p><div class="menu"><button data-a="exp">Exporter</button><button data-a="rst">Restaurer</button></div>')+(bm?'<p class="help">'+esc(bm)+'</p>':'');
+const bkUI=()=>(rs?'<p class="help">Sauvegarde du '+esc(rs.date)+' : '+rs.np+' paquet'+(rs.np>1?"s":"")+'. Elle remplacera toutes tes données actuelles'+(cfg.code?', y compris sur tes autres appareils synchronisés':'')+'.</p><div class="menu"><button data-a="rsx">Annuler</button><button class="dg" data-a="rsok">Remplacer mes données</button></div>':'<p class="help">Un fichier JSON avec tous tes dossiers, paquets, images et ta progression. '+bkInfo()+'</p><div class="menu"><button data-a="exp">Exporter</button><button data-a="rst">Restaurer</button></div>')+(bm?'<p class="help">'+esc(bm)+'</p>':'')+(rs?'':recHTML());
+const recLbl=e=>({"avant-restauration":"Avant une restauration","avant-remise-a-zero":"Avant une remise à zéro","ancienne-generation":"Ajouts hors ligne écartés"})[e.kind]||e.kind;
+const recHTML=()=>!REC.length?"":'<h2 class="h2">Récupération ('+REC.length+')</h2><p class="help">Copies de sécurité gardées sur cet appareil seulement : jamais synchronisées, jamais réinjectées automatiquement.</p>'+REC.slice().reverse().map(e=>'<p class="help"><b>'+esc(recLbl(e))+'</b><br>'+esc(new Date(e.at).toLocaleDateString("fr",{day:"numeric",month:"long",year:"numeric"}))+' · '+e.packs.length+(e.packs.length>1?" paquets":" paquet")+', '+e.n+(e.n>1?" cartes":" carte")+(e.packs.length==1?' · '+esc(e.packs[0].name):'')+'</p><div class="menu"><button data-a="rcx" data-v="'+esc(e.k)+'">Exporter</button><button data-a="rca" data-v="'+esc(e.k)+'">Ajouter comme paquets</button><button class="dg" data-a="rcd" data-v="'+esc(e.k)+'">Supprimer</button></div>').join("");
 function nxSetHTML(){let sp=SETP;const C=NXC;if(sp=="sync"||sp=="bk"){AS={k:"nxp",w:sp};SETP=sp=null}
  const I=(n,c)=>'<span class="nxsi" style="--c:'+c+'" aria-hidden="true">'+ic(n,18)+'</span>';
  if(sp){const T={sync:"Synchronisation",bk:"Sauvegarde",acc:"Couleur de contraste"}[sp]||"Réglages";
