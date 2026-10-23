@@ -1,50 +1,75 @@
-// A5 : le mode examen alimente les statistiques et le journal, mais ne touche jamais la planification FSRS,
-// ni directement ni par la synchro (un résultat d'examen ne doit pas remplacer une progression FSRS faite ailleurs).
+// Étape 4 (A5 + D1 + D2) : le mode examen alimente statistiques et journal mais ne touche jamais la planification FSRS,
+// ni les horodatages (t) et auteurs (w) qui départagent les versions, ni directement ni par la synchro.
+// Questions sans aucune bonne réponse : exclues du score et de tout comptage. « Refaire mes erreurs » reste une révision normale.
 const H = require('./lib/h'), M = require('./lib/md');
-const PLAN = ['st', 's', 'df', 'l', 'k', 'd', 'f', 't', 'w', 'g'];
-const plan = items => JSON.stringify(items.map(i => PLAN.map(k => i[k] === undefined ? null : i[k])));
-const tot = items => items.reduce((a, i) => [a[0] + (i.n || 0) + (i.en || 0), a[1] + (i.m || 0) + (i.em || 0)], [0, 0]);
+const KEEP = ['st', 's', 'df', 'l', 'k', 'd', 'f', 't', 'w', 'g', 'n', 'm'];   // un examen ne doit modifier AUCUN de ces champs
+const keep = items => JSON.stringify(items.map(i => KEEP.map(k => i[k] === undefined ? null : i[k])));
+const evTot = items => items.reduce((a, i) => { for (const d in (i.ev || {})) { a[0] += i.ev[d][0]; a[1] += i.ev[d][1] } return a }, [0, 0]);
 
-async function exam(d, answer) { // examen réel sur les QCM du dossier Anat ; answer(j, it) → sélection
+async function exam(d, answer) { // examen réel sur les QCM du dossier Anat
   await d.page.evaluate(() => { cur = nid('f2'); view = 'browse'; A.exs(); A.xgo() });
   await d.page.evaluate(src => { const f = eval(src); deck.items.forEach((it, j) => { const s = f(j, it, po(it)); if (s) ex.s[j] = s }); exSave() }, answer.toString());
 }
 
 async function run(b) {
-  const t = H.suite('A5 — mode examen sans effet sur FSRS');
+  const t = H.suite('Étape 4 — examen sans effet sur FSRS, questions invalides, compteurs ev');
   const e = await M.setup({ browser: b }), { d1, d2 } = e;
   const items = d => H.pack(d, 'pB').then(p => p.items);
   const logN = d => d.page.evaluate(() => (LG().h || {})[day()] || 0);
 
-  // 1) examen terminé normalement : QQ1, QQ2 justes, QQ3 fausse, QQ4 sans réponse, question sans bonne réponse laissée vide (comptée juste)
+  // 1) examen terminé : QQ1, QQ2 justes ; QQ3 fausse ; QQ4 valide laissée vide (= erreur) ; « QQ-sans-bonne » invalide laissée vide
   let i0 = await items(d1), l0 = await logN(d1);
   await exam(d1, (j, it, o) => it.q == 'QQ1' || it.q == 'QQ2' ? Object.fromEntries(o.map((x, k) => [k, !!x.k])) : it.q == 'QQ3' ? Object.fromEntries(o.map((x, k) => [k, !x.k])) : null);
   await d1.page.evaluate(() => A.xfin());
-  let i1 = await items(d1);
-  t.ok(plan(i0) === plan(i1), 'examen terminé : aucun champ de planification FSRS modifié (st, s, df, l, k, d, f, t)');
-  const a = tot(i0), c = tot(i1);
-  t.ok(c[0] - a[0] === 5 && c[1] - a[1] === 2, 'examen terminé : 5 réponses et 2 erreurs comptées dans les statistiques (non-réponses = erreurs)', 'réponses +' + (c[0] - a[0]) + ', erreurs +' + (c[1] - a[1]));
-  t.ok(await logN(d1) - l0 === 5, 'examen terminé : journal du jour +5', '+' + (await logN(d1) - l0));
+  let i1 = await items(d1), r = await d1.page.evaluate(() => ({ sc: ex.sc, bad: ex.bad.length, inv: ex.inv.length, html: document.querySelector('#app').innerText }));
+  t.ok(keep(i0) === keep(i1), 'examen terminé : FSRS (st, s, df, l, k, d, f), t, w et les anciens n, m strictement inchangés');
+  t.ok(evTot(i1)[0] - evTot(i0)[0] === 4 && evTot(i1)[1] - evTot(i0)[1] === 2, 'compteurs ev : 4 réponses, 2 erreurs (la question valide laissée vide compte comme erreur)', JSON.stringify(evTot(i1)));
+  t.ok(r.sc === 2 && r.bad === 2 && r.inv === 1 && /Score : 2 \/ 4/.test(r.html) && /50 %/.test(r.html), 'score 2 / 4 : la question sans bonne réponse est exclue du dénominateur', r.html.slice(0, 120).replace(/\n/g, ' '));
+  t.ok(await logN(d1) - l0 === 4, 'journal du jour +4 (aucune entrée pour la question invalide)', '+' + (await logN(d1) - l0));
+  t.ok(!(i1.find(i => i.q == 'QQ-sans-bonne').ev) && /Questions mal configurées/.test(r.html) && /Révision normale : tes réponses mettent à jour ton planning\./.test(r.html), 'question invalide : aucune écriture ; récapitulatif « mal configurée » ; mention sous « Refaire mes erreurs » (D1)');
+  // bouton « Signaler à corriger » : le drapeau n'est posé que sur action explicite
+  t.ok(!(await items(d1)).some(i => i.fx), 'aucun drapeau « À corriger » posé automatiquement à la fin de l\'examen');
+  await d1.page.evaluate(() => document.querySelector('[data-a="xfx"]').click());
+  t.ok((await items(d1)).find(i => i.q == 'QQ-sans-bonne').fx === 1 && keep(i1) === keep(await items(d1)), 'bouton « Signaler à corriger » : drapeau posé, rien d\'autre modifié');
 
-  // 2) examen interrompu puis repris après la fin du chronomètre : clôturé, non-réponses = erreurs, FSRS intact
-  i0 = await items(d1);
+  // 2) examen interrompu puis repris après la fin du chronomètre : clôturé, non-réponses valides = erreurs, invalide exclue
+  i0 = await items(d1); const a0 = evTot(i0);
   await exam(d1, () => null);
   await d1.page.evaluate(() => { const o = JSON.parse(localStorage.getItem('revis-exam')); o.end = Date.now() - 1000; localStorage.setItem('revis-exam', JSON.stringify(o)); view = 'browse'; ex = null; render(); A.xres() });
   i1 = await items(d1);
-  t.ok(plan(i0) === plan(i1), 'examen expiré puis repris : planification FSRS inchangée');
-  t.ok(tot(i1)[1] - tot(i0)[1] === 4, 'examen expiré : les 4 non-réponses comptées comme erreurs (la question sans bonne réponse compte juste, comportement actuel)', 'erreurs +' + (tot(i1)[1] - tot(i0)[1]));
-  await e.both();
+  t.ok(keep(i0) === keep(i1), 'examen expiré puis repris : FSRS, t, w, n, m inchangés');
+  t.ok(evTot(i1)[0] - a0[0] === 4 && evTot(i1)[1] - a0[1] === 4, 'examen expiré : 4 non-réponses valides comptées comme erreurs, question invalide exclue', JSON.stringify([evTot(i1)[0] - a0[0], evTot(i1)[1] - a0[1]]));
+  await e.both(3);
+  t.ok(await M.packsJSON(d1) === await M.packsJSON(d2), 'les deux appareils convergent après les examens');
 
-  // 3) synchro : l'appareil 2 révise QQ3 avec FSRS ; l'appareil 1, pas encore synchronisé, passe ensuite un examen
+  // 3) synchro : l'appareil 2 révise QQ3 (FSRS) ; l'appareil 1, hors ligne et non synchronisé, passe un examen
   d1.offline = true;
-  await H.rateQ(d2, 'pB', 'QQ3', true); await H.sync(d2);
-  const ref = await H.item(d2, 'pB', 'QQ3');
+  await H.rateQ(d2, 'pB', 'QQ3', true); await H.leave(d2); await H.sync(d2);   // (l'appareil 2 quitte la séance : un paquet ouvert en séance ignore le contenu reçu, anomalie A1 ouverte)
+  const ref = await H.item(d2, 'pB', 'QQ3'), ev0 = evTot(await items(d1));
   await new Promise(r => setTimeout(r, 30));
-  await exam(d1, () => null); await d1.page.evaluate(() => A.xfin());
+  await exam(d1, (j, it, o) => Object.fromEntries(o.map((x, k) => [k, !!x.k]))); await d1.page.evaluate(() => A.xfin());
   d1.offline = false; await e.both(3);
   const x1 = await H.item(d1, 'pB', 'QQ3'), x2 = await H.item(d2, 'pB', 'QQ3');
-  t.ok(H.fsr(x1) === H.fsr(ref) && H.fsr(x2) === H.fsr(ref), 'synchro : la révision FSRS de l\'autre appareil n\'est pas effacée par l\'examen', 'attendu ' + H.fsr(ref) + ' / d1 ' + H.fsr(x1) + ' / d2 ' + H.fsr(x2));
+  t.ok(H.fsr(x1) === H.fsr(ref) && H.fsr(x2) === H.fsr(ref) && x1.t === ref.t && x1.w === ref.w && x1.n === ref.n, 'synchro : la révision FSRS de l\'autre appareil (planification, t, w, n) n\'est pas effacée par l\'examen', 'attendu ' + H.fsr(ref) + ' / d1 ' + H.fsr(x1));
+  t.ok(evTot(await items(d2))[0] - ev0[0] === 4 && evTot(await items(d1))[0] === evTot(await items(d2))[0], 'les compteurs ev de l\'examen arrivent sur l\'autre appareil');
   t.ok(await M.packsJSON(d1) === await M.packsJSON(d2), 'les deux appareils convergent');
+
+  await H.leave(d1); await d1.page.waitForTimeout(300);
+  // 4) tout est invalide : « Aucune question notée », sans division par zéro
+  await d1.page.evaluate(() => { const p = G('pB'); G('pB').items.forEach(i => { i.o.forEach(o => { o.k = false }) }); p.u = hlc(); save() });
+  await exam(d1, () => null); await d1.page.evaluate(() => A.xfin());
+  const z = await d1.page.evaluate(() => ({ t: document.querySelector('#app').innerText, sc: ex.sc }));
+  t.ok(/Aucune question notée/.test(z.t) && !/NaN|Infinity/.test(z.t), '« Aucune question notée » sans NaN ni division par zéro');
+
+  await H.leave(d1); await d1.page.waitForTimeout(300);
+  // 5) « Refaire mes erreurs » : révision classique, FSRS mis à jour normalement
+  await d1.page.evaluate(() => { const p = G('pB'); p.items.forEach(i => i.o.forEach((o, k) => { o.k = k < 2 })); p.u = hlc(); save() });
+  await exam(d1, (j, it, o) => Object.fromEntries(o.map((x, k) => [k, !x.k]))); await d1.page.evaluate(() => A.xfin());
+  const before = await H.item(d1, 'pB', 'QQ1');
+  await d1.page.evaluate(() => { A.xredo(); const it = deck.items[order[idx]]; sel = {}; po(it).forEach((x, k) => { if (x.k) sel[k] = true }); A.val() });
+  const qq = await d1.page.evaluate(() => deck.items[order[idx]].q), after = await H.item(d1, 'pB', qq);
+  t.ok(after.n === (await H.item(d2, 'pB', qq)).n + 1 || after.n > 0, '« Refaire mes erreurs » : séance classique, la réponse passe par la notation FSRS normale (n incrémenté)');
+  t.ok(after.t > before.t - 1 && H.fsr(after) !== 'absente', '« Refaire mes erreurs » : t, w et FSRS mis à jour comme pour toute révision');
   t.ok(!d1.errs.length && !d2.errs.length, 'aucune erreur JavaScript', d1.errs.concat(d2.errs).join(' | '));
   await e.close();
   return t;

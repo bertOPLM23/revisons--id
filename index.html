@@ -1710,7 +1710,7 @@ const setDens=()=>{document.documentElement.dataset.dens=cfg.cp?"1":"0"};
 function infoHTML(n){const ps=packsOf(n),its=ps.flatMap(p=>p.items||[]),d0=day(),pl=(k,a,b)=>k+" "+(k>1?b:a),
  nf=ps.filter(p=>p.k=="fc").reduce((a,p)=>a+p.items.length,0),nq=ps.filter(p=>p.k=="qcm").reduce((a,p)=>a+p.items.length,0),
  c=cn(ps),w=Math.min(c.w,newLeft());let ans=0,mis=0,hard=0,next=1e9,last=-1;
- its.forEach(i=>{ans+=i.n||0;mis+=i.m||0;if((i.m||0)>=2)hard++;if(i.d!=null&&i.d>d0&&i.d<next)next=i.d;if(i.l!=null&&i.l>last)last=i.l});
+ its.forEach(i=>{ans+=nOf(i);mis+=mOf(i);if(mOf(i)>=2)hard++;if(i.d!=null&&i.d>d0&&i.d<next)next=i.d;if(i.l!=null&&i.l>last)last=i.l});
  const row=(a,b)=>'<div class="inf"><span>'+a+'</span><b>'+b+'</b></div>';
  let h=row("Contenu",([nf?pl(nf,"carte","cartes"):"",nq?pl(nq,"question","questions"):""].filter(Boolean).join(", ")||"vide")+(n.k=="f"?" dans "+pl(ps.length,"paquet","paquets"):""));
  const ct=crAt(n);if(ct)h+=row("Créé le",new Date(ct).toLocaleDateString("fr",{day:"numeric",month:"long",year:"numeric"})+" à "+new Date(ct).toLocaleTimeString("fr",{hour:"2-digit",minute:"2-digit"}));
@@ -1774,7 +1774,7 @@ function dupNodes(ids){const ns=ids.map(G).filter(isPack).filter(n=>!n.x);if(!ns
  ns.forEach(n=>{const c=cp(n);c.id=uid();c.name=n.name+" (copie)";["h","hu","pn","pu","o","ou","last","x","xt","xb","xr","xp"].forEach(f=>delete c[f]);(c.items||[]).forEach(i=>PFX.forEach(f=>delete i[f]));c.u=hlc();S.nodes.push(c);made.push(c.id)});
  save();render();undoX(made,made.length>1?made.length+" paquets dupliqués (progression remise à zéro)":"Paquet dupliqué (progression remise à zéro)")}
 function askReset(ids){const ns=ids.map(G).filter(n=>n&&!n.x);if(!ns.length)return;const ps=[...new Set(ns.flatMap(packsOf))].filter(p=>p.items),cnt=ps.reduce((a,p)=>a+p.items.length,0),name=ns.length==1?"« "+ns[0].name+" »":ns.length+" éléments";
- CF=()=>{const snap=ps.map(cp),now=hlc();ps.forEach(p=>{p.items.forEach(i=>PFX.forEach(f=>delete i[f]));delete p.last;p.u=now});selm=false;selset.clear();save();render();undoS(snap,"Progression remise à zéro")};
+ CF=()=>{const snap=ps.map(cp),now=hlc();ps.forEach(p=>{p.items.forEach(i=>{PFX.forEach(f=>delete i[f]);delete i.ev});delete p.last;p.u=now});selm=false;selset.clear();save();render();undoS(snap,"Progression remise à zéro")};
  AS={k:"conf",title:"Remettre à zéro ?",text:"La progression de "+cnt+(cnt>1?" cartes ou questions":" carte ou question")+" de "+name+" sera effacée (calendrier de révision et taux de réussite). Le contenu reste intact.",ok:"Réinitialiser",danger:1};asRender()}
 // « Déjà révisé » (cours appris ou révisé hors de l'app) : les cartes jamais vues entrent directement en répétition espacée
 // (stabilité FSRS de « Bien », prochaine révision après l'intervalle correspondant) ; celles à revoir aujourd'hui sont notées « Bien ».
@@ -1914,7 +1914,7 @@ const loadImg=f=>new Promise((res,rej)=>{const url=URL.createObjectURL(f),im=new
 const LG=()=>{const id="log-"+DEV;let L=G(id);if(!L){L={id,p:"-",k:"log",h:{},u:hlc()};S.nodes.push(L)}if(!L.h)L.h={};return L};
 const rec=(i,ok)=>{i.n=(i.n||0)+1;if(!ok)i.m=(i.m||0)+1;i.t=hlc();i.w=DEV;const L=LG(),d=day();L.h[d]=(L.h[d]||0)+1;L.u=hlc();tc(i);pace()};
 const packsOf=n=>n.k=="f"?desc(n.id).filter(x=>x.k!="f"):[n],allPacks=()=>cur?packsOf(G(cur)):desc(0).filter(x=>x.k!="f");
-const hardList=()=>allPacks().flatMap(p=>p.items.filter(i=>(i.m||0)>=2).map(i=>({i,p}))).sort((a,b)=>b.i.m/b.i.n-a.i.m/a.i.n||b.i.m-a.i.m);
+const hardList=()=>allPacks().flatMap(p=>p.items.filter(i=>mOf(i)>=2).map(i=>({i,p}))).sort((a,b)=>mOf(b.i)/nOf(b.i)-mOf(a.i)/nOf(a.i)||mOf(b.i)-mOf(a.i));
 const lbl=(i,p)=>i.im?p.name+", zone "+(i.t+1)+(i.a?" ("+i.a+")":""):i.q;
 const dstr=d=>new Date(d*864e5).toLocaleDateString("fr",{timeZone:"UTC",weekday:"short",day:"numeric",month:"long"});
 const mmss=t=>Math.floor(t/60)+":"+String(t%60).padStart(2,"0"),dur=t=>t<60?t+" s":Math.floor(t/60)+" min"+(t%60?" "+t%60+" s":"");
@@ -1950,14 +1950,14 @@ function statsHTML(){
  if(statsTab=="rates"){
  const ks=kids(cur);h+='<h2 class="h2">Taux de réussite'+(cur?' dans « '+esc(G(cur).name)+' »':'')+'</h2>';
  if(cfg.srs&&ks.length)h+='<p class="help">Solide : retenue pour au moins 3 semaines selon FSRS.</p>';if(!ks.length)h+='<p class="help">Rien ici pour l\'instant.</p>';
- ks.forEach(n=>{const a=packsOf(n).reduce((a,p)=>{p.items.forEach(i=>{a.n+=i.n||0;a.m+=i.m||0});return a},{n:0,m:0}),p=a.n?Math.round((a.n-a.m)/a.n*100):null,cl=p==null?"":p>=80?" g":p<50?" r":"";
+ ks.forEach(n=>{const a=packsOf(n).reduce((a,p)=>{p.items.forEach(i=>{a.n+=nOf(i);a.m+=mOf(i)});return a},{n:0,m:0}),p=a.n?Math.round((a.n-a.m)/a.n*100):null,cl=p==null?"":p>=80?" g":p<50?" r":"";
   h+='<div class="st"><div class="sth"><span class="ic">'+ic(n.k=="f"?"f":n.k,18,n.c)+'</span><b>'+esc(n.name)+'</b><span class="pv'+cl+'">'+(p==null?"–":p+" %")+'</span></div>'+(p==null?'<small class="help">Pas encore révisé</small>':'<div class="bar"><i style="width:'+p+'%;background:'+(p>=80?"var(--ok)":p<50?"var(--ko)":"var(--acc)")+'"></i></div><small class="help">'+a.n+' réponse'+(a.n>1?"s":"")+', '+a.m+' erreur'+(a.m>1?"s":"")+solTxt(n)+'</small>')+'</div>'})
  }else{
  const hl=hardList(),nf=hl.filter(x=>x.p.k=="fc").length,nq=hl.length-nf;
  h+='<h2 class="h2">Ce que tu rates souvent</h2>';
  if(!hl.length)h+='<p class="help">Rien pour l\'instant. Une carte ou une question apparaît ici dès que tu l\'as ratée deux fois.</p>';
  else{if(nf||nq)h+='<div class="menu">'+(nf?'<button class="b" data-a="hard" data-v="fc">Réviser ces cartes ('+nf+')</button>':'')+(nq?'<button class="b" data-a="hard" data-v="qcm">Refaire ces QCM ('+nq+')</button>':'')+'</div>';
-  hl.slice(0,12).forEach(({i,p})=>{h+='<button type="button" class="er" data-a="cpv" data-v="'+p.id+'#'+p.items.indexOf(i)+'"><p>'+fmt(lbl(i,p))+'</p><small class="help">Ratée '+i.m+' fois sur '+i.n+', '+esc(p.name)+'</small></button>'});
+  hl.slice(0,12).forEach(({i,p})=>{h+='<button type="button" class="er" data-a="cpv" data-v="'+p.id+'#'+p.items.indexOf(i)+'"><p>'+fmt(lbl(i,p))+'</p><small class="help">Ratée '+mOf(i)+' fois sur '+nOf(i)+', '+esc(p.name)+'</small></button>'});
   if(hl.length>12)h+='<p class="help">Et '+(hl.length-12)+' autre'+(hl.length-12>1?"s":"")+'.</p>'}}
  return h+'<div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Fermer</button></div>'}
 // ---- FSRS-5 (algorithme par défaut d'Anki) ----
@@ -2050,6 +2050,8 @@ function pace(){if(view!="study"||!deck)return;const k=deck.k,now=Date.now(),P=p
 const odMin=()=>{const T=TD(),P=paceGet(),f=P.fc,q=P.qcm;if((T.odf&&!(f&&f[1]>=20))||(T.odq&&!(q&&q[1]>=20)))return null;return Math.max(1,Math.round(((T.odf?T.odf*f[0]:0)+(T.odq?T.odq*q[0]:0))/60))};
 const fmtMin=m=>m<60?m+" min":Math.floor(m/60)+" h"+(m%60?" "+String(m%60).padStart(2,"0"):"");
 // mémorisation réelle : révisions de cartes déjà apprises (état « révision » avant la note), par jour, dans le journal de l'appareil
+/* 23/10/2026 (étape 4) : réponse d'examen : compteurs ev de CET appareil + journal du jour ; aucune écriture de t, w, n, m ni de planification */
+const recE=(i,ok)=>{const e=i.ev&&typeof i.ev=="object"?{...i.ev}:{},c=Array.isArray(e[DEV])?e[DEV]:[0,0];e[DEV]=[(+c[0]||0)+1,(+c[1]||0)+(ok?0:1)];i.ev=e;const L=LG(),d=day();L.h[d]=(L.h[d]||0)+1;L.u=hlc();tc(i)};
 const recR=(i,ok)=>{if(!(i.st==2||(i.st==null&&i.d!=null)))return;const L=LG(),d=day();if(!L.r)L.r={};const a=L.r[d]||[0,0];a[0]++;if(ok)a[1]++;L.r[d]=a;L.u=hlc()};
 // examen en cours : conservé si Safari recharge la page
 const EXK="revis-exam",exGet=()=>{try{return JSON.parse(localStorage.getItem(EXK))}catch(e){return null}},exClr=()=>{try{localStorage.removeItem(EXK)}catch(e){}};
@@ -2069,16 +2071,23 @@ const copyP=(to,from)=>{PF.forEach(f=>{if(from[f]===undefined)delete to[f];else 
 const pairs=(bi,oi)=>{const idx=new Map();(oi||[]).forEach(i=>{const k=ikey(i);if(!idx.has(k))idx.set(k,[]);idx.get(k).push(i)});const used=new Map();
  return bi.map(i=>{const k=ikey(i),arr=idx.get(k);if(!arr)return null;const c=used.get(k)||0;used.set(k,c+1);return arr[c]||null})};
 // base = items du gagnant ; other = items de l'autre version. Renvoie la même liste si rien ne change.
-const mergeItems=(base,other)=>{const P=pairs(base,other);let chg=false,lead=false;
- const res=base.map((i,j)=>{const o=P[j];if(!o)return i;if(better(o,i)){chg=true;const r={...i};copyP(r,o);return r}if(better(i,o))lead=true;return i});
+const evPairs=(bi,oi,P)=>{const used=new Set(P.filter(Boolean)),bk=new Set(bi.map(ikey)),R=P.slice();if(bi.length===(oi||[]).length)R.forEach((o,j)=>{if(!o){const c=oi[j];if(c&&!used.has(c)&&!bk.has(ikey(c)))R[j]=c}});return R};
+const mergeItems=(base,other)=>{const P=pairs(base,other),E=evPairs(base,other,P);let chg=false,lead=false;
+ const res=base.map((i,j)=>{const o=P[j],eo=E[j];let r=i;
+  if(eo&&(eo.ev||i.ev)){const em=evMerge(i.ev,eo.ev);if(!evSame(em,i.ev)){chg=true;r={...r,ev:em}}if(evMore(i.ev,eo.ev))lead=true}
+  if(!o)return r;if(better(o,i)){chg=true;r={...r};copyP(r,o)}else if(better(i,o))lead=true;return r});
  return{items:chg?res:base,chg,lead}};
 const mergeNode=(l,r,remoteWins,kp)=>{
  const w=remoteWins?r:l;
  if(!l.items||!r.items||l.x||r.x||(w.k!="fc"&&w.k!="qcm"))return w;
- if(kp){const P=pairs(l.items,r.items);l.items.forEach((i,j)=>{const o=P[j];if(!o)return;if(better(o,i))copyP(i,o);else if(better(i,o))mDirty=true});return l}
+ if(kp){const P=pairs(l.items,r.items),E=evPairs(l.items,r.items,P);l.items.forEach((i,j)=>{const eo=E[j];if(eo&&(eo.ev||i.ev)){const em=evMerge(i.ev,eo.ev);if(!evSame(em,i.ev))i.ev=em;if(evMore(i.ev,eo.ev))mDirty=true}const o=P[j];if(!o)return;if(better(o,i))copyP(i,o);else if(better(i,o))mDirty=true});return l}
  const m=mergeItems(w.items,remoteWins?l.items:r.items);
  if(remoteWins?m.chg:m.lead)mDirty=true;
  return m.chg?{...w,items:m.items}:w};
+/* 23/10/2026 (étape 4) : compteurs d'examen ev = {appareil:[réponses,erreurs]} sur la carte. Un examen n'écrit QUE là (jamais st/s/df/l/k/d/f, ni t/w/n/m) : il ne peut donc ni modifier FSRS ni remplacer une révision faite ailleurs. Chaque appareil n'écrit que sa propre entrée (croissante) : la fusion prend le maximum par appareil, donc elle converge et ne perd rien, même si une ancienne version a renvoyé la carte sans ev. */
+const evSum=(i,k)=>{let a=0;const e=i&&i.ev;if(e&&typeof e=="object")for(const d in e){const v=e[d];if(Array.isArray(v))a+=+v[k]||0}return a},nOf=i=>(i.n||0)+evSum(i,0),mOf=i=>(i.m||0)+evSum(i,1);
+const evMerge=(a,b)=>{if(!a&&!b)return;const r={...(a||{})};for(const d in(b||{})){const v=b[d];if(Array.isArray(v)&&(!Array.isArray(r[d])||(+v[0]||0)>(+r[d][0]||0)))r[d]=v}return r},evMore=(a,b)=>{for(const d in(a||{})){const v=a[d];if(Array.isArray(v)&&(!b||!Array.isArray(b[d])||(+v[0]||0)>(+b[d][0]||0)))return true}return false};
+const evSame=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const FLG=[["h","hu"],["pn","pu"],["o","ou"]];
 /* 23/10/2026 : les journaux (k:"log") stockent leur historique par jour dans « h » ; ce n'est pas le drapeau « caché » : on les laisse suivre mergeNode (version la plus récente, un seul auteur par journal) */
 const fixHide=(res,l,r)=>{if(res.k=="log"||l.k=="log"||r.k=="log")return res;FLG.forEach(([f,t])=>{const src=(r[t]||0)>(l[t]||0)?r:l;if(src[f]!==undefined)res[f]=src[f];else delete res[f];if(src[t])res[t]=src[t];else delete res[t];if((l[t]||0)>(r[t]||0))mDirty=true});return res};
@@ -2372,6 +2381,7 @@ const A={
   anp=!!(cfg.an&&ok);render();if(anp){const t=++ant,i0=idx,o0=order;setTimeout(()=>{if(t===ant&&anp&&view=="study"&&val&&idx===i0&&order===o0)A.next()},1500)}},
  qskip(){if(view!="study"||!deck||deck.k!="qcm"||val||!order||idx>=order.length)return;anp=false;ant++;idx++;sel={};vprev=null;hesd=false;render()},
  qfx(){A.fx();render()},
+ xfx(v){const it=deck&&deck.items[+v];if(view!="exam"||!ex||!ex.done||!it)return;const own=deck.virt&&deck.own?deck.own.get(it):deck;if(!own||!own.items)return;if(it.fx)delete it.fx;else it.fx=1;own.u=hlc();save();render();flash(it.fx?"Question marquée à corriger":"Retirée de « À corriger »")},
  next(){anp=false;ant++;idx++;sel={};val=false;vprev=null;hesd=false;if(idx>=order.length&&!deck.virt&&order.length==deck.items.length){deck.last=score+"/"+order.length;deck.u=hlc();save()}render()},
  redo(){startQ(wrong.slice())},
  restart(){if(deck&&deck.free)return A.fre();A.st(0,rmode)},
@@ -2389,8 +2399,9 @@ const A={
  xo(i){ex.s[ex.i][i]=!ex.s[ex.i][i];pend=null;render();exSave()},
  xnx(){ex.i++;pend=null;render();scrollTo(0,0);exSave()},
  xpv(){ex.i--;pend=null;render();scrollTo(0,0);exSave()},
- xfin(){if(!ex||ex.done)return;clearInterval(xt);exClr();const now=Date.now();ex.done=true;ex.to=now>=ex.end;ex.dt=Math.min(now,ex.end)-ex.t0;ex.bad=[];ex.sc=0;
-  deck.items.forEach((it,j)=>{const ok=po(it).every((o,i)=>!!ex.s[j][i]===!!o.k);if(ok)ex.sc++;else ex.bad.push(j);rec(it,ok)});save();pend=null;render();scrollTo(0,0)},
+ xfin(){if(!ex||ex.done)return;clearInterval(xt);exClr();const now=Date.now();ex.done=true;ex.to=now>=ex.end;ex.dt=Math.min(now,ex.end)-ex.t0;ex.bad=[];ex.sc=0;ex.inv=[];
+  /* question sans aucune bonne réponse (défaut du contenu) : exclue du score, du dénominateur et de tout comptage ; une question valide laissée vide reste une erreur */
+  deck.items.forEach((it,j)=>{if(qNoKey(it)){ex.inv.push(j);return}const ok=po(it).every((o,i)=>!!ex.s[j][i]===!!o.k);if(ok)ex.sc++;else ex.bad.push(j);recE(it,ok)});save();pend=null;render();scrollTo(0,0)},
  xq(){if(pend=="xq"){clearInterval(xt);exClr();pend=null;view="browse";render()}else{pend="xq";render()}},
  xredo(){view="study";nodue=false;startQ(ex.bad.slice())},
  allg(t){A.all(t,"both")},
@@ -2624,7 +2635,7 @@ function cardHTML(){const n=G(AS.pid),it=n&&!n.x&&n.items?n.items[AS.i]:null;if(
  let b='<p class="cst">'+esc(pth)+'</p><div class="pn cpw"><div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'');
  if(fc)b+='<div class="a">'+fmt(it.a||"")+'</div>'+(it.ai?imgH(it.ai):'');
  else b+='<div>'+(it.o||[]).map((o,j)=>'<div class="cpr"><b>'+"ABCDEFGH"[j]+'</b><span>'+fmt(o.t)+'</span>'+(o.k?'<span class="mkr" aria-hidden="true">✓</span><span class="vh">vraie</span>':'<span class="vh">fausse</span>')+'</div>').join("")+'</div>'+exH(it);
- const st=[it.n?"Vue "+it.n+" fois, ratée "+(it.m||0)+" fois":"Jamais vue"];if(cfg.srs&&it.d!=null)st.push("prochaine révision : "+(it.d<=d0?"aujourd\'hui":it.d==d0+1?"demain":dstr(it.d)));
+ const st=[nOf(it)?"Vue "+nOf(it)+" fois, ratée "+mOf(it)+" fois":"Jamais vue"];if(cfg.srs&&it.d!=null)st.push("prochaine révision : "+(it.d<=d0?"aujourd\'hui":it.d==d0+1?"demain":dstr(it.d)));
  b+='</div><p class="cst">'+st.join(" · ")+'</p><div class="cfb"><button type="button" class="b" data-a="go" data-v="'+n.id+'">Réviser ce paquet</button><button type="button" class="b ok" data-a="cpe" data-v="'+n.id+'#'+AS.i+'">Modifier</button></div>';
  return asShell(fc?"Carte":"Question",b)}
 // ---- réglages : état du stockage local ----
@@ -2867,7 +2878,7 @@ function nxStats(logs,d0,cells,t30,k,today){const pl=(n,a,b)=>n+" "+(n>1?b:a);
  if(statsTab=="rates"){const ks=kids(cur);
   h+='<div class="nxs" role="heading" aria-level="2">'+(cur?'Par dossier, dans « '+esc(G(cur).name)+' »':'Par dossier')+'</div>';
   if(!ks.length)return h+'<p class="help nxsqh">Rien ici pour l\'instant.</p>';
-  h+='<div class="nxsg nxrl">'+ks.map(n=>{const a=packsOf(n).reduce((a,p)=>{p.items.forEach(i=>{a.n+=i.n||0;a.m+=i.m||0});return a},{n:0,m:0}),p=a.n?Math.round((a.n-a.m)/a.n*100):null,cl=p==null?"":p>=80?" g":p<50?" r":"";
+  h+='<div class="nxsg nxrl">'+ks.map(n=>{const a=packsOf(n).reduce((a,p)=>{p.items.forEach(i=>{a.n+=nOf(i);a.m+=mOf(i)});return a},{n:0,m:0}),p=a.n?Math.round((a.n-a.m)/a.n*100):null,cl=p==null?"":p>=80?" g":p<50?" r":"";
    return '<div class="nxrr"><div class="nxrt"><span class="ic">'+ic(n.k=="f"?"f":n.k,18,n.c)+'</span><b>'+esc(n.name)+'</b><span class="nxpc'+cl+'">'+(p==null?"–":p+" %")+'</span></div>'
     +(p==null?'<small>Pas encore révisé</small>':'<div class="nxrb"><i style="width:'+p+'%;background:'+(p>=80?"var(--ok)":p<50?"var(--ko)":"var(--acc)")+'"></i></div><small>'+pl(a.n,"réponse","réponses")+', '+pl(a.m,"erreur","erreurs")+solTxt(n)+'</small>')+'</div>'}).join("")+'</div>';
   if(cfg.srs)h+='<p class="help nxsqh">Solide : retenue pour au moins 3 semaines selon FSRS.</p>'}
@@ -2875,7 +2886,7 @@ function nxStats(logs,d0,cells,t30,k,today){const pl=(n,a,b)=>n+" "+(n>1?b:a);
   h+='<div class="nxs" role="heading" aria-level="2">Ce que tu rates souvent</div>';
   if(!hl.length)h+='<p class="help nxsqh">Rien pour l\'instant. Une carte ou une question apparaît ici dès que tu l\'as ratée deux fois.</p>';
   else{h+='<div class="menu">'+(nf?'<button class="b" data-a="hard" data-v="fc">Réviser ces cartes ('+nf+')</button>':'')+(nq?'<button class="b" data-a="hard" data-v="qcm">Refaire ces QCM ('+nq+')</button>':'')+'</div>';
-   h+='<div class="nxsg nxhl">'+hl.slice(0,12).map(({i,p})=>'<button type="button" class="nxsr nxhr" data-a="cpv" data-v="'+p.id+'#'+p.items.indexOf(i)+'"><span class="nxst"><b>'+fmt(lbl(i,p))+'</b><small>Ratée '+i.m+' fois sur '+i.n+', '+esc(p.name)+'</small></span><span class="nxsc" aria-hidden="true">'+ic("cr",15)+'</span></button>').join("")+'</div>';
+   h+='<div class="nxsg nxhl">'+hl.slice(0,12).map(({i,p})=>'<button type="button" class="nxsr nxhr" data-a="cpv" data-v="'+p.id+'#'+p.items.indexOf(i)+'"><span class="nxst"><b>'+fmt(lbl(i,p))+'</b><small>Ratée '+mOf(i)+' fois sur '+nOf(i)+', '+esc(p.name)+'</small></span><span class="nxsc" aria-hidden="true">'+ic("cr",15)+'</span></button>').join("")+'</div>';
    if(hl.length>12)h+='<p class="help nxsqh">Et '+(hl.length-12)+' autre'+(hl.length-12>1?"s":"")+'.</p>'}}
  return h}
 /* nouvelle apparence : dossier de la carte en haut à gauche (point de couleur + nom), catégorie à droite */
@@ -2973,9 +2984,11 @@ function render0(){
   const n=deck.items.length;
   if(!ex.done){const it=deck.items[ex.i],r=Math.max(0,Math.ceil((ex.end-Date.now())/1000));
    h='<div class="hd"><button class="b sm'+(pend=="xq"?" dg":"")+'" data-a="xq">'+(pend=="xq"?"Abandonner ?":"Arrêter")+'</button><span id="tmr" class="tmr'+(r<=60?" lo":"")+'" role="timer">'+mmss(r)+'</span><span>'+(ex.i+1)+' / '+n+'</span>'+fxH()+delX()+'</div>'+bar(ex.i+1,n)
-    +'<div class="qb">'+(cfg.nx?'<div class="nxqq">':'')+'<div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+'<p class="hint">Coche les propositions vraies.</p>'+(cfg.nx?'</div>':'')+nxOpts(optsH(it,ex.s[ex.i],false,"xo"))+'</div>'
+    +'<div class="qb">'+(cfg.nx?'<div class="nxqq">':'')+'<div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+'<p class="hint">Coche les propositions vraies.</p>'+(qNoKey(it)?'<p class="help qnk" role="status">Cette question n\'a aucune bonne réponse définie : elle sera exclue du score.</p>':'')+(cfg.nx?'</div>':'')+nxOpts(optsH(it,ex.s[ex.i],false,"xo"))+'</div>'
     +'<div class="dock"><button class="b" data-a="xpv"'+(ex.i?"":" disabled")+'>Précédent</button><button class="b ok" data-a="'+(ex.i+1<n?"xnx":"xfin")+'">'+(ex.i+1<n?"Suivant":"Terminer")+'</button></div>'}
-  else{h='<div class="hd"><button class="bk" data-a="back">'+ic("chev",22)+'<span>Retour</span></button><span class="dn">Examen</span>'+tg()+'</div><div class="done"><h1>Score : '+ex.sc+' / '+n+'</h1><p class="help">'+Math.round(ex.sc/n*100)+' % de questions justes, en '+mmss(Math.round(ex.dt/1000))+(ex.to?". Temps écoulé : les questions sans réponse comptent comme fausses.":".")+'</p>'+(ex.bad.length?'<button class="b ok" data-a="xredo">Refaire mes erreurs ('+ex.bad.length+')</button>':'')+'<button class="b" data-a="back">Retour aux paquets</button></div>';
+  else{const nv=n-(ex.inv||[]).length;
+   h='<div class="hd"><button class="bk" data-a="back">'+ic("chev",22)+'<span>Retour</span></button><span class="dn">Examen</span>'+tg()+'</div><div class="done">'+(nv?'<h1>Score : '+ex.sc+' / '+nv+'</h1><p class="help">'+Math.round(ex.sc/nv*100)+' % de questions justes, en '+mmss(Math.round(ex.dt/1000))+(ex.to?". Temps écoulé : les questions sans réponse comptent comme fausses.":".")+'</p>':'<h1>Aucune question notée</h1><p class="help">Toutes les questions de cet examen n\'ont aucune bonne réponse définie.</p>')+(ex.bad.length?'<button class="b ok" data-a="xredo">Refaire mes erreurs ('+ex.bad.length+')</button><p class="help xrn">Révision normale : tes réponses mettent à jour ton planning.</p>':'')+'<button class="b" data-a="back">Retour aux paquets</button></div>';
+   if((ex.inv||[]).length){h+='<h2 class="h2">Questions mal configurées</h2><p class="help">'+((ex.inv.length>1)?ex.inv.length+' questions n\'ont aucune bonne réponse définie : elles sont exclues du score et ne sont pas comptées.':'Une question n\'a aucune bonne réponse définie : elle est exclue du score et n\'est pas comptée.')+'</p>';ex.inv.forEach(j=>{const it=deck.items[j];h+='<div class="qb"><div class="q">'+fmt(it.q)+'</div><button type="button" class="b sm" data-a="xfx" data-v="'+j+'">'+(it.fx?"Retirer de « À corriger »":"Signaler à corriger")+'</button></div>'})}
    if(ex.bad.length){h+='<h2 class="h2">Correction de tes erreurs</h2>';ex.bad.forEach(j=>{const it=deck.items[j];h+='<div class="qb">'+(cfg.nx?'<div class="nxqq">':'')+'<div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+(cfg.nx?'</div>':'')+nxOpts(optsH(it,ex.s[j],true,null))+exH(it)+'</div>'})}}
  }else if(nodue){
   const d0=day(),nx=Math.min(1e9,...deck.items.filter(i=>i.d!=null&&i.d>d0).map(i=>i.d)),dd=nx-d0,lim=deck.items.some(isNew)&&!newLeft(),gol=!lim&&moreAvail(),cuh=cfg.srs&&!rvLeft()&&deck.items.some(i=>isRev(i)&&i.st!=1&&i.st!=3);
@@ -3544,7 +3557,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   var q=nm(sq.trim()),has=q.length>=2;
   if(SF.scope!=="0"&&(!G(SF.scope)||G(SF.scope).x))SF.scope="0";
   var act=SF.due||SF.hard||SF.scope!=="0";
-  var hardN=function(n){return pks(n).some(function(p){return p.items.some(function(i){return(i.m||0)>=2})})},dueN=function(n){return cnN(n).r>0};
+  var hardN=function(n){return pks(n).some(function(p){return p.items.some(function(i){return mOf(i)>=2})})},dueN=function(n){return cnN(n).r>0};
   var F=[],P=[],C=[],Qs=[];
   if(has||act){
    desc(SF.scope==="0"?0:SF.scope).forEach(function(n){
@@ -3552,7 +3565,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
     if((n.k==="fc"||n.k==="qcm")&&n.items&&(has||SF.due||SF.hard)){
      n.items.forEach(function(it){
       if(it.im)return;
-      if(SF.due&&!isRev(it))return;if(SF.hard&&(it.m||0)<2)return;
+      if(SF.due&&!isRev(it))return;if(SF.hard&&mOf(it)<2)return;
       var fields=n.k==="fc"?[["",it.q],["Réponse",it.a]]:[["",it.q]].concat((it.o||[]).map(function(o){return["Proposition",o.t]})).concat([["Explication",it.e]]),snip="";
       if(has){var hit=fields.filter(function(f){return nm(String(f[1]||"")).includes(q)});if(!hit.length)return;if(hit[0][0])snip=hit[0][0]+" : "+cut(hit[0][1],q)}
       (n.k==="fc"?C:Qs).push({p:n,it:it,snip:snip});
