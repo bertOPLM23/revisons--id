@@ -1,7 +1,7 @@
 // Deux (ou trois) appareils synchronisés sur le même code fictif et le même serveur simulé.
 const H = require('./h'), D = require('./data');
 exports.setup = async (o = {}) => {
-  const b = o.browser || await H.launch(), T = H.dayNow(), srv = H.server({ guardGn: !!o.guardGn });
+  const b = o.browser || await H.launch(), T = H.dayNow(), srv = H.server({ guardGn: !!o.guardGn, jsonb: o.jsonb });
   const cfg = { srs: true, nl: 20, nx: true, code: H.CODE, ...(o.cfg || {}) };
   const seed = D.mk(T);
   const mk = (dev, x = {}) => H.device(b, { seed: JSON.parse(JSON.stringify(seed)), cfg, dev, srv, ...x });

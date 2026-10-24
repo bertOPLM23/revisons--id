@@ -28,7 +28,12 @@ function dayNow(tz = 'Europe/Paris', now = Date.now()) {
 
 // serveur simulé : copie fidèle de revis_n_pull / revis_n_push / revis_n_ver (définitions lues le 21/10/2026)
 // opts.guardGn : simule la garde de génération proposée (refus si data.gn < gn stocké) — n'existe pas encore en production
+// opts.jsonb : simule PostgreSQL jsonb, qui réordonne les clés de TOUS les objets (y compris dans les tableaux) : clés courtes d'abord, puis ordre alphabétique ;
+//   sans cette option l'ordre d'écriture est conservé (comportement historique des tests). REV_JSONB=1 active jsonb par défaut pour toute une exécution.
+const jsonbOrder = v => Array.isArray(v) ? v.map(jsonbOrder) : v && typeof v == 'object' ? Object.fromEntries(Object.keys(v).sort((a, b) => a.length - b.length || (a < b ? -1 : a > b ? 1 : 0)).map(k => [k, jsonbOrder(v[k])])) : v;
 function server(opts = {}) {
+  if (opts.jsonb === undefined) opts = { ...opts, jsonb: process.env.REV_JSONB == '1' };
+  const store = n => { const c = JSON.parse(JSON.stringify(n)); return opts.jsonb ? jsonbOrder(c) : c };
   const T = new Map(); let seq = 0; const inject = [];
   const maxRev = () => Math.max(0, ...[...T.values()].map(v => v.rev));
   const srv = { T, log: [], inject, opts,
@@ -39,14 +44,14 @@ function server(opts = {}) {
       if (f == 'revis_n_pull') {
         const nodes = [...T.values()].filter(v => v.rev > (b.p_since || 0)).sort((a, c) => a.rev - c.rev).map(v => JSON.parse(JSON.stringify(v.data)));
         // écho retardé : une ancienne version d'un nœud rejouée dans une réponse
-        while (inject.length) nodes.push(JSON.parse(JSON.stringify(inject.shift())));
+        while (inject.length) nodes.push(store(inject.shift()));
         return ok({ rev: maxRev(), nodes });
       }
       if (f == 'revis_n_push' && srv.failPush > 0) { srv.failPush--; return r.fulfill({ status: 500, body: '{}' }) }   // panne simulée : synchronisation interrompue
       if (f == 'revis_n_push') {
         for (const n of b.p_nodes) {
           const u = +n.u || 0, e = T.get(n.id), gn = +n.gn || 0, eg = e ? (+e.data.gn || 0) : 0;
-          if (!e || (u >= e.u && (!srv.opts.guardGn || gn >= eg))) { T.set(n.id, { data: JSON.parse(JSON.stringify(n)), u, rev: ++seq }); srv.log.push(['put', n.id, u]) }
+          if (!e || (u >= e.u && (!srv.opts.guardGn || gn >= eg))) { T.set(n.id, { data: store(n), u, rev: ++seq }); srv.log.push(['put', n.id, u]) }
           else srv.log.push(['refus', n.id, u, e.u])
         }
         return ok(maxRev());
@@ -107,4 +112,4 @@ function suite(name) {
     known(c, label, extra) { checks.push({ ok: true, known: !c, label, extra }) } };
 }
 
-module.exports = { launch, dayNow, server, device, sync, sync1, syncAll, rate, rateQ, leave, item, pack, fsr, suite, CODE, HTML, oldHtml, ROOT };
+module.exports = { jsonbOrder, launch, dayNow, server, device, sync, sync1, syncAll, rate, rateQ, leave, item, pack, fsr, suite, CODE, HTML, oldHtml, ROOT };

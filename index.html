@@ -2096,7 +2096,7 @@ const mergeNode=(l,r,remoteWins,kp)=>{
 /* 23/10/2026 (étape 4) : compteurs d'examen ev = {appareil:[réponses,erreurs]} sur la carte. Un examen n'écrit QUE là (jamais st/s/df/l/k/d/f, ni t/w/n/m) : il ne peut donc ni modifier FSRS ni remplacer une révision faite ailleurs. Chaque appareil n'écrit que sa propre entrée (croissante) : la fusion prend le maximum par appareil, donc elle converge et ne perd rien, même si une ancienne version a renvoyé la carte sans ev. */
 const evSum=(i,k)=>{let a=0;const e=i&&i.ev;if(e&&typeof e=="object")for(const d in e){const v=e[d];if(Array.isArray(v))a+=+v[k]||0}return a},nOf=i=>(i.n||0)+evSum(i,0),mOf=i=>(i.m||0)+evSum(i,1);
 const evMerge=(a,b)=>{if(!a&&!b)return;const r={...(a||{})};for(const d in(b||{})){const v=b[d];if(Array.isArray(v)&&(!Array.isArray(r[d])||(+v[0]||0)>(+r[d][0]||0)))r[d]=v}return r},evMore=(a,b)=>{for(const d in(a||{})){const v=a[d];if(Array.isArray(v)&&(!b||!Array.isArray(b[d])||(+v[0]||0)>(+b[d][0]||0)))return true}return false};
-const evSame=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+const evSame=(a,b)=>cj(a)===cj(b);
 /* ===== 23/10/2026 (A2) : générations de nœud (remise à zéro, restauration, annulation par instantané) =====
    gn = horodatage hlc de l'opération, gw = appareil auteur, gc = « le contenu fait foi » (restauration). Comparaison (gn, gw) : ordre total, donc même gagnant sur tous les appareils quel que soit l'ordre d'arrivée.
    La génération la plus élevée gagne le nœud ; pour un paquet, progression et ev viennent de ses cartes (appariées prudemment), jamais de l'ancienne génération. Les cartes remises à zéro / restaurées portent t=gn et w=auteur : une ancienne version, qui ne connaît pas gn, les respecte aussi (better() : t le plus récent). */
@@ -2111,14 +2111,18 @@ const wipeProg=i=>{PF.forEach(f=>delete i[f]);delete i.ev},takeProg=(i,e)=>{PF.f
    les deux différemment -> conflit : suppression d'un côté + modification de l'autre = la suppression l'emporte (aucune progression supprimée ne ressuscite) ; deux modifications = la version du paquet le plus récent (u) ; la version écartée est mise dans la copie de récupération (REC, « conflit-contenu »).
    Le contenu = tout sauf la progression (PF) et ev ; la progression de chaque carte continue de suivre better() (la révision la plus récente), y compris pour une carte dont le texte a été corrigé ailleurs (appariement de secours par rang + signature, evPairs).
    Pas de base (paquet jamais synchronisé, ancienne version) : ancienne logique inchangée. Paquet ouvert en séance (kp) : seuls les ajouts purs sont adoptés sur place ; tout autre changement distant (modification, suppression) est différé (PENDG) jusqu'à la fin de la séance. */
+/* 24/10/2026 (B1) : forme canonique JSON indépendante de l'ordre des clés, à TOUS les niveaux (objets dans des objets et dans des tableaux). PostgreSQL jsonb réordonne les clés (courtes d'abord, puis alphabétique) : une carte {q,a} revient {a,q}, une proposition {t,k} revient {k,t}. L'ordre des TABLEAUX est conservé (il est significatif). Comme JSON.stringify : clé non définie ignorée, undefined dans un tableau = null. Pour un objet plat de chaînes / nombres, le résultat est identique à JSON.stringify d'un objet aux clés triées (empreintes historiques des flashcards inchangées). canon() (réglages) n'est pas modifiée : elle ne gère pas les tableaux. */
+const cj=v=>Array.isArray(v)?"["+v.map(x=>cj(x===undefined?null:x)).join(",")+"]":v&&typeof v=="object"?"{"+Object.keys(v).sort().filter(k=>v[k]!==undefined).map(k=>JSON.stringify(k)+":"+cj(v[k])).join(",")+"}":JSON.stringify(v===undefined?null:v);
+/* BHV = version du format des empreintes de S.baseH : une base d'un autre format est ignorée puis reconstruite (aucune migration silencieuse) */
+const BHV=2;
 const cobj=i=>{const o={};Object.keys(i).sort().forEach(k=>{if(PF.indexOf(k)<0&&k!="ev")o[k]=i[k]});return o};
-const chash=i=>recHash(JSON.stringify(cobj(i)));
+const chash=i=>recHash(cj(cobj(i)));
 const chs=a=>a.map(chash).sort(),sameH=(a,b)=>a.length===b.length&&a.every((x,j)=>x===b[j]);
 const bmap=items=>{const m={};grp(items).forEach((a,k)=>{m["k"+k]=chs(a)});return m};
 let CSV=null;
 function cPlan(l,r,rw){
  if(!V2||!l||!r||!isPack(l)||!isPack(r)||!l.items||!r.items||l.x||r.x)return null;
- const bs=(S.baseH||{})[l.id];if(!bs)return null;
+ if(S.baseHv!==BHV)return null;const bs=(S.baseH||{})[l.id];if(!bs)return null;
  if(CSV&&CSV[l.id]!=null&&vers(r)<CSV[l.id])return null; /* version distante plus ancienne que celle déjà connue du serveur (écho tardif) : ce n'est pas une suppression, on garde l'ancienne règle (la locale l'emporte) */
  const gl=grp(l.items),gr=grp(r.items),dec=new Map(),mm=new Map(),add=new Set(),drop=[];let pend=false;
  const cnt=a=>{const m={};a.forEach(x=>m[x]=(m[x]||0)+1);return m},dr=(c,ex)=>c.filter(x=>ex.indexOf(chash(x))<0);
@@ -2148,9 +2152,9 @@ function cBuild(l,r,pl,rw,np){
  W.forEach(c=>{const k=ikey(c);if(pl.dec.get(k)==own){out.push(fin(c,own));return}if(done.has(k))return;done.add(k);out.push(...res(k))});
  O.forEach(c=>{const k=ikey(c);if(wk.has(k)||done.has(k))return;done.add(k);out.push(...res(k))});
  return out}
-const cMergeNode=(l,r,rw)=>{const pl=cPlan(l,r,rw);if(!pl)return null;const it=cBuild(l,r,pl,rw),js=canon(it),w=rw?r:l;
- if(js!==canon(r.items))mDirty=true;
- return js===canon(w.items)?w:{...w,items:it}};
+const cMergeNode=(l,r,rw)=>{const pl=cPlan(l,r,rw);if(!pl)return null;const it=cBuild(l,r,pl,rw),js=cj(it),w=rw?r:l;
+ if(js!==cj(r.items))mDirty=true;
+ return js===cj(w.items)?w:{...w,items:it}};
 /* paquet ouvert en séance : adopte sur place les cartes ajoutées ailleurs (à la fin, les index de séance restent valides) */
 const cAdopt=(l,r,pl,wipe)=>{if(!pl.add.size)return;r.items.forEach(c=>{if(pl.add.has(ikey(c))){const x=cp(c);if(wipe)wipeProg(x);l.items.push(x)}})};
 /* copie de récupération des cartes que la fusion va écarter (conflit) : faite AVANT la fusion */
@@ -2162,8 +2166,8 @@ function genMerge(l,r,sg,kp){const E=sg>0?l:r,O=sg>0?r:l;let res;
  if(kp&&E===r){ /* paquet ouvert en séance : on ne remplace ni le contenu ni les index ; adoption différée si le contenu change */
   if(whole||E.gc){PENDG.add(l.id);return l}
   const pl=cPlan(l,E,false);if(pl){if(pl.pend){PENDG.add(l.id);return l}cAdopt(l,E,pl,false)}
-  const P=safePairs(l.items,E.items);l.items.forEach((i,j)=>{const e=P[j];if(e)takeProg(i,e);else wipeProg(i)});l.gn=E.gn;l.gw=E.gw;delete l.gc;if(canon(l)!==canon(r))mDirty=true;return l}
- if(kp&&E===l&&!whole&&!E.gc){const pl=cPlan(l,O,false);if(pl){if(pl.pend){PENDG.add(l.id);return l}cAdopt(l,O,pl,true);if(canon(l)!==canon(r))mDirty=true;return l}}
+  const P=safePairs(l.items,E.items);l.items.forEach((i,j)=>{const e=P[j];if(e)takeProg(i,e);else wipeProg(i)});l.gn=E.gn;l.gw=E.gw;delete l.gc;if(cj(l)!==cj(r))mDirty=true;return l}
+ if(kp&&E===l&&!whole&&!E.gc){const pl=cPlan(l,O,false);if(pl){if(pl.pend){PENDG.add(l.id);return l}cAdopt(l,O,pl,true);if(cj(l)!==cj(r))mDirty=true;return l}}
  if(whole)res=E;
  else{const rw=(r.u||0)>(l.u||0),pl=E.gc?null:cPlan(l,r,rw);
   if(pl){const M=cBuild(l,r,pl,rw,true),own=new Set(E.items),P=safePairs(M,E.items);res={...(rw?r:l),gn:E.gn,gw:E.gw};delete res.gc;
@@ -2171,7 +2175,7 @@ function genMerge(l,r,sg,kp){const E=sg>0?l:r,O=sg>0?r:l;let res;
   else{const src=E.gc?E:(rw?r:l);
   if(src===E)res=E;
   else{const P=safePairs(src.items,E.items);res={...src,gn:E.gn,gw:E.gw};delete res.gc;res.items=src.items.map((i,j)=>{const c={...i},e=P[j];if(e)takeProg(c,e);else wipeProg(c);return c})}}}
- if(res!==r&&canon(res)!==canon(r))mDirty=true;return res}
+ if(res!==r&&cj(res)!==cj(r))mDirty=true;return res}
 
 /* ===== copie de récupération locale : jamais synchronisée, jamais réinjectée automatiquement =====
    IndexedDB (clé R de revis-data) + miroir localStorage ; {v,list} : la copie la plus récente fait foi. Déduplication par clé (nature + empreinte du contenu) ; plafond 300 entrées / 6 Mo :
@@ -2196,11 +2200,11 @@ const recCand=(l,r)=>{const gr=grp(r.x?[]:r.items||[]),bs=(S.base||{})[l.id],out
 /* S.base : par paquet, nombre de cartes par texte de question tel qu'il était à la dernière synchronisation entièrement réussie ; sert seulement à repérer ce qui a été ajouté depuis (jamais d'identité de carte) */
 /* instantané des empreintes de contenu pris juste APRÈS la fusion (avant tout await) : une modification faite pendant l'envoi ne doit pas entrer dans la base sans être partie */
 function baseSnap(){const m=new Map();S.nodes.forEach(n=>{if(isPack(n)&&!n.x&&n.items&&!PENDG.has(n.id))m.set(n.id,bmap(n.items))});return m}
-function baseUp(sn){const B=S.base||(S.base={}),BH=S.baseH||(S.baseH={});let ch=false;const ids=new Set();
- if(sn)sn.forEach((m,id)=>{if(JSON.stringify(m)!==JSON.stringify(BH[id])){BH[id]=m;ch=true}});
+function baseUp(sn){const B=S.base||(S.base={});let ch=false;if(S.baseHv!==BHV){S.baseH={};S.baseHv=BHV;ch=true}const BH=S.baseH||(S.baseH={});const ids=new Set();
+ if(sn)sn.forEach((m,id)=>{if(cj(m)!==cj(BH[id])){BH[id]=m;ch=true}});
  S.nodes.forEach(n=>{if(isPack(n)&&!n.items&&BH[n.id]){delete BH[n.id];ch=true}});
  S.nodes.forEach(n=>{if(!isPack(n))return;ids.add(n.id);if(n.x||!n.items||PENDG.has(n.id)){if(!n.items&&B[n.id]){delete B[n.id];ch=true}return}
-  const m={};n.items.forEach(i=>{const k=ikey(i);m[k]=(m[k]||0)+1});if(JSON.stringify(m)!==JSON.stringify(B[n.id])){B[n.id]=m;ch=true}});
+  const m={};n.items.forEach(i=>{const k=ikey(i);m[k]=(m[k]||0)+1});if(cj(m)!==cj(B[n.id])){B[n.id]=m;ch=true}});
  Object.keys(B).forEach(id=>{if(!ids.has(id)){delete B[id];ch=true}});Object.keys(BH).forEach(id=>{if(!ids.has(id)){delete BH[id];ch=true}});if(ch)persist()}
 const FLG=[["h","hu"],["pn","pu"],["o","ou"]];
 /* 23/10/2026 : les journaux (k:"log") stockent leur historique par jour dans « h » ; ce n'est pas le drapeau « caché » : on les laisse suivre mergeNode (version la plus récente, un seul auteur par journal) */
