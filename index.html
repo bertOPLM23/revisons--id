@@ -131,7 +131,7 @@ html[data-ipad="1"] .qb{padding:26px}
 .eb{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .ei{display:flex;gap:8px;align-items:center}
 .th{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
-textarea.ext{min-height:72px;font-size:15px}
+textarea.ext{min-height:72px;font-size:16px}
 .pn{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
 .hm{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:3px}
 .hm i,.lgs i{display:block;aspect-ratio:1;border-radius:3px;background:color-mix(in srgb,var(--ink) 7%,var(--card))}
@@ -1638,7 +1638,8 @@ IC.flame='<path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.4 2.6-5.3 3.5-8.3.6 1.5 1.5
 IC.cal='<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>';
 let cfg={srs:true,ipad:true,nl:20,hc:0,rt:.9,vw:"list"};try{Object.assign(cfg,JSON.parse(localStorage.getItem("revis-cfg")))}catch(e){}cfg.nx=true;
 const saveCfg=()=>{try{localStorage.setItem("revis-cfg",JSON.stringify(cfg))}catch(e){}try{setPush()}catch(e){}};
-const INT=[1,3,7,14,30],day=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5),isDue=i=>i.d==null||i.d<=day(),ms=new Set();
+/* 23/10/2026 (A6) : la journée de révision commence à 4 h, heure locale (DSH = 4 h) ; un numéro de jour = la date du calendrier où elle a commencé */
+let RDAY=0;const INT=[1,3,7,14,30],DSH=144e5,day=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4-DSH)/864e5),isDue=i=>i.d==null||i.d<=day(),ms=new Set();
 const sched=(i,ok)=>{if(i.d==null)bumpNew();if(ok){i.b=(i.b||0)+1;i.d=day()+INT[Math.min(i.b,INT.length)-1]}else{i.b=0;i.d=day()}};
 const isNew=i=>i.d==null,isRev=i=>i.d!=null&&i.d<=day();
 // limite globale : comptée sur les données synchronisées (i.f = jour de première vue), donc commune à tous les appareils
@@ -1663,7 +1664,7 @@ const bkCard=()=>{const d=bkDue();if(!d||!S.nodes.some(n=>!n.x&&(n.k=="fc"||n.k=
  return '<div class="pn bkp"><small class="lbl">SAUVEGARDE</small><b>'+(d.never?"Aucune sauvegarde exportée pour l\'instant":"Dernière sauvegarde il y a "+d.days+" jour"+(d.days>1?"s":""))+'</b><small class="help">Le fichier JSON te protège si ton navigateur ou ta synchro a un souci.</small><div class="menu"><button data-a="exp">Exporter</button><button data-a="bks">Plus tard</button></div></div>'};
 // ---- paquets / dossiers cachés : ignorés par « Réviser tout » et le mode examen, mais toujours visibles et révisables ----
 // ===== gestion des dossiers et paquets : annulation, corbeille, tri, épingles, dupliquer, réinitialiser, fusionner =====
-const TR_MS=30*864e5,PFX=["st","s","df","l","k","d","b","n","m","t","f"],isPack=n=>!!n&&(n.k=="fc"||n.k=="qcm"),cp=o=>JSON.parse(JSON.stringify(o));
+const TR_MS=30*864e5,PFX=["st","s","df","l","k","d","b","n","m","t","f","w"],isPack=n=>!!n&&(n.k=="fc"||n.k=="qcm"),cp=o=>JSON.parse(JSON.stringify(o));
 let U=null,AS=null,CF=null,PV=null;
 const snapF=(ns,fs)=>ns.map(n=>({id:n.id,v:fs.map(f=>[f,f in n,n[f]])}));
 const undoP=(snap,msg,bu,bump)=>{U={k:"p",snap,bu,bump:bump||[],t:Date.now()};flash(msg,1)};
@@ -1672,27 +1673,27 @@ const undoB=(b,msg)=>{U={k:"b",b,t:Date.now()};flash(msg,1)};
 const undoX=(ids,msg)=>{U={k:"x",ids,t:Date.now()};flash(msg,1)};
 const trashed=n=>!!(n.x&&n.xt&&!n.xp&&Date.now()-n.xt<TR_MS);
 const tdesc=(id,b)=>S.nodes.filter(n=>n.p==id&&n.x&&n.xb==b).flatMap(n=>[n,...tdesc(n.id,b)]);
-function restoreNodes(ns){const now=Date.now();ns.forEach(n=>{delete n.x;delete n.xt;delete n.xb;if(n.xr){delete n.xr;if(n.p&&(!G(n.p)||G(n.p).x))n.p=0}n.u=now})}
+function restoreNodes(ns){const now=hlc();ns.forEach(n=>{delete n.x;delete n.xt;delete n.xb;if(n.xr){delete n.xr;if(n.p&&(!G(n.p)||G(n.p).x))n.p=0}n.u=now})}
 function trashRestore(b){restoreNodes(S.nodes.filter(n=>n.xb==b&&n.x));gc()}
 function trashRestoreOne(id){const n=G(id);if(!n)return;restoreNodes([n,...tdesc(id,n.xb)]);gc()}
-function purgeNodes(ns){const now=Date.now();ns.forEach(n=>{delete n.items;n.x=1;n.xp=1;n.xt=n.xt||now;n.u=now});gc()}
+function purgeNodes(ns){const now=hlc();ns.forEach(n=>{delete n.items;n.x=1;n.xp=1;n.xt=n.xt||now;n.u=now});gc()}
 function purgeId(id){const n=G(id);if(n)purgeNodes([n,...tdesc(id,n.xb)])}
 function trashSweep(){let ch=false;S.nodes.forEach(n=>{if(n.x&&!n.xp&&n.xt&&Date.now()-n.xt>=TR_MS){delete n.items;n.xp=1;ch=true}});if(ch){gc();persist()}}
 const trashRoots=()=>S.nodes.filter(n=>n.x&&n.xr&&trashed(n)&&(n.k=="f"||isPack(n))).sort((a,b)=>b.xt-a.xt);
-function undoRun(){const u=U;U=null;if(!u||Date.now()-u.t>8000)return false;const now=Date.now();
+function undoRun(){const u=U;U=null;if(!u||Date.now()-u.t>8000)return false;const now=hlc();
  if(u.k=="p"){u.snap.forEach(s=>{const n=G(s.id);if(!n)return;s.v.forEach(([f,had,val])=>{if(had)n[f]=val;else delete n[f]});if(u.bu)n.u=now;u.bump.forEach(t=>{n[t]=now})})}
- else if(u.k=="s"){u.nodes.forEach(o=>{const c={...cp(o),u:now},i=S.nodes.findIndex(n=>n.id==c.id);if(i>=0)S.nodes[i]=c;else S.nodes.push(c)})}
+ else if(u.k=="s"){u.nodes.forEach(o=>{const c={...cp(o),u:now};if(c.k!="log"){c.gn=now;c.gw=DEV;delete c.gc;if(isPack(c)&&c.items)c.items=c.items.map(x=>({...x,t:now,w:DEV}))}const i=S.nodes.findIndex(n=>n.id==c.id);if(i>=0)S.nodes[i]=c;else S.nodes.push(c)})}
  else if(u.k=="b")trashRestore(u.b);
  else if(u.k=="x")u.ids.forEach(purgeId);
  save();return true}
 // ---- indicateurs « caché » / « épinglé » : horodatage propre, fusionné séparément à la synchro ----
-const flagSet=(ns,f,t,val,msg)=>{const snap=snapF(ns,[f,t]),now=Date.now();ns.forEach(n=>{if(val)n[f]=1;else delete n[f];n[t]=now});save();render();undoP(snap,msg,false,[t])};
+const flagSet=(ns,f,t,val,msg)=>{const snap=snapF(ns,[f,t]),now=hlc();ns.forEach(n=>{if(val)n[f]=1;else delete n[f];n[t]=now});save();render();undoP(snap,msg,false,[t])};
 const pinI=z=>'<span class="pinI" title="Épinglé" aria-label="Épinglé">'+ic("pin",z||14)+'</span>';
 // ---- tri ----
 const sortMode=()=>{const m=cfg.so;return m=="recent"||m=="due"||m=="manual"||m=="created"?m:"name"};
 // date de création : lue dans l'identifiant (uid() commence par Date.now() en base 36), 0 si inconnue (données de démonstration)
 const crAt=n=>{if(!n)return 0;if(n.cr)return n.cr;const m=/^([0-9a-z]{7,9})[0-9a-z]{5}$/.exec(String(n.id));if(!m)return 0;const t=parseInt(m[1],36);return t>1577836800000&&t<Date.now()+864e5?t:0};
-const lastDay=n=>{let m=-1;packsOf(n).forEach(p=>(p.items||[]).forEach(i=>{const d=i.l!=null?i.l:(i.t?Math.floor((i.t-new Date().getTimezoneOffset()*6e4)/864e5):-1);if(d>m)m=d}));return m};
+const lastDay=n=>{let m=-1;packsOf(n).forEach(p=>(p.items||[]).forEach(i=>{const d=i.l!=null?i.l:(i.t&&i.d!=null?Math.floor((i.t-new Date().getTimezoneOffset()*6e4-DSH)/864e5):-1);if(d>m)m=d}));return m};
 const dueOf=n=>{const c=cnN(n);return c.r*1000+Math.min(c.w,newLeft())};
 const kidsS=p=>{const a=kids(p),m=sortMode();if(m=="name")return a;
  const srt=l=>{const ix=l.map((n,i)=>[n,i]);
@@ -1700,7 +1701,7 @@ const kidsS=p=>{const a=kids(p),m=sortMode();if(m=="name")return a;
   const key=m=="recent"?lastDay:m=="created"?crAt:dueOf,k=new Map(l.map(n=>[n.id,key(n)]));
   return ix.sort((x,y)=>(k.get(y[0].id)-k.get(x[0].id))||x[1]-y[1]).map(x=>x[0])};
  return[...srt(a.filter(n=>n.k=="f")),...srt(a.filter(n=>n.k!="f"))]};
-function applyOrder(l,msg){const snap=snapF(l,["o","ou"]),now=Date.now();let ch=false;l.forEach((x,i)=>{const v=(i+1)*10;if(x.o!==v){x.o=v;x.ou=now;ch=true}});if(!ch)return;save();render();undoP(snap,msg,false,["ou"])}
+function applyOrder(l,msg){const snap=snapF(l,["o","ou"]),now=hlc();let ch=false;l.forEach((x,i)=>{const v=(i+1)*10;if(x.o!==v){x.o=v;x.ou=now;ch=true}});if(!ch)return;save();render();undoP(snap,msg,false,["ou"])}
 const grpOf=n=>kidsS(n.p).filter(x=>(x.k=="f")==(n.k=="f"));
 function moveStep(id,d){const n=G(id);if(!n)return;const g=grpOf(n),i=g.findIndex(x=>x.id==id),j=i+d;if(i<0||j<0||j>=g.length)return;const l=g.slice();[l[i],l[j]]=[l[j],l[i]];applyOrder(l,d<0?"Déplacé vers le haut":"Déplacé vers le bas")}
 function reorderTo(id,refId,pos){const n=G(id),ref=G(refId);if(!n||!ref||n.p!=ref.p||(n.k=="f")!=(ref.k=="f"))return;
@@ -1710,7 +1711,7 @@ const setDens=()=>{document.documentElement.dataset.dens=cfg.cp?"1":"0"};
 function infoHTML(n){const ps=packsOf(n),its=ps.flatMap(p=>p.items||[]),d0=day(),pl=(k,a,b)=>k+" "+(k>1?b:a),
  nf=ps.filter(p=>p.k=="fc").reduce((a,p)=>a+p.items.length,0),nq=ps.filter(p=>p.k=="qcm").reduce((a,p)=>a+p.items.length,0),
  c=cn(ps),w=Math.min(c.w,newLeft());let ans=0,mis=0,hard=0,next=1e9,last=-1;
- its.forEach(i=>{ans+=i.n||0;mis+=i.m||0;if((i.m||0)>=2)hard++;if(i.d!=null&&i.d>d0&&i.d<next)next=i.d;if(i.l!=null&&i.l>last)last=i.l});
+ its.forEach(i=>{ans+=nOf(i);mis+=mOf(i);if(mOf(i)>=2)hard++;if(i.d!=null&&i.d>d0&&i.d<next)next=i.d;if(i.l!=null&&i.l>last)last=i.l});
  const row=(a,b)=>'<div class="inf"><span>'+a+'</span><b>'+b+'</b></div>';
  let h=row("Contenu",([nf?pl(nf,"carte","cartes"):"",nq?pl(nq,"question","questions"):""].filter(Boolean).join(", ")||"vide")+(n.k=="f"?" dans "+pl(ps.length,"paquet","paquets"):""));
  const ct=crAt(n);if(ct)h+=row("Créé le",new Date(ct).toLocaleDateString("fr",{day:"numeric",month:"long",year:"numeric"})+" à "+new Date(ct).toLocaleTimeString("fr",{hour:"2-digit",minute:"2-digit"}));
@@ -1771,10 +1772,11 @@ function asRender(){let el=document.getElementById("asd");
  if(AS&&AS.k=="nxp"&&el._h){const a=document.activeElement;if(el._h===html||(a&&el.contains(a)&&/^(INPUT|TEXTAREA)$/.test(a.tagName))){document.documentElement.classList.add("sho");return}}
  el.innerHTML=html;el._h=html;document.documentElement.classList.add("sho")}
 function dupNodes(ids){const ns=ids.map(G).filter(isPack).filter(n=>!n.x);if(!ns.length)return;const made=[];
- ns.forEach(n=>{const c=cp(n);c.id=uid();c.name=n.name+" (copie)";["h","hu","pn","pu","o","ou","last","x","xt","xb","xr","xp"].forEach(f=>delete c[f]);(c.items||[]).forEach(i=>PFX.forEach(f=>delete i[f]));c.u=Date.now();S.nodes.push(c);made.push(c.id)});
+ ns.forEach(n=>{const c=cp(n);c.id=uid();c.name=n.name+" (copie)";["h","hu","pn","pu","o","ou","last","x","xt","xb","xr","xp"].forEach(f=>delete c[f]);(c.items||[]).forEach(i=>PFX.forEach(f=>delete i[f]));c.u=hlc();S.nodes.push(c);made.push(c.id)});
  save();render();undoX(made,made.length>1?made.length+" paquets dupliqués (progression remise à zéro)":"Paquet dupliqué (progression remise à zéro)")}
 function askReset(ids){const ns=ids.map(G).filter(n=>n&&!n.x);if(!ns.length)return;const ps=[...new Set(ns.flatMap(packsOf))].filter(p=>p.items),cnt=ps.reduce((a,p)=>a+p.items.length,0),name=ns.length==1?"« "+ns[0].name+" »":ns.length+" éléments";
- CF=()=>{const snap=ps.map(cp),now=Date.now();ps.forEach(p=>{p.items.forEach(i=>PFX.forEach(f=>delete i[f]));delete p.last;p.u=now});selm=false;selset.clear();save();render();undoS(snap,"Progression remise à zéro")};
+ CF=async()=>{if(!(await recSave([recEntry("avant-remise-a-zero",ps.map(p=>recPack(p)),"État des paquets avant la remise à zéro")]))){flash("Remise à zéro bloquée. "+recMsg);return}
+  const snap=ps.map(cp),now=hlc();ps.forEach(p=>{p.items.forEach(i=>{PFX.forEach(f=>delete i[f]);delete i.ev;i.t=now;i.w=DEV});delete p.last;p.gn=now;p.gw=DEV;delete p.gc;p.u=now});selm=false;selset.clear();save();render();undoS(snap,"Progression remise à zéro")};
  AS={k:"conf",title:"Remettre à zéro ?",text:"La progression de "+cnt+(cnt>1?" cartes ou questions":" carte ou question")+" de "+name+" sera effacée (calendrier de révision et taux de réussite). Le contenu reste intact.",ok:"Réinitialiser",danger:1};asRender()}
 // « Déjà révisé » (cours appris ou révisé hors de l'app) : les cartes jamais vues entrent directement en répétition espacée
 // (stabilité FSRS de « Bien », prochaine révision après l'intervalle correspondant) ; celles à revoir aujourd'hui sont notées « Bien ».
@@ -1785,10 +1787,10 @@ function askKnown(ids){const ns=ids.map(G).filter(n=>n&&!n.x);if(!ns.length)retu
  if(!nw.length&&!du.length){flash("Rien à marquer dans "+name+" : aucune carte jamais vue ni à revoir aujourd\'hui");return}
  const cnt=(l,a1,a2)=>{const f=l.filter(x=>x[0].k=="fc").length,q=l.length-f;return[f?pl(f,"carte "+a1,"cartes "+a2):"",q?pl(q,"question "+a1,"questions "+a2):""].filter(Boolean).join(" et ")},
   st=FW[2],iv=fI(st),
-  grad=(i,sv,t,now)=>{i.st=2;i.s=+sv.toFixed(4);i.df=+(i.df||fD0(3)).toFixed(3);i.l=t;i.d=t+fz(fI(sv));i.t=now;delete i.k;delete i.b};
- CF=()=>{const snap=ps.map(cp),now=Date.now(),t=day(),tp=new Set();
+  grad=(i,sv,t,now)=>{i.st=2;i.s=+sv.toFixed(4);i.df=+(i.df||fD0(3)).toFixed(3);i.l=t;i.d=t+fz(fI(sv));i.t=now;i.w=DEV;delete i.k;delete i.b};
+ CF=()=>{const snap=ps.map(cp),now=hlc(),t=day(),tp=new Set();
   nw.forEach(([p,i])=>{grad(i,st,t,now);tp.add(p)});
-  du.forEach(([p,i])=>{fsInit(i);if(i.st==2){applyP(i,opts(i)[2]);i.t=now}else grad(i,Math.max(i.s||0,st),t,now);tp.add(p)});
+  du.forEach(([p,i])=>{fsInit(i);if(i.st==2){applyP(i,opts(i)[2]);i.t=now;i.w=DEV}else grad(i,Math.max(i.s||0,st),t,now);tp.add(p)});
   tp.forEach(p=>{p.u=now});selm=false;selset.clear();TDv++;save();render();const all=nw.concat(du),nq=all.filter(x=>x[0].k=="qcm").length,nt=all.length;undoS(snap,nq==nt?pl(nt,"question marquée comme révisée","questions marquées comme révisées"):nq?nt+" cartes et questions marquées comme révisées":pl(nt,"carte marquée comme révisée","cartes marquées comme révisées"))};
  const tx=[];
  if(nw.length)tx.push(cnt(nw,"jamais vue","jamais vues")+" : "+(nw.length>1?"elles passent":"elle passe")+" directement en répétition espacée, comme si tu "+(nw.length>1?"les avais réussies":"l\'avais réussie")+" (première révision dans "+pl(iv,"jour","jours")+" environ).");
@@ -1798,7 +1800,7 @@ const ikey2=i=>String(i.q||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").t
 function askMerge(){const ns=[...selset].map(G).filter(n=>n&&!n.x&&isPack(n));if(ns.length<2||!ns.every(n=>n.k==ns[0].k))return;const t=ns[0],o=ns.slice(1);
  CF=()=>{const snap=ns.map(cp),seen=new Set(t.items.map(ikey2));let add=0,dup=0;
   o.forEach(p=>p.items.forEach(i=>{const k=ikey2(i);if(seen.has(k)){dup++;return}seen.add(k);t.items.push(cp(i));add++}));
-  t.u=Date.now();killIds(o.map(p=>p.id));selm=false;selset.clear();render();
+  t.u=hlc();killIds(o.map(p=>p.id));selm=false;selset.clear();render();
   undoS(snap,add+(t.k=="fc"?(add>1?" cartes ajoutées":" carte ajoutée"):(add>1?" questions ajoutées":" question ajoutée"))+" à « "+t.name+" »"+(dup?", "+dup+(dup>1?" doublons ignorés":" doublon ignoré"):""))};
  AS={k:"conf",title:"Fusionner "+ns.length+" paquets ?",text:"Le contenu de « "+o.map(p=>p.name).join(" », « ")+" » sera ajouté à « "+t.name+" » (les questions en double sont ignorées). Les autres paquets iront à la corbeille.",ok:"Fusionner"};asRender()}
 function trashHTML(){const rs=trashRoots(),now=Date.now(),pl=(k,a,b)=>k+" "+(k>1?b:a);
@@ -1860,6 +1862,13 @@ function seedS(){let o=null;try{o=JSON.parse(localStorage.getItem("revis-v1"))}c
   {id:4,p:2,k:"qcm",name:"QCM",items:Q.map(([q,o])=>({q,o:o.map(([t,k])=>({t,k}))}))}];
  return s}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7),nid=v=>v=="0"?0:v;
+/* 21/10/2026 (étape 2) : horloge hybride (HLC) pour toutes les versions (u des nœuds, t des cartes, hu/pu/ou des drapeaux).
+   hlc() = max(heure locale, dernière valeur + 1) : jamais en arrière, même si l'horloge système recule ; hlcSee(v) intègre toute version vue
+   (données locales au démarrage, nœuds reçus à la synchro), donc une écriture locale est toujours postérieure à ce qu'on a observé. */
+let HLCv=0;const hlc=()=>{const n=Date.now();HLCv=n>HLCv?n:HLCv+1;return HLCv},hlcSee=v=>{v=+v||0;if(v>HLCv&&v<9e15)HLCv=v};
+/* 23/10/2026 (D4) : version d'un nœud pour l'envoi = la plus grande de u (contenu) et des horodatages de drapeaux hu/pu/ou ; un drapeau modifié seul (flagSet, applyOrder) ne change pas u mais doit être envoyé. Le u envoyé au serveur reste celui du contenu (le serveur compare u : inchangé, accepté). */
+const vers=n=>Math.max(n.u||0,n.hu||0,n.pu||0,n.ou||0);
+const hlcNode=n=>{if(!n)return;hlcSee(n.u);hlcSee(n.gn);hlcSee(n.hu);hlcSee(n.pu);hlcSee(n.ou);if(n.items)n.items.forEach(i=>hlcSee(i&&i.t))};
 // anciens identifiants numériques → identifiants texte ; gid = identité de ce jeu de données (la synchro repart de zéro s'il change)
 function normS(s){if(s.nodes.some(n=>typeof n.id=="number")){const m={0:0};s.nodes.forEach(n=>m[n.id]=n.id<=4?"s"+n.id:uid());s.nodes.forEach(n=>{n.id=m[n.id];n.p=m[n.p]??0})}if(!s.gid)s.gid=uid();return s}
 // ---- stockage ----
@@ -1890,7 +1899,7 @@ async function loadS(){let ls=null;try{ls=JSON.parse(localStorage.getItem(K))}ca
 function bootErr(){$("app").innerHTML='<div class="done"><h1>Données momentanément illisibles</h1><p class="help">Safari n\'a pas pu ouvrir la base de données de l\'app. Tes données ne sont pas effacées. Ferme complètement l\'app, puis rouvre-la.</p><button class="b ok" type="button" onclick="location.reload()">Réessayer</button></div>'}
 async function boot(){const w=setTimeout(()=>{if(!booted)$("app").innerHTML='<div class="empty">Chargement de tes données…</div>'},700);
  let s=null;try{s=await loadS()}catch(e){stErr=String(e)}clearTimeout(w);if(!s)return bootErr();
- S=s;booted=true;setPull();persist();trashSweep();render();
+ S=s;S.nodes.forEach(hlcNode);try{await recLoad()}catch(e){}booted=true;setPull();persist();trashSweep();render();
  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{})}catch(e){}
  iload().then(()=>{ready=true;render();sync();rt()})}
 if(typeof addEventListener=="function"){addEventListener("pagehide",()=>{stFlush()});document.addEventListener("visibilitychange",()=>{if(document.hidden)stFlush()})}
@@ -1900,14 +1909,14 @@ const iput=async(k,v)=>{try{(await idb()).transaction("i","readwrite").objectSto
 const idel=async k=>{try{(await idb()).transaction("i","readwrite").objectStore("i").delete(k)}catch(e){}};
 const iload=()=>new Promise(res=>{idb().then(db=>{const c=db.transaction("i").objectStore("i").openCursor();c.onsuccess=()=>{const r=c.result;if(r){IMG.set(r.key,r.value);r.continue()}else res()};c.onerror=()=>res()}).catch(()=>res());setTimeout(res,4000)});
 const imgH=id=>IMG.has(id)?'<img class="qim" src="'+IMG.get(id)+'" alt="" draggable="false">':'<div class="qim ph">Image en cours de synchronisation…</div>';
-const newImg=src=>{const id="img-"+uid();S.nodes.push({id,p:"-",k:"img",u:Date.now()});IMG.set(id,src);iput(id,src);return id};
-const gc=()=>{const u=new Set();S.nodes.forEach(n=>{if((!n.x||trashed(n))&&n.items)n.items.forEach(i=>["qi","ai","im"].forEach(f=>i[f]&&u.add(i[f])))});S.nodes.forEach(n=>{if(n.k=="img"&&!n.x&&!u.has(n.id)){n.x=1;n.u=Date.now();IMG.delete(n.id);idel(n.id)}})};
+const newImg=src=>{const id="img-"+uid();S.nodes.push({id,p:"-",k:"img",u:hlc()});IMG.set(id,src);iput(id,src);return id};
+const gc=()=>{const u=new Set();S.nodes.forEach(n=>{if((!n.x||trashed(n))&&n.items)n.items.forEach(i=>["qi","ai","im"].forEach(f=>i[f]&&u.add(i[f])))});S.nodes.forEach(n=>{if(n.k=="img"&&!n.x&&!u.has(n.id)){n.x=1;n.u=hlc();IMG.delete(n.id);idel(n.id)}})};
 const loadImg=f=>new Promise((res,rej)=>{const url=URL.createObjectURL(f),im=new Image();im.onload=()=>{const M=1200,k=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL("image/jpeg",.72))};im.onerror=()=>{URL.revokeObjectURL(url);rej()};im.src=url});
 // ---- statistiques ----
-const LG=()=>{const id="log-"+DEV;let L=G(id);if(!L){L={id,p:"-",k:"log",h:{},u:Date.now()};S.nodes.push(L)}if(!L.h)L.h={};return L};
-const rec=(i,ok)=>{i.n=(i.n||0)+1;if(!ok)i.m=(i.m||0)+1;i.t=Date.now();const L=LG(),d=day();L.h[d]=(L.h[d]||0)+1;L.u=Date.now();tc(i);pace()};
+const LG=()=>{const id="log-"+DEV;let L=G(id);if(!L){L={id,p:"-",k:"log",h:{},u:hlc()};S.nodes.push(L)}if(!L.h)L.h={};return L};
+const rec=(i,ok)=>{i.n=(i.n||0)+1;if(!ok)i.m=(i.m||0)+1;i.t=hlc();i.w=DEV;const L=LG(),d=day();L.h[d]=(L.h[d]||0)+1;L.u=hlc();tc(i);pace()};
 const packsOf=n=>n.k=="f"?desc(n.id).filter(x=>x.k!="f"):[n],allPacks=()=>cur?packsOf(G(cur)):desc(0).filter(x=>x.k!="f");
-const hardList=()=>allPacks().flatMap(p=>p.items.filter(i=>(i.m||0)>=2).map(i=>({i,p}))).sort((a,b)=>b.i.m/b.i.n-a.i.m/a.i.n||b.i.m-a.i.m);
+const hardList=()=>allPacks().flatMap(p=>p.items.filter(i=>mOf(i)>=2).map(i=>({i,p}))).sort((a,b)=>mOf(b.i)/nOf(b.i)-mOf(a.i)/nOf(a.i)||mOf(b.i)-mOf(a.i));
 const lbl=(i,p)=>i.im?p.name+", zone "+(i.t+1)+(i.a?" ("+i.a+")":""):i.q;
 const dstr=d=>new Date(d*864e5).toLocaleDateString("fr",{timeZone:"UTC",weekday:"short",day:"numeric",month:"long"});
 const mmss=t=>Math.floor(t/60)+":"+String(t%60).padStart(2,"0"),dur=t=>t<60?t+" s":Math.floor(t/60)+" min"+(t%60?" "+t%60+" s":"");
@@ -1932,7 +1941,7 @@ function fcHTML(){
  let b="";for(let k=0;k<N;k++)b+='<div class="fcb'+(c[k]?"":" z")+(k==0?" t":"")+'"><span class="fcn">'+c[k]+'</span><i style="height:'+(c[k]?Math.max(4,Math.round(c[k]/mx*64)):3)+'px"></i><span class="fcl">'+lab(k)+'</span></div>';
  return '<h2 class="h2">À revoir ces 7 prochains jours</h2><div class="pn"><div class="fc7" role="img" aria-label="Révisions prévues sur 7 jours : '+c.join(", ")+'">'+b+'</div><p class="hmd">'+(tot?tot+" à revoir cette semaine"+(late?", dont "+late+" en retard (comptée"+(late>1?"s":"")+" aujourd\'hui)":"")+".":"Rien à revoir ces 7 prochains jours.")+' Les cartes jamais vues ne sont pas comptées.</p></div>'}
 function statsHTML(){
- const logs=S.nodes.filter(n=>n.k=="log"&&!n.x),cnt=d=>logs.reduce((s,l)=>s+((l.h||{})[d]||0),0),d0=day(),wd=(new Date().getDay()+6)%7,W=(typeof innerWidth=="number"&&innerWidth>=700)?26:18,st=d0-wd-(W-1)*7;
+ const logs=S.nodes.filter(n=>n.k=="log"&&!n.x),cnt=d=>logs.reduce((s,l)=>s+((l.h||{})[d]||0),0),d0=day(),wd=(new Date(d0*864e5).getUTCDay()+6)%7,W=(typeof innerWidth=="number"&&innerWidth>=700)?26:18,st=d0-wd-(W-1)*7;
  let cells="";for(let d=st;d<st+W*7;d++){if(d>d0){cells+='<i class="fu"></i>';continue}const c=cnt(d),l=!c?0:c<10?1:c<30?2:c<60?3:4;cells+='<i class="l'+l+(d==(hmSel??d0)?" on":"")+'" data-a="hmd" data-v="'+d+'" title="'+dstr(d)+' : '+c+' révision'+(c>1?"s":"")+'"></i>'}
  let t30=0;for(let d=d0-29;d<=d0;d++)t30+=cnt(d);let k=0,d=cnt(d0)?d0:d0-1;while(cnt(d)>0){k++;d--}
  const today=cnt(d0);
@@ -1943,14 +1952,14 @@ function statsHTML(){
  if(statsTab=="rates"){
  const ks=kids(cur);h+='<h2 class="h2">Taux de réussite'+(cur?' dans « '+esc(G(cur).name)+' »':'')+'</h2>';
  if(cfg.srs&&ks.length)h+='<p class="help">Solide : retenue pour au moins 3 semaines selon FSRS.</p>';if(!ks.length)h+='<p class="help">Rien ici pour l\'instant.</p>';
- ks.forEach(n=>{const a=packsOf(n).reduce((a,p)=>{p.items.forEach(i=>{a.n+=i.n||0;a.m+=i.m||0});return a},{n:0,m:0}),p=a.n?Math.round((a.n-a.m)/a.n*100):null,cl=p==null?"":p>=80?" g":p<50?" r":"";
+ ks.forEach(n=>{const a=packsOf(n).reduce((a,p)=>{p.items.forEach(i=>{a.n+=nOf(i);a.m+=mOf(i)});return a},{n:0,m:0}),p=a.n?Math.round((a.n-a.m)/a.n*100):null,cl=p==null?"":p>=80?" g":p<50?" r":"";
   h+='<div class="st"><div class="sth"><span class="ic">'+ic(n.k=="f"?"f":n.k,18,n.c)+'</span><b>'+esc(n.name)+'</b><span class="pv'+cl+'">'+(p==null?"–":p+" %")+'</span></div>'+(p==null?'<small class="help">Pas encore révisé</small>':'<div class="bar"><i style="width:'+p+'%;background:'+(p>=80?"var(--ok)":p<50?"var(--ko)":"var(--acc)")+'"></i></div><small class="help">'+a.n+' réponse'+(a.n>1?"s":"")+', '+a.m+' erreur'+(a.m>1?"s":"")+solTxt(n)+'</small>')+'</div>'})
  }else{
  const hl=hardList(),nf=hl.filter(x=>x.p.k=="fc").length,nq=hl.length-nf;
  h+='<h2 class="h2">Ce que tu rates souvent</h2>';
  if(!hl.length)h+='<p class="help">Rien pour l\'instant. Une carte ou une question apparaît ici dès que tu l\'as ratée deux fois.</p>';
  else{if(nf||nq)h+='<div class="menu">'+(nf?'<button class="b" data-a="hard" data-v="fc">Réviser ces cartes ('+nf+')</button>':'')+(nq?'<button class="b" data-a="hard" data-v="qcm">Refaire ces QCM ('+nq+')</button>':'')+'</div>';
-  hl.slice(0,12).forEach(({i,p})=>{h+='<button type="button" class="er" data-a="cpv" data-v="'+p.id+'#'+p.items.indexOf(i)+'"><p>'+fmt(lbl(i,p))+'</p><small class="help">Ratée '+i.m+' fois sur '+i.n+', '+esc(p.name)+'</small></button>'});
+  hl.slice(0,12).forEach(({i,p})=>{h+='<button type="button" class="er" data-a="cpv" data-v="'+p.id+'#'+p.items.indexOf(i)+'"><p>'+fmt(lbl(i,p))+'</p><small class="help">Ratée '+mOf(i)+' fois sur '+nOf(i)+', '+esc(p.name)+'</small></button>'});
   if(hl.length>12)h+='<p class="help">Et '+(hl.length-12)+' autre'+(hl.length-12>1?"s":"")+'.</p>'}}
  return h+'<div class="dock"><button class="b" data-a="cd" data-v="'+cur+'">Fermer</button></div>'}
 // ---- FSRS-5 (algorithme par défaut d'Anki) ----
@@ -1985,7 +1994,7 @@ const applyP=(i,p)=>{const nw=i.d==null;fsInit(i);i.st=p.st;i.s=+p.s.toFixed(4);
 // Données synchronisées : dossier.xd (jour de l'examen), nœud « opt » (date pour tout, plan de rattrapage cu), i.f (jour de première vue).
 const GM=8,MORE=20,CU_MIN=100;let TDv=0,TDc=null;
 const optN=()=>G("opt");
-const optMk=()=>{let o=optN();if(!o){o={id:"opt",p:"-",k:"opt",u:Date.now()};S.nodes.push(o)}return o};
+const optMk=()=>{let o=optN();if(!o){o={id:"opt",p:"-",k:"opt",u:hlc()};S.nodes.push(o)}return o};
 // ---- réglages communs à tous les appareils : nœud « set » synchronisé comme les autres (la version la plus récente gagne) ----
 // Restent propres à l'appareil : le code de synchro, le panneau latéral ouvert ou fermé, et deux compteurs internes.
 // Créé avec u=1 : tant qu'aucun réglage n'est modifié, chaque appareil garde les siens ; le premier changement se propage partout.
@@ -1994,7 +2003,7 @@ const setSnap=()=>{const c={};Object.keys(cfg).forEach(k=>{if(!SETL.includes(k)&
 const setU=()=>{try{return+localStorage.getItem("revis-setu")||0}catch(e){return 0}},setUW=u=>{try{localStorage.setItem("revis-setu",String(u))}catch(e){}};
 let setLock=false;
 function setPush(){if(setLock||!booted||!S||!S.nodes)return;const v=setSnap(),n=G("set");if(n&&!n.x&&canon({c:n.c||{},th:n.th||"",ac:n.ac||""})==canon(v))return;
- const u=Date.now();if(n){n.c=v.c;n.th=v.th;n.ac=v.ac;n.u=u;delete n.x}else S.nodes.push({id:"set",p:"-",k:"set",u,...v});setUW(u);save()}
+ const u=hlc();if(n){n.c=v.c;n.th=v.th;n.ac=v.ac;n.u=u;delete n.x}else S.nodes.push({id:"set",p:"-",k:"set",u,...v});setUW(u);save()}
 function setPull(){if(!booted||!S||!S.nodes)return;const n=G("set");
  if(!n){S.nodes.push({id:"set",p:"-",k:"set",u:1,...setSnap()});return}
  if(n.x||(n.u||0)<=setU())return;setUW(n.u||0);
@@ -2051,7 +2060,9 @@ function pace(){if(view!="study"||!deck)return;const k=deck.k,now=Date.now(),P=p
 const odMin=()=>{const T=TD(),P=paceGet(),f=P.fc,q=P.qcm;if((T.odf&&!(f&&f[1]>=20))||(T.odq&&!(q&&q[1]>=20)))return null;return Math.max(1,Math.round(((T.odf?T.odf*f[0]:0)+(T.odq?T.odq*q[0]:0))/60))};
 const fmtMin=m=>m<60?m+" min":Math.floor(m/60)+" h"+(m%60?" "+String(m%60).padStart(2,"0"):"");
 // mémorisation réelle : révisions de cartes déjà apprises (état « révision » avant la note), par jour, dans le journal de l'appareil
-const recR=(i,ok)=>{if(!(i.st==2||(i.st==null&&i.d!=null)))return;const L=LG(),d=day();if(!L.r)L.r={};const a=L.r[d]||[0,0];a[0]++;if(ok)a[1]++;L.r[d]=a;L.u=Date.now()};
+/* 23/10/2026 (étape 4) : réponse d'examen : compteurs ev de CET appareil + journal du jour ; aucune écriture de t, w, n, m ni de planification */
+const recE=(i,ok)=>{const e=i.ev&&typeof i.ev=="object"?{...i.ev}:{},c=Array.isArray(e[DEV])?e[DEV]:[0,0];e[DEV]=[(+c[0]||0)+1,(+c[1]||0)+(ok?0:1)];i.ev=e;const L=LG(),d=day();L.h[d]=(L.h[d]||0)+1;L.u=hlc();tc(i)};
+const recR=(i,ok)=>{if(!(i.st==2||(i.st==null&&i.d!=null)))return;const L=LG(),d=day();if(!L.r)L.r={};const a=L.r[d]||[0,0];a[0]++;if(ok)a[1]++;L.r[d]=a;L.u=hlc()};
 // examen en cours : conservé si Safari recharge la page
 const EXK="revis-exam",exGet=()=>{try{return JSON.parse(localStorage.getItem(EXK))}catch(e){return null}},exClr=()=>{try{localStorage.removeItem(EXK)}catch(e){}};
 const exSave=()=>{if(view!="exam"||!ex||ex.done||!deck||!deck.own)return;try{localStorage.setItem(EXK,JSON.stringify({it:deck.items.map(i=>{const p=deck.own.get(i);return[p?p.id:null,p?p.items.indexOf(i):-1,ikey(i)]}),s:ex.s,i:ex.i,t0:ex.t0,end:ex.end,sd:QSD}))}catch(e){}};
@@ -2062,29 +2073,154 @@ const hash=async c=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new 
 const rpc=async(f,b)=>{const r=await fetch(SB+"/rest/v1/rpc/"+f,{method:"POST",headers:{apikey:SK,Authorization:"Bearer "+SK,"Content-Type":"application/json"},body:JSON.stringify(b)});if(!r.ok)throw new Error(r.status);const x=await r.text();return x?JSON.parse(x):null};
 // ---- fusion de synchro : contenu par paquet (le plus récent), progression carte par carte (la révision la plus récente) ----
 let mDirty=false;
-const PF=["st","s","df","l","k","d","b","n","m","t","f"];
+const PF=["st","s","df","l","k","d","b","n","m","t","f","w"];
 const ikey=i=>String(i.q||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
-const better=(x,y)=>{const a=[x.t||0,x.n||0,x.l||0],b=[y.t||0,y.n||0,y.l||0];for(let j=0;j<3;j++)if(a[j]!==b[j])return a[j]>b[j];
- return PF.map(f=>x[f]).join("|")>PF.map(f=>y[f]).join("|")};
+const better=(x,y)=>{const a=x.t||0,b=y.t||0;if(a!==b)return a>b;const wx=x.w||"",wy=y.w||"";if(wx!==wy)return wx>wy;
+ if(!wx){const c=[x.n||0,x.l||0],d=[y.n||0,y.l||0];for(let j=0;j<2;j++)if(c[j]!==d[j])return c[j]>d[j]}return false};
 const copyP=(to,from)=>{PF.forEach(f=>{if(from[f]===undefined)delete to[f];else to[f]=from[f]})};
 const pairs=(bi,oi)=>{const idx=new Map();(oi||[]).forEach(i=>{const k=ikey(i);if(!idx.has(k))idx.set(k,[]);idx.get(k).push(i)});const used=new Map();
  return bi.map(i=>{const k=ikey(i),arr=idx.get(k);if(!arr)return null;const c=used.get(k)||0;used.set(k,c+1);return arr[c]||null})};
 // base = items du gagnant ; other = items de l'autre version. Renvoie la même liste si rien ne change.
-const mergeItems=(base,other)=>{const P=pairs(base,other);let chg=false,lead=false;
- const res=base.map((i,j)=>{const o=P[j];if(!o)return i;if(better(o,i)){chg=true;const r={...i};copyP(r,o);return r}if(better(i,o))lead=true;return i});
+/* appariement de secours des ev (carte dont le texte a été modifié ailleurs) : jamais par la seule position. Il faut le même rang ET la même « signature » de contenu (propositions du QCM avec leur état vrai/faux, ou réponse de la carte), non vide, et une seule candidate de chaque côté ; sinon aucun transfert (une carte neuve ne reçoit jamais les compteurs d'une carte supprimée) */
+const evSig=i=>{if(!i)return"";if(Array.isArray(i.o))return i.o.map(o=>nm(String(o&&o.t||"").trim())+(o&&o.k?"*":"")).join("|");return nm(String(i.a||"").trim())};
+const evPairs=(bi,oi,P)=>{const used=new Set(P.filter(Boolean)),bk=new Set(bi.map(ikey)),R=P.slice(),ub=[],uo=[];
+ bi.forEach((i,j)=>{if(!P[j])ub.push(j)});(oi||[]).forEach((c,j)=>{if(!used.has(c)&&!bk.has(ikey(c)))uo.push(j)});
+ const cnt=(a,src)=>{const m=new Map();a.forEach(j=>{const g=evSig(src[j]);if(g)m.set(g,(m.get(g)||0)+1)});return m},cb=cnt(ub,bi),co=cnt(uo,oi||[]);
+ ub.forEach(j=>{const c=(oi||[])[j];if(!c||used.has(c)||bk.has(ikey(c)))return;const g=evSig(bi[j]);if(g&&g===evSig(c)&&cb.get(g)===1&&co.get(g)===1)R[j]=c});return R};
+const mergeItems=(base,other)=>{const P=pairs(base,other),E=evPairs(base,other,P);let chg=false,lead=false;
+ const res=base.map((i,j)=>{const o=P[j],eo=E[j];let r=i;
+  if(eo&&(eo.ev||i.ev)){const em=evMerge(i.ev,eo.ev);if(!evSame(em,i.ev)){chg=true;r={...r,ev:em}}if(evMore(i.ev,eo.ev))lead=true}
+  if(!o)return r;if(better(o,i)){chg=true;r={...r};copyP(r,o)}else if(better(i,o))lead=true;return r});
  return{items:chg?res:base,chg,lead}};
 const mergeNode=(l,r,remoteWins,kp)=>{
  const w=remoteWins?r:l;
  if(!l.items||!r.items||l.x||r.x||(w.k!="fc"&&w.k!="qcm"))return w;
- if(kp){const P=pairs(l.items,r.items);l.items.forEach((i,j)=>{const o=P[j];if(!o)return;if(better(o,i))copyP(i,o);else if(better(i,o))mDirty=true});return l}
+ if(kp){const pl=cPlan(l,r,false);if(pl){if(pl.pend){PENDG.add(l.id);return l}cAdopt(l,r,pl,false)}
+  const P=pairs(l.items,r.items),E=evPairs(l.items,r.items,P);l.items.forEach((i,j)=>{const eo=E[j];if(eo&&(eo.ev||i.ev)){const em=evMerge(i.ev,eo.ev);if(!evSame(em,i.ev))i.ev=em;if(evMore(i.ev,eo.ev))mDirty=true}const o=P[j];if(!o)return;if(better(o,i))copyP(i,o);else if(better(i,o))mDirty=true});return l}
+ const cm=cMergeNode(l,r,remoteWins);if(cm)return cm;
  const m=mergeItems(w.items,remoteWins?l.items:r.items);
  if(remoteWins?m.chg:m.lead)mDirty=true;
  return m.chg?{...w,items:m.items}:w};
+/* 23/10/2026 (étape 4) : compteurs d'examen ev = {appareil:[réponses,erreurs]} sur la carte. Un examen n'écrit QUE là (jamais st/s/df/l/k/d/f, ni t/w/n/m) : il ne peut donc ni modifier FSRS ni remplacer une révision faite ailleurs. Chaque appareil n'écrit que sa propre entrée (croissante) : la fusion prend le maximum par appareil, donc elle converge et ne perd rien, même si une ancienne version a renvoyé la carte sans ev. */
+const evSum=(i,k)=>{let a=0;const e=i&&i.ev;if(e&&typeof e=="object")for(const d in e){const v=e[d];if(Array.isArray(v))a+=+v[k]||0}return a},nOf=i=>(i.n||0)+evSum(i,0),mOf=i=>(i.m||0)+evSum(i,1);
+const evMerge=(a,b)=>{if(!a&&!b)return;const r={...(a||{})};for(const d in(b||{})){const v=b[d];if(Array.isArray(v)&&(!Array.isArray(r[d])||(+v[0]||0)>(+r[d][0]||0)))r[d]=v}return r},evMore=(a,b)=>{for(const d in(a||{})){const v=a[d];if(Array.isArray(v)&&(!b||!Array.isArray(b[d])||(+v[0]||0)>(+b[d][0]||0)))return true}return false};
+const evSame=(a,b)=>cj(a)===cj(b);
+/* ===== 23/10/2026 (A2) : générations de nœud (remise à zéro, restauration, annulation par instantané) =====
+   gn = horodatage hlc de l'opération, gw = appareil auteur, gc = « le contenu fait foi » (restauration). Comparaison (gn, gw) : ordre total, donc même gagnant sur tous les appareils quel que soit l'ordre d'arrivée.
+   La génération la plus élevée gagne le nœud ; pour un paquet, progression et ev viennent de ses cartes (appariées prudemment), jamais de l'ancienne génération. Les cartes remises à zéro / restaurées portent t=gn et w=auteur : une ancienne version, qui ne connaît pas gn, les respecte aussi (better() : t le plus récent). */
+const gcmp=(a,b)=>{const x=+a.gn||0,y=+b.gn||0;if(x!==y)return x>y?1:-1;const p=String(a.gw||""),q=String(b.gw||"");return p===q?0:p>q?1:-1};
+const grp=l=>{const m=new Map();(l||[]).forEach(i=>{const k=ikey(i);if(!m.has(k))m.set(k,[]);m.get(k).push(i)});return m};
+/* appariement prudent : clé (texte de question) non vide, et même nombre de cartes de chaque côté (1:1, ou k:k dans l'ordre) ; sinon aucune carte du groupe n'est appariée */
+const safePairs=(bi,oi)=>{const go=grp(oi),gb=grp(bi),used=new Map();return bi.map(i=>{const k=ikey(i);if(!k)return null;const a=gb.get(k),b=go.get(k);if(!b||a.length!==b.length)return null;const c=used.get(k)||0;used.set(k,c+1);return b[c]})};
+const wipeProg=i=>{PF.forEach(f=>delete i[f]);delete i.ev},takeProg=(i,e)=>{PF.forEach(f=>{if(e[f]===undefined)delete i[f];else i[f]=e[f]});if(e.ev===undefined)delete i.ev;else i.ev=e.ev};
+/* ===== 23/10/2026 (A1) : fusion du CONTENU des cartes à trois versions =====
+   Avant : le contenu d'un paquet suivait la version la plus récente (u) en bloc, donc les cartes ajoutées ou corrigées sur un appareil disparaissaient si l'autre appareil avait un u plus récent (ex. il venait de noter une carte).
+   Maintenant : trois versions = locale (L), distante (R) et base (dernière synchronisation entièrement réussie, S.baseH : par paquet, par texte de question, empreintes du contenu des cartes). Par texte de question : seul L a changé -> L ; seul R a changé -> R ; les deux pareil -> L ;
+   les deux différemment -> conflit : suppression d'un côté + modification de l'autre = la suppression l'emporte (aucune progression supprimée ne ressuscite) ; deux modifications = la version du paquet le plus récent (u) ; la version écartée est mise dans la copie de récupération (REC, « conflit-contenu »).
+   Le contenu = tout sauf la progression (PF) et ev ; la progression de chaque carte continue de suivre better() (la révision la plus récente), y compris pour une carte dont le texte a été corrigé ailleurs (appariement de secours par rang + signature, evPairs).
+   Pas de base (paquet jamais synchronisé, ancienne version) : ancienne logique inchangée. Paquet ouvert en séance (kp) : seuls les ajouts purs sont adoptés sur place ; tout autre changement distant (modification, suppression) est différé (PENDG) jusqu'à la fin de la séance. */
+/* 24/10/2026 (B1) : forme canonique JSON indépendante de l'ordre des clés, à TOUS les niveaux (objets dans des objets et dans des tableaux). PostgreSQL jsonb réordonne les clés (courtes d'abord, puis alphabétique) : une carte {q,a} revient {a,q}, une proposition {t,k} revient {k,t}. L'ordre des TABLEAUX est conservé (il est significatif). Comme JSON.stringify : clé non définie ignorée, undefined dans un tableau = null. Pour un objet plat de chaînes / nombres, le résultat est identique à JSON.stringify d'un objet aux clés triées (empreintes historiques des flashcards inchangées). canon() (réglages) n'est pas modifiée : elle ne gère pas les tableaux. */
+const cj=v=>Array.isArray(v)?"["+v.map(x=>cj(x===undefined?null:x)).join(",")+"]":v&&typeof v=="object"?"{"+Object.keys(v).sort().filter(k=>v[k]!==undefined).map(k=>JSON.stringify(k)+":"+cj(v[k])).join(",")+"}":JSON.stringify(v===undefined?null:v);
+/* BHV = version du format des empreintes de S.baseH : une base d'un autre format est ignorée puis reconstruite (aucune migration silencieuse) */
+const BHV=2;
+const cobj=i=>{const o={};Object.keys(i).sort().forEach(k=>{if(PF.indexOf(k)<0&&k!="ev")o[k]=i[k]});return o};
+const chash=i=>recHash(cj(cobj(i)));
+const chs=a=>a.map(chash).sort(),sameH=(a,b)=>a.length===b.length&&a.every((x,j)=>x===b[j]);
+const bmap=items=>{const m={};grp(items).forEach((a,k)=>{m["k"+k]=chs(a)});return m};
+let CSV=null;
+function cPlan(l,r,rw){
+ if(!V2||!l||!r||!isPack(l)||!isPack(r)||!l.items||!r.items||l.x||r.x)return null;
+ if(S.baseHv!==BHV)return null;const bs=(S.baseH||{})[l.id];if(!bs)return null;
+ if(CSV&&CSV[l.id]!=null&&vers(r)<CSV[l.id])return null; /* version distante plus ancienne que celle déjà connue du serveur (écho tardif) : ce n'est pas une suppression, on garde l'ancienne règle (la locale l'emporte) */
+ const gl=grp(l.items),gr=grp(r.items),dec=new Map(),mm=new Map(),add=new Set(),drop=[];let pend=false;
+ const cnt=a=>{const m={};a.forEach(x=>m[x]=(m[x]||0)+1);return m},dr=(c,ex)=>c.filter(x=>ex.indexOf(chash(x))<0);
+ new Set([...gl.keys(),...gr.keys()]).forEach(k=>{const A=gl.get(k)||[],R=gr.get(k)||[],b=bs["k"+k]||[],ha=chs(A),hr=chs(R),cl=!sameH(ha,b),cr=!sameH(hr,b);let d=rw?"R":"L";
+  if(!sameH(ha,hr)){
+   if(!cr)d="L";
+   else if(!cl)d="R";
+   else if(k&&b.length<=1){
+    if(!A.length){d="L";drop.push(...dr(R,b))}
+    else if(!R.length){d="R";drop.push(...dr(A,b))}
+    else{d=rw?"R":"L";drop.push(...(rw?dr(A,hr):dr(R,ha)))}}
+   else{d="M";const cb=cnt(b),cL=cnt(ha),cR=cnt(hr),pool=[...A.map(c=>[c,"L",chash(c)]),...R.map(c=>[c,"R",chash(c)])],out=[];
+    new Set([...b,...ha,...hr]).forEach(x=>{const bx=cb[x]||0,a1=(cL[x]||0)-bx,a2=(cR[x]||0)-bx,n=bx+(a1>=0&&a2>=0?Math.max(a1,a2):a1<=0&&a2<=0?Math.min(a1,a2):a1+a2);
+     pool.filter(q=>q[2]==x).slice(0,Math.max(0,n)).forEach(q=>out.push(q))});mm.set(k,out)}
+   if(cr){if(!b.length&&!A.length)add.add(k);else pend=true}}
+  dec.set(k,d)});
+ return{gl,gr,dec,mm,add,drop,pend}}
+/* liste fusionnée des cartes ; np = true : cartes telles quelles, sans fusion de progression (chemin des générations, où la progression vient d'ailleurs) */
+function cBuild(l,r,pl,rw,np){
+ const W=rw?r.items:l.items,O=rw?l.items:r.items,own=rw?"R":"L",cpl=new Map(),cpr=new Map();
+ if(!np){const P=pairs(l.items,r.items),E=evPairs(l.items,r.items,P);l.items.forEach((i,j)=>{const o=E[j];if(o){cpl.set(i,o);cpr.set(o,i)}})}
+ const fin=(c,s)=>{if(np)return c;const o=(s=="L"?cpl:cpr).get(c);if(!o)return c;let x=c;
+  if(o.ev||c.ev){const em=evMerge(c.ev,o.ev);if(!evSame(em,c.ev))x={...x,ev:em}}
+  if(better(o,c)){if(x===c)x={...c};copyP(x,o)}return x};
+ const res=k=>{const d=pl.dec.get(k);if(d=="M")return pl.mm.get(k).map(([c,s])=>fin(c,s));return(d=="L"?pl.gl:pl.gr).get(k)?.map(c=>fin(c,d))||[]};
+ const out=[],done=new Set(),wk=new Set(W.map(ikey));
+ W.forEach(c=>{const k=ikey(c);if(pl.dec.get(k)==own){out.push(fin(c,own));return}if(done.has(k))return;done.add(k);out.push(...res(k))});
+ O.forEach(c=>{const k=ikey(c);if(wk.has(k)||done.has(k))return;done.add(k);out.push(...res(k))});
+ return out}
+const cMergeNode=(l,r,rw)=>{const pl=cPlan(l,r,rw);if(!pl)return null;const it=cBuild(l,r,pl,rw),js=cj(it),w=rw?r:l;
+ if(js!==cj(r.items))mDirty=true;
+ return js===cj(w.items)?w:{...w,items:it}};
+/* paquet ouvert en séance : adopte sur place les cartes ajoutées ailleurs (à la fin, les index de séance restent valides) */
+const cAdopt=(l,r,pl,wipe)=>{if(!pl.add.size)return;r.items.forEach(c=>{if(pl.add.has(ikey(c))){const x=cp(c);if(wipe)wipeProg(x);l.items.push(x)}})};
+/* copie de récupération des cartes que la fusion va écarter (conflit) : faite AVANT la fusion */
+const cDrops=(l,r,g)=>{if(g!==0){const E=g>0?l:r;if(E.gc||E.x)return null}const pl=cPlan(l,r,(r.u||0)>(l.u||0));
+ return pl&&pl.drop.length?recEntry("conflit-contenu",[recPack(l,pl.drop)],"Cartes écartées : modifiées différemment sur deux appareils, ou supprimées sur l'un et modifiées sur l'autre"):null};
+let PENDG=new Set();
+function genMerge(l,r,sg,kp){const E=sg>0?l:r,O=sg>0?r:l;let res;
+ const whole=!isPack(E)||!isPack(O)||!E.items||!O.items||E.x||O.x;
+ if(kp&&E===r){ /* paquet ouvert en séance : on ne remplace ni le contenu ni les index ; adoption différée si le contenu change */
+  if(whole||E.gc){PENDG.add(l.id);return l}
+  const pl=cPlan(l,E,false);if(pl){if(pl.pend){PENDG.add(l.id);return l}cAdopt(l,E,pl,false)}
+  const P=safePairs(l.items,E.items);l.items.forEach((i,j)=>{const e=P[j];if(e)takeProg(i,e);else wipeProg(i)});l.gn=E.gn;l.gw=E.gw;delete l.gc;if(cj(l)!==cj(r))mDirty=true;return l}
+ if(kp&&E===l&&!whole&&!E.gc){const pl=cPlan(l,O,false);if(pl){if(pl.pend){PENDG.add(l.id);return l}cAdopt(l,O,pl,true);if(cj(l)!==cj(r))mDirty=true;return l}}
+ if(whole)res=E;
+ else{const rw=(r.u||0)>(l.u||0),pl=E.gc?null:cPlan(l,r,rw);
+  if(pl){const M=cBuild(l,r,pl,rw,true),own=new Set(E.items),P=safePairs(M,E.items);res={...(rw?r:l),gn:E.gn,gw:E.gw};delete res.gc;
+   res.items=M.map((c,j)=>{if(own.has(c))return c;const x={...c},e=P[j];if(e)takeProg(x,e);else wipeProg(x);return x})}
+  else{const src=E.gc?E:(rw?r:l);
+  if(src===E)res=E;
+  else{const P=safePairs(src.items,E.items);res={...src,gn:E.gn,gw:E.gw};delete res.gc;res.items=src.items.map((i,j)=>{const c={...i},e=P[j];if(e)takeProg(c,e);else wipeProg(c);return c})}}}
+ if(res!==r&&cj(res)!==cj(r))mDirty=true;return res}
+
+/* ===== copie de récupération locale : jamais synchronisée, jamais réinjectée automatiquement =====
+   IndexedDB (clé R de revis-data) + miroir localStorage ; {v,list} : la copie la plus récente fait foi. Déduplication par clé (nature + empreinte du contenu) ; plafond 300 entrées / 6 Mo :
+   au-delà, une nouvelle copie est REFUSÉE (rien n'est supprimé en silence) et l'opération destructive correspondante est bloquée. */
+const REC_LS="revis-rec",REC_MAXB=6e6,REC_MAXN=300;let REC=[],RSB=false;
+const recHash=t=>{let a=2166136261,b=5381;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);a^=c;a=Math.imul(a,16777619);b=(Math.imul(b,33)^c)>>>0}return(a>>>0).toString(36)+"-"+b.toString(36)+"-"+t.length};
+const recBytes=()=>REC.reduce((a,e)=>a+(e.b||0),0);
+async function recLoad(){let a=null,l=null;try{const v=await idbGet("R");if(typeof v=="string")a=JSON.parse(v)}catch(e){}try{const v=localStorage.getItem(REC_LS);if(v)l=JSON.parse(v)}catch(e){}
+ const c=[a,l].filter(x=>x&&Array.isArray(x.list)).sort((x,y)=>(y.v||0)-(x.v||0))[0];REC=c?c.list:[]}
+async function recPersist(){const js=JSON.stringify({v:Date.now(),list:REC});let ok=false;try{await idbPut("R",js);ok=true}catch(e){}try{if(js.length<=1e6){localStorage.setItem(REC_LS,js);ok=true}else localStorage.removeItem(REC_LS)}catch(e){}return ok}
+async function recSave(es){const add=[];es.forEach(e=>{if(e&&!REC.some(x=>x.k===e.k)&&!add.some(x=>x.k===e.k))add.push(e)});if(!add.length)return true;
+ if(REC.length+add.length>REC_MAXN||recBytes()+add.reduce((a,e)=>a+e.b,0)>REC_MAXB)return false;
+ const prev=REC;REC=[...REC,...add];if(await recPersist())return true;REC=prev;return false}
+const recPath=p=>{try{return path(p.p).map(n=>n.name).join(" › ")}catch(e){return""}};
+const recPack=(p,items)=>({pid:p.id,name:p.name,k:p.k,path:recPath(p),items:cp(items||p.items)});
+const recEntry=(kind,packs,note)=>{const js=JSON.stringify(packs);return{k:kind+"|"+recHash(js),kind,at:Date.now(),packs,n:packs.reduce((a,p)=>a+p.items.length,0),b:js.length,note:note||""}};
+const recMsg="La copie de sécurité n'a pas pu être enregistrée (espace plein ou stockage indisponible). Exporte ou supprime des éléments récupérables (Réglages › Sauvegarde) puis réessaie.";
+/* cartes d'une ancienne génération (locale) qui seraient écartées : absentes du gagnant et ajoutées/modifiées depuis la dernière synchronisation (S.base) ; en cas de doute (groupe de doublons, clé vide, base absente) on les garde toutes */
+const recCand=(l,r)=>{const gr=grp(r.x?[]:r.items||[]),bs=(S.base||{})[l.id],out=[];
+ grp(l.items).forEach((a,k)=>{if(!k){out.push(...a);return}const nr=(gr.get(k)||[]).length;if(a.length<=nr)return;if(bs&&a.length-(bs[k]||0)<=0)return;out.push(...a)});
+ return out.length?recEntry("ancienne-generation",[recPack(l,out)],"Ajouts ou modifications faits hors ligne avant l'opération qui a remplacé ce paquet"):null};
+/* S.base : par paquet, nombre de cartes par texte de question tel qu'il était à la dernière synchronisation entièrement réussie ; sert seulement à repérer ce qui a été ajouté depuis (jamais d'identité de carte) */
+/* instantané des empreintes de contenu pris juste APRÈS la fusion (avant tout await) : une modification faite pendant l'envoi ne doit pas entrer dans la base sans être partie */
+function baseSnap(){const m=new Map();S.nodes.forEach(n=>{if(isPack(n)&&!n.x&&n.items&&!PENDG.has(n.id))m.set(n.id,bmap(n.items))});return m}
+function baseUp(sn){const B=S.base||(S.base={});let ch=false;if(S.baseHv!==BHV){S.baseH={};S.baseHv=BHV;ch=true}const BH=S.baseH||(S.baseH={});const ids=new Set();
+ if(sn)sn.forEach((m,id)=>{if(cj(m)!==cj(BH[id])){BH[id]=m;ch=true}});
+ S.nodes.forEach(n=>{if(isPack(n)&&!n.items&&BH[n.id]){delete BH[n.id];ch=true}});
+ S.nodes.forEach(n=>{if(!isPack(n))return;ids.add(n.id);if(n.x||!n.items||PENDG.has(n.id)){if(!n.items&&B[n.id]){delete B[n.id];ch=true}return}
+  const m={};n.items.forEach(i=>{const k=ikey(i);m[k]=(m[k]||0)+1});if(cj(m)!==cj(B[n.id])){B[n.id]=m;ch=true}});
+ Object.keys(B).forEach(id=>{if(!ids.has(id)){delete B[id];ch=true}});Object.keys(BH).forEach(id=>{if(!ids.has(id)){delete BH[id];ch=true}});if(ch)persist()}
 const FLG=[["h","hu"],["pn","pu"],["o","ou"]];
-const fixHide=(res,l,r)=>{FLG.forEach(([f,t])=>{const src=(r[t]||0)>(l[t]||0)?r:l;if(src[f]!==undefined)res[f]=src[f];else delete res[f];if(src[t])res[t]=src[t];else delete res[t];if((l[t]||0)>(r[t]||0))mDirty=true});return res};
+/* 23/10/2026 : les journaux (k:"log") stockent leur historique par jour dans « h » ; ce n'est pas le drapeau « caché » : on les laisse suivre mergeNode (version la plus récente, un seul auteur par journal) */
+const fixHide=(res,l,r)=>{if(res.k=="log"||l.k=="log"||r.k=="log")return res;FLG.forEach(([f,t])=>{const src=(r[t]||0)>(l[t]||0)?r:l;if(src[f]!==undefined)res[f]=src[f];else delete res[f];if(src[t])res[t]=src[t];else delete res[t];if((l[t]||0)>(r[t]||0))mDirty=true});return res};
 const merge=(a,b,keep,dset)=>{const m=new Map();a.forEach(n=>m.set(n.id,n));
  b.forEach(r=>{const l=m.get(r.id);if(!l){m.set(r.id,r);return}
-  const kp=keep.has(r.id),rw=(r.u||0)>(l.u||0)&&!kp,was=mDirty;mDirty=false;m.set(r.id,fixHide(mergeNode(l,r,rw,kp),l,r));if(mDirty&&dset)dset.add(r.id);mDirty=was||mDirty});
+  const kp=keep.has(r.id),gs=gcmp(l,r);if(gs!==0){const w0=mDirty;mDirty=false;m.set(r.id,fixHide(genMerge(l,r,gs,kp),l,r));if(mDirty&&dset)dset.add(r.id);mDirty=w0||mDirty;return}
+  const rw=(r.u||0)>(l.u||0)&&!kp,was=mDirty;mDirty=false;m.set(r.id,fixHide(mergeNode(l,r,rw,kp),l,r));if(mDirty&&dset)dset.add(r.id);mDirty=was||mDirty});
  return[...m.values()]};
 const ui=f=>{if(view=="set"||(f&&(view=="browse"||view=="stats")))render();else sdu()};
 let lastV=null,hp=null,hc=null,ws,tp,wt;
@@ -2122,7 +2258,7 @@ let V2=true;
 const SYK="revis-sy2",syGet=h=>{let o=null;try{o=JSON.parse(localStorage.getItem(SYK))}catch(e){}return o&&o.h===h.slice(0,16)&&o.sv&&o.g===S.gid?o:{h:h.slice(0,16),g:S.gid,rev:0,sv:{}}},sySet=o=>{try{localStorage.setItem(SYK,JSON.stringify(o))}catch(e){}};
 // syF = échecs consécutifs : à partir de 2 sans raison réseau, on évoque la mise en pause du projet Supabase gratuit
 let syF=0,syOk=0;
-const syErr=e=>{syF++;if(e&&/^4\d\d$/.test(e.message)&&e.message!="404")return"Le serveur a refusé la synchronisation (données trop volumineuses ?). Exporte une sauvegarde par sécurité.";
+const syErr=e=>{syF++;if(e&&e.message=="rec")return"Synchronisation en pause : "+recMsg;if(e&&/^4\d\d$/.test(e.message)&&e.message!="404")return"Le serveur a refusé la synchronisation (données trop volumineuses ?). Exporte une sauvegarde par sécurité.";
  if(typeof navigator!="undefined"&&navigator.onLine===false)return"Pas de connexion Internet. Tes révisions restent enregistrées sur cet appareil et seront synchronisées au retour du réseau.";
  if(syF>=2)return"Le serveur ne répond pas alors que tu es connecté à Internet. Si l\'app n\'a été ouverte sur aucun appareil depuis plus de 7 jours, le serveur gratuit (Supabase) s\'est sans doute mis en pause : relance le projet « Mes révisions » depuis supabase.com (bouton « Restore »), puis touche « Synchroniser maintenant ». Tes données ne sont pas perdues.";
  return"Échec de la synchronisation (réseau ?). Réessaie."};
@@ -2136,25 +2272,32 @@ async function sync(){
  if(!cfg.code||busy||!ready)return;
  if(!V2)return sync1();
  busy=true;clearTimeout(tm);sm="Synchronisation…";ui();
- try{const h=await H(),st=syGet(h);let r;
+ try{const h=await H(),st=syGet(h);let r;CSV=st.sv;
   try{r=await rpc("revis_n_pull",{p_hash:h,p_since:st.rev||0})}catch(e){if(e.message=="404"){V2=false;busy=false;return sync1()}throw e}
+  ((r&&r.nodes)||[]).forEach(hlcNode);
   const dirty=new Set(),rm=new Map(((r&&r.nodes)||[]).map(n=>{if(n.k=="img"&&n.d){if(!IMG.has(n.id)){IMG.set(n.id,n.d);iput(n.id,n.d)}dirty.add(n.id);const{d,...o}=n;n=o}return[n.id,n]})),ln=new Map(S.nodes.map(n=>[n.id,n]));
   const keep=new Set(view=="study"||view=="exam"?(deck.virt?[...deck.own.values()].map(n=>n.id):[deck.id]):view=="edit"?[ed.id]:[]);
-  mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep,dirty);setPull();TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
-  rm.forEach(n=>{st.sv[n.id]=n.u||0});
+  /* A2 : avant d'adopter une génération supérieure qui remplace le contenu, copie de récupération des ajouts/modifications locaux ; si elle échoue, rien n'est adopté (erreur « rec ») */
+  {const rc=[];for(const r of rm.values()){const l=G(r.id);if(!l||!isPack(l)||!isPack(r))continue;const g=gcmp(l,r);
+   /* version locale écartée par une génération distante qui fait foi pour le contenu, ou version distante (ancien client, ancienne génération) écartée par la nôtre */
+   const c=g<0&&l.items&&!l.x&&(r.gc||r.x)?recCand(l,r):g>0&&r.items&&!r.x&&(l.gc||l.x)?recCand(r,l):null;if(c)rc.push(c);const cd=keep.has(r.id)?null:cDrops(l,r,g);if(cd)rc.push(cd)}if(rc.length&&!(await recSave(rc)))throw new Error("rec")}
+  PENDG=new Set();mDirty=false;S.nodes=merge(S.nodes,[...rm.values()],keep,dirty);const bsn=baseSnap();setPull();TDv++;S.nodes.forEach(n=>{if(n.k=="img"&&n.x&&IMG.has(n.id)){IMG.delete(n.id);idel(n.id)}});
+  rm.forEach(n=>{if(!PENDG.has(n.id))st.sv[n.id]=vers(n)});
   const ch=S.nodes.some(n=>ln.get(n.id)!==n);
   if(cur&&(!G(cur)||G(cur).x))cur=0;
   persist();
   await imgSync(h);
   // envoi par lots (300 nœuds ou environ 1,5 Mo) ; la version envoyée est notée au moment de l'envoi
-  const out=S.nodes.filter(n=>dirty.has(n.id)||(n.u||0)>(st.sv[n.id]??-1));let lot=[],sz=0;
-  const send=async()=>{if(!lot.length)return;const us=lot.map(n=>[n.id,n.u||0]),p=rpc("revis_n_push",{p_hash:h,p_nodes:lot});lot=[];sz=0;await p;us.forEach(([id,u])=>{st.sv[id]=u});sySet(st)};
+  const out=S.nodes.filter(n=>!PENDG.has(n.id)&&(dirty.has(n.id)||vers(n)>(st.sv[n.id]??-1)));let lot=[],sz=0,bu=false;
+  out.forEach(n=>{const k=st.sv[n.id];if(k!=null&&vers(n)<=k){hlcSee(k);n.u=hlc();bu=true}});if(bu)persist();
+  const send=async()=>{if(!lot.length)return;const us=lot.map(n=>[n.id,vers(n)]),p=rpc("revis_n_push",{p_hash:h,p_nodes:lot});lot=[];sz=0;await p;us.forEach(([id,u])=>{st.sv[id]=u});sySet(st)};
   for(const n of out){const k=JSON.stringify(n).length;if(lot.length&&(lot.length>=300||sz+k>15e5))await send();lot.push(n);sz+=k}
   await send();if(out.length)ping();
-  st.rev=Math.max(st.rev||0,+(r&&r.rev)||0);sySet(st);
+  if(!PENDG.size)st.rev=Math.max(st.rev||0,+(r&&r.rev)||0);sySet(st);
   lastV=await rpc("revis_n_ver",{p_hash:h});
+  baseUp(bsn);
   sm=syOkMsg();
-  busy=false;ui(ch);return
+  busy=false;ui(ch);if(PENDG.size)setTimeout(sync,3000);return
  }catch(e){sm=syErr(e)}
  busy=false;ui()}
 let lpt=0;async function poll(){if(!cfg.code||document.hidden||busy||!ready)return;if(Date.now()-lpt<(ws&&ws.readyState==1?3e4:2e4))return;lpt=Date.now();try{const v=await rpc(V2?"revis_n_ver":"revis_ver",{p_hash:await H()});if(v&&v!==lastV)sync()}catch(e){}}
@@ -2186,9 +2329,9 @@ function dupAsk(name,what,go,ren){CF=go;AS={k:"conf",title:"Ce nom existe déjà
 const unflash=()=>{document.querySelectorAll&&document.querySelectorAll(".ts").forEach(x=>x.remove())};
 const flash=(m,u)=>{if(!document.createElement||!document.body)return;unflash();const d=document.createElement("div");d.className="ts";d.setAttribute&&d.setAttribute("role","status");d.innerHTML="<span>"+esc(m)+"</span>"+(u?'<button data-a="undo">Annuler</button>':"");document.body.appendChild(d);setTimeout(()=>d.remove(),u?5500:2200)};
 const moveIds=(ids,to)=>{const mv=[];ids.forEach(i=>{const n=G(i);if(!n||n.p==to||i==to||(to&&(!G(to)||G(to).x))||desc(i).some(x=>x.id==to))return;mv.push(n)});
- if(mv.length){const snap=snapF(mv,["p"]);mv.forEach(n=>{n.p=to;n.u=Date.now()});save();undoP(snap,mv.length+(mv.length>1?" éléments déplacés":" élément déplacé"),true)}
+ if(mv.length){const snap=snapF(mv,["p"]);mv.forEach(n=>{n.p=to;n.u=hlc()});save();undoP(snap,mv.length+(mv.length>1?" éléments déplacés":" élément déplacé"),true)}
  selm=false;selset.clear();render()};
-const killIds=ids=>{const b=uid(),now=Date.now(),ds=new Map(ids.map(i=>[i,new Set(desc(i).map(n=>n.id))])),a=new Set([...ids,...[...ds.values()].flatMap(x=>[...x])]);
+const killIds=ids=>{const b=uid(),now=hlc(),ds=new Map(ids.map(i=>[i,new Set(desc(i).map(n=>n.id))])),a=new Set([...ids,...[...ds.values()].flatMap(x=>[...x])]);
  S.nodes.forEach(n=>{if(a.has(n.id)&&!n.x){n.x=1;n.xt=now;n.xb=b;n.u=now;if(ids.includes(n.id)&&!ids.some(j=>j!=n.id&&ds.get(j).has(n.id)))n.xr=1}});
  save();clearTimeout(gct);gct=setTimeout(()=>{gc();save()},8000);return b};
 const vis=()=>{const z=fq.trim();let l=z?desc(cur).filter(n=>nm(n.name).includes(nm(z))):kidsS(cur);if(ft=="f"||ft=="fc"||ft=="qcm")l=l.filter(n=>n.k==ft);else if(ft=="due")l=l.filter(n=>dn(n)>0);return l};
@@ -2207,7 +2350,7 @@ const selDock=()=>{const n=selset.size,dis=n?"":" disabled",allH=n&&[...selset].
  const t=(a,ic_,l,x)=>'<button type="button" class="rqt'+(x||"")+'" data-a="'+a+'"'+dis+'>'+ic(ic_,22)+'<span>'+l+'</span></button>';
  return '<div class="dock sdk rqsd">'+(cfg.nx?'':'<div class="hd"><span>'+n+' sélectionné'+(n>1?"s":"")+'</span><span class="bt"><button class="b sm" data-a="selall">Tout</button><button class="b sm" data-a="sel">Terminer</button></span></div>')+'<div class="rqtl">'+t("smv","move","Déplacer")+t("shid",allH?"eye":"eyeoff",allH?"Afficher":"Cacher")+t("spl","more","Plus")+t("sdel","trash","Supprimer"," dg")+'</div></div>'};
 const nxSelTop=()=>{const n=selset.size,all=vis().length>0&&vis().every(x=>selset.has(x.id));return '<div class="rqselb"><button type="button" class="rqcap" data-a="sel">Annuler</button><b role="status">'+n+' sélectionné'+(n>1?"s":"")+'</b><button type="button" class="rqcap" data-a="selall" aria-label="'+(all?"Tout désélectionner":"Tout sélectionner")+'"><span class="rqfull">'+(all?"Tout désélectionner":"Tout sélectionner")+'</span><span class="rqshort">'+(all?"Aucun":"Tout")+'</span></button></div>'};
-const tc=i=>{(deck.virt?deck.own.get(i):deck).u=Date.now()},bar=(k,n)=>'<div class="bar"><i style="width:'+(n?k/n*100:0)+'%"></i></div>';
+const tc=i=>{(deck.virt?deck.own.get(i):deck).u=hlc()},bar=(k,n)=>'<div class="bar"><i style="width:'+(n?k/n*100:0)+'%"></i></div>';
 const delB=fc=>'<button class="tg dl" data-a="qdel" aria-label="'+(fc?"Supprimer cette carte":"Supprimer cette question")+'" title="'+(fc?"Supprimer cette carte":"Supprimer cette question")+'">'+ic("trash",18)+'</button>';
 const delH=()=>{if(view!="study"||nodue||!deck)return"";const fc=deck.k=="fc";return(fc?!!(q&&q.length):!!(order&&idx<order.length))?delB(fc):""};
 const edH=()=>{if(view!="study"||nodue||!deck)return"";const on=deck.k=="fc"?!!(q&&q.length):!!(order&&idx<order.length);return on?'<button class="tg" data-a="qed" aria-label="Modifier" title="Modifier">'+ic("edit",18)+'</button>':""};
@@ -2251,6 +2394,8 @@ function parseAll(t){
  return{fc,qcm,skip};
 }
 function parse(t,k){return parseAll(t)[k=="fc"?"fc":"qcm"]}
+/* 21/10/2026 (A4) : une question ne se valide que si au moins une proposition est cochée ; une question importée sans aucune bonne réponse (défaut du contenu) ne se valide jamais : « Passer » (sans écriture) ou « À corriger » */
+const qNoKey=it=>!!it&&!po(it).some(o=>o.k),qvOk=()=>{if(view!="study"||!deck||deck.k!="qcm"||!order||idx>=order.length)return false;const it=deck.items[order[idx]];return!!it&&!qNoKey(it)&&po(it).some((o,i)=>!!sel[i])};
 function startQ(o){qSeed();order=o;idx=0;score=0;wrong=[];sel={};val=false;vprev=null;hesd=false;render()}
 const A={
  th(){TH=dark()?"light":"dark";try{localStorage.setItem("revis-theme",TH)}catch(e){}try{setPush()}catch(e){}setTh();render()},
@@ -2293,7 +2438,7 @@ const A={
  sren(){ed={m:"ren",id:[...selset][0]};view="name";render()},
  scol(){ed={ids:[...selset].filter(i=>G(i)&&G(i).k=="f")};view="col";render()},
  col(id){ed={ids:[id]};view="col";render()},
- setc(c){const ns=ed.ids.map(G).filter(Boolean),snap=snapF(ns,['c']);ns.forEach(n=>{if(c)n.c=c;else delete n.c;n.u=Date.now()});save();A.cd(cur);undoP(snap,'Couleur modifiée',true)},
+ setc(c){const ns=ed.ids.map(G).filter(Boolean),snap=snapF(ns,['c']);ns.forEach(n=>{if(c)n.c=c;else delete n.c;n.u=hlc()});save();A.cd(cur);undoP(snap,'Couleur modifiée',true)},
  hide(id){const n=G(id);if(!n||n.x)return;const val=!n.h;flagSet([n],'h','hu',val,(n.k=='f'?'Dossier ':'Paquet ')+(val?'caché':'affiché'))},
  shid(){const ns=[...selset].map(G).filter(n=>n&&!n.x);if(!ns.length)return;const val=!ns.every(n=>n.h);selm=false;selset.clear();flagSet(ns,'h','hu',val,ns.length>1?ns.length+(val?' éléments cachés':' éléments affichés'):(val?'Élément caché':'Élément affiché'))},
  sdel(){const k=selset.size;if(!k)return;const b=killIds([...selset]);selm=false;selset.clear();pend=null;render();undoB(b,k>1?k+' éléments supprimés':'Élément supprimé')},
@@ -2337,8 +2482,8 @@ const A={
  ok(){const fv=ed.force;ed.force=null;const v=fv!=null?fv:$("nm").value.trim();if(!v){$("msg").textContent="Donne un nom.";return}
   if(fv==null){const p0=ed.m=="ren"?(G(ed.id)||{}).p:cur,k0=ed.m=="ren"?(G(ed.id)||{}).k:"f",d=dupOf(p0,v,k0=="f"?["f"]:["fc","qcm"],ed.m=="ren"?ed.id:null);
    if(d&&!(ed.m=="ren"&&nm(G(ed.id).name.trim())==nm(v))){const e0=ed;dupAsk(d.name,d.k=="f"?"un dossier":"un paquet",()=>{if(ed!==e0||view!="name")return;ed.force=v;A.ok()},ed.m=="ren");return}}
-  if(ed.m=="ren"){const n0=G(ed.id);if(n0&&n0.name!=v){const snap=snapF([n0],["name"]);n0.name=v;n0.u=Date.now();save();A.cd(cur);undoP(snap,"Renommé",true);return}}
-  if(ed.m=="new")S.nodes.push({id:uid(),p:cur,k:"f",name:v,u:Date.now()});else{const n=G(ed.id);n.name=v;n.u=Date.now()}save();A.cd(cur)},
+  if(ed.m=="ren"){const n0=G(ed.id);if(n0&&n0.name!=v){const snap=snapF([n0],["name"]);n0.name=v;n0.u=hlc();save();A.cd(cur);undoP(snap,"Renommé",true);return}}
+  if(ed.m=="new")S.nodes.push({id:uid(),p:cur,k:"f",name:v,u:hlc()});else{const n=G(ed.id);n.name=v;n.u=hlc()}save();A.cd(cur)},
  mv(id){ed={ids:[id]};view="move";render()},
  mvto(id){moveIds(ed.ids,nid(id));A.cd(cur)},
  imp(){view="imp";impStep=1;impCp=false;menu=pend=null;render()},
@@ -2347,7 +2492,7 @@ const A={
  impb(){impStep=1;render();scrollTo(0,0)},
  add(f){const r=parseAll($("tx").value),nm=$("nm").value.trim()||"Nouveau paquet";
   if(!r.fc.length&&!r.qcm.length){$("msg").textContent="Rien de reconnu : vérifie le format indiqué.";return}
-  const both=r.fc.length&&r.qcm.length,now=Date.now(),pl=(n,a,b)=>n+" "+(n>1?b:a);
+  const both=r.fc.length&&r.qcm.length,now=hlc(),pl=(n,a,b)=>n+" "+(n>1?b:a);
   if(f!==true){const d=(r.fc.length&&dupOf(cur,both?nm+" · Flashcards":nm,["fc","qcm"]))||(r.qcm.length&&dupOf(cur,both?nm+" · QCM":nm,["fc","qcm"]));
    if(d){dupAsk(d.name,"un paquet",()=>{if(view=="imp"&&$("tx"))A.add(true)});return}}
   if(r.fc.length)S.nodes.push({id:uid(),p:cur,k:"fc",name:both?nm+" · Flashcards":nm,items:r.fc,u:now});
@@ -2361,19 +2506,22 @@ const A={
  no(){if(cfg.srs&&!deck.free)return A.rate(1);const i=deck.items[q[0]];if(cfg.hc<6){cfg.hc++;saveCfg()}if(!deck.free){rec(i,false);save()}q.push(q.shift());back=false;render()},
  rate(g){g=+g;const i=deck.items[q[0]];if(!i)return;if(cfg.hc<6){cfg.hc++;saveCfg()}rec(i,g>1);recR(i,g>1);const p=opts(i)[g-1];applyP(i,p);save();const c=q.shift();
   if(p.m){q.splice(Math.min(q.length,p.m<=1?2:p.m<=6?4:p.m<=10?7:9),0,c)}else known++;
-  back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=Date.now();save()}render()},
- yes(){if(cfg.srs&&!deck.free)return A.rate(3);const i=deck.items[q[0]];if(cfg.hc<6){cfg.hc++;saveCfg()}if(!deck.free){rec(i,true);save()}q.shift();known++;back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=Date.now();save()}render()},
+  back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=hlc();save()}render()},
+ yes(){if(cfg.srs&&!deck.free)return A.rate(3);const i=deck.items[q[0]];if(cfg.hc<6){cfg.hc++;saveCfg()}if(!deck.free){rec(i,true);save()}q.shift();known++;back=false;if(!q.length&&!deck.virt){deck.last="terminé";deck.u=hlc();save()}render()},
  opt(i){if(val)return;sel[i]=!sel[i];render()},
- val(){val=true;const it=deck.items[order[idx]],ok=po(it).every((o,i)=>!!sel[i]===!!o.k);if(ok)score++;else wrong.push(order[idx]);if(!deck.free){rec(it,ok);if(cfg.srs){recR(it,ok);vprev=ok?cp(it):null;hesd=false;let p=opts(it)[ok?2:0];if(ok&&p.m)p={...p,st:2,k:null,m:0,iv:fI(p.s)};applyP(it,p)}save()}
+ val(){if(val||!qvOk())return;val=true;const it=deck.items[order[idx]],ok=po(it).every((o,i)=>!!sel[i]===!!o.k);if(ok)score++;else wrong.push(order[idx]);if(!deck.free){rec(it,ok);if(cfg.srs){recR(it,ok);vprev=ok?cp(it):null;hesd=false;let p=opts(it)[ok?2:0];if(ok&&p.m)p={...p,st:2,k:null,m:0,iv:fI(p.s)};applyP(it,p)}save()}
   anp=!!(cfg.an&&ok);render();if(anp){const t=++ant,i0=idx,o0=order;setTimeout(()=>{if(t===ant&&anp&&view=="study"&&val&&idx===i0&&order===o0)A.next()},1500)}},
- next(){anp=false;ant++;idx++;sel={};val=false;vprev=null;hesd=false;if(idx>=order.length&&!deck.virt&&order.length==deck.items.length){deck.last=score+"/"+order.length;deck.u=Date.now();save()}render()},
+ qskip(){if(view!="study"||!deck||deck.k!="qcm"||val||!order||idx>=order.length)return;anp=false;ant++;idx++;sel={};vprev=null;hesd=false;render()},
+ qfx(){A.fx();render()},
+ xfx(v){const it=deck&&deck.items[+v];if(view!="exam"||!ex||!ex.done||!it)return;const own=deck.virt&&deck.own?deck.own.get(it):deck;if(!own||!own.items)return;if(it.fx)delete it.fx;else it.fx=1;own.u=hlc();save();render();flash(it.fx?"Question marquée à corriger":"Retirée de « À corriger »")},
+ next(){anp=false;ant++;idx++;sel={};val=false;vprev=null;hesd=false;if(idx>=order.length&&!deck.virt&&order.length==deck.items.length){deck.last=score+"/"+order.length;deck.u=hlc();save()}render()},
  redo(){startQ(wrong.slice())},
  restart(){if(deck&&deck.free)return A.fre();A.st(0,rmode)},
  stats(){view="stats";menu=pend=null;hmSel=null;om=false;render();scrollTo(0,0);if(cfg.code)setTimeout(sync,0)},
  hard(t){const own=new Map(),items=[];hardList().forEach(({i,p})=>{if(p.k==t){own.set(i,p);items.push(i)}});if(!items.length)return;deck={virt:1,own,name:"Ce que tu rates souvent",k:t,items};A.st(1)},
  edit(id){ed={id};view="edit";menu=pend=null;render();scrollTo(0,0)},
  pimg(v){const[i,f]=v.split(":");pk={t:"card",id:ed.id,i:+i,f};$("fi").click()},
- rimg(v){const[i,f]=v.split(":"),n=G(ed.id);delete n.items[+i][f];n.u=Date.now();gc();save();render()},
+ rimg(v){const[i,f]=v.split(":"),n=G(ed.id);delete n.items[+i][f];n.u=hlc();gc();save();render()},
  exs(){xs={ids:new Set(desc(cur).filter(n=>n.k=="qcm").map(n=>n.id)),n:20,t:60};view="exs";menu=pend=null;render();scrollTo(0,0)},
  xp(id){xs.ids.has(id)?xs.ids.delete(id):xs.ids.add(id);render()},
  xn(v){xs.n=+v;render()},
@@ -2383,8 +2531,9 @@ const A={
  xo(i){ex.s[ex.i][i]=!ex.s[ex.i][i];pend=null;render();exSave()},
  xnx(){ex.i++;pend=null;render();scrollTo(0,0);exSave()},
  xpv(){ex.i--;pend=null;render();scrollTo(0,0);exSave()},
- xfin(){if(!ex||ex.done)return;clearInterval(xt);exClr();const now=Date.now();ex.done=true;ex.to=now>=ex.end;ex.dt=Math.min(now,ex.end)-ex.t0;ex.bad=[];ex.sc=0;
-  deck.items.forEach((it,j)=>{const ok=po(it).every((o,i)=>!!ex.s[j][i]===!!o.k);if(ok)ex.sc++;else ex.bad.push(j);rec(it,ok)});save();pend=null;render();scrollTo(0,0)},
+ xfin(){if(!ex||ex.done)return;clearInterval(xt);exClr();const now=Date.now();ex.done=true;ex.to=now>=ex.end;ex.dt=Math.min(now,ex.end)-ex.t0;ex.bad=[];ex.sc=0;ex.inv=[];
+  /* question sans aucune bonne réponse (défaut du contenu) : exclue du score, du dénominateur et de tout comptage ; une question valide laissée vide reste une erreur */
+  deck.items.forEach((it,j)=>{if(qNoKey(it)){ex.inv.push(j);return}const ok=po(it).every((o,i)=>!!ex.s[j][i]===!!o.k);if(ok)ex.sc++;else ex.bad.push(j);recE(it,ok)});save();pend=null;render();scrollTo(0,0)},
  xq(){if(pend=="xq"){clearInterval(xt);exClr();pend=null;view="browse";render()}else{pend="xq";render()}},
  xredo(){view="study";nodue=false;startQ(ex.bad.slice())},
  allg(t){A.all(t,"both")},
@@ -2392,22 +2541,22 @@ const A={
  more(){if(XB.d!=day())XB={d:day(),n:{}};const ks=new Set();dkPacks().forEach(p=>{const o=ownOf(p);if(o!=null&&p.items.some(isNew)&&!gLeft(o,p.k))ks.add(o+"|"+p.k)});ks.forEach(gk=>{XB.n[gk]=(XB.n[gk]||0)+MORE});TDv++;A.st(0,"new");scrollTo(0,0)},
  xd(id){AS={k:"goal",id:String(id)};asRender()},
  xds(id){const e=$("xdi"),v=e?e.value:"",d=pd(v);if(d==null||d<day()){AS={k:"goal",id,v};asRender();const p=$("xdp");if(p)p.textContent=d==null?"Choisis le premier jour de l\'examen.":"Choisis une date à venir.";return}
-  const x=id=="0"?optMk():G(id);if(!x)return;x.xd=d;x.u=Date.now();save();render();flash("Date d\'examen enregistrée : "+dstr(d))},
- xdr(id){const x=id=="0"?optN():G(id);if(!x)return;delete x.xd;x.u=Date.now();save();render();flash("Date d\'examen retirée")},
+  const x=id=="0"?optMk():G(id);if(!x)return;x.xd=d;x.u=hlc();save();render();flash("Date d\'examen enregistrée : "+dstr(d))},
+ xdr(id){const x=id=="0"?optN():G(id);if(!x)return;delete x.xd;x.u=hlc();save();render();flash("Date d\'examen retirée")},
  cpv(v){const k=String(v).lastIndexOf("#");AS={k:"card",pid:String(v).slice(0,k),i:+String(v).slice(k+1)};asRender()},
  cpe(v){const k=String(v).lastIndexOf("#"),n=G(String(v).slice(0,k)),i=+String(v).slice(k+1);if(n&&n.items&&n.items[i]&&window.cardEd)window.cardEd(n,i)},
  cpc(){const c=cfg.code?fc4(cfg.code):"",ko=()=>flash("Copie impossible : recopie le code affiché dans Réglages.");if(!c)return;if(!navigator.clipboard||!navigator.clipboard.writeText)return ko();navigator.clipboard.writeText(c).then(()=>{try{localStorage.setItem("revis-codeok","1")}catch(e){}render();flash("Code copié : colle-le dans tes notes")}).catch(ko)},
  cok(){try{localStorage.setItem("revis-codeok","1")}catch(e){}render()},
- cuall(){const o=optN();if(cuAct()){delete o.cu;o.u=Date.now();save()}else{cfg.cud=day();saveCfg()}render();flash("Tout ton retard est proposé dans « Réviser »")},
- cusp(){const o=optMk();o.cu={d0:day(),n:3};o.u=Date.now();save();render();const k=rvLeft();flash("Retard étalé sur 3 jours : "+k+(k>1?" révisions":" révision")+" aujourd\'hui")},
- hes(){if(!val||!vprev||hesd||!deck||deck.free||!cfg.srs)return;const it=deck.items[order[idx]];if(!it)return;copyP(it,vprev);applyP(it,opts(it)[1]);hesd=true;anp=false;ant++;save();render()},
+ cuall(){const o=optN();if(cuAct()){delete o.cu;o.u=hlc();save()}else{cfg.cud=day();saveCfg()}render();flash("Tout ton retard est proposé dans « Réviser »")},
+ cusp(){const o=optMk();o.cu={d0:day(),n:3};o.u=hlc();save();render();const k=rvLeft();flash("Retard étalé sur 3 jours : "+k+(k>1?" révisions":" révision")+" aujourd\'hui")},
+ hes(){if(!val||!vprev||hesd||!deck||deck.free||!cfg.srs)return;const it=deck.items[order[idx]];if(!it)return;copyP(it,vprev);applyP(it,opts(it)[1]);it.t=hlc();it.w=DEV;tc(it);hesd=true;anp=false;ant++;save();render()},
  fs(v){cfg.fs=+v;saveCfg();setFs();render()},
- fx(){const it=curIt();if(!it)return;const own=deck.virt&&deck.own?deck.own.get(it):deck;if(!own||!own.items)return;if(it.fx)delete it.fx;else it.fx=1;own.u=Date.now();save();
+ fx(){const it=curIt();if(!it)return;const own=deck.virt&&deck.own?deck.own.get(it):deck;if(!own||!own.items)return;if(it.fx)delete it.fx;else it.fx=1;own.u=hlc();save();
   const b=document.querySelector(".fxb");if(b){b.classList.toggle("on",!!it.fx);b.setAttribute("aria-pressed",String(!!it.fx));b.setAttribute("aria-label",fxL(it.fx));b.title=fxL(it.fx)}
   flash(it.fx?(deck.k=="fc"?"Carte marquée à corriger":"Question marquée à corriger"):"Retirée de « À corriger »")},
  fxl(){AS={k:"fix"};asRender()},
  fxe(v){AS={k:"fix"};A.cpe(v)},
- fxo(v){AS={k:"fix"};const k=String(v).lastIndexOf("#"),n=G(String(v).slice(0,k)),it=n&&n.items?n.items[+String(v).slice(k+1)]:null;if(!it||!it.fx)return;delete it.fx;n.u=Date.now();save();render();flash("Retirée de « À corriger »")},
+ fxo(v){AS={k:"fix"};const k=String(v).lastIndexOf("#"),n=G(String(v).slice(0,k)),it=n&&n.items?n.items[+String(v).slice(k+1)]:null;if(!it||!it.fx)return;delete it.fx;n.u=hlc();save();render();flash("Retirée de « À corriger »")},
  lt(){cfg.nolt=!cfg.nolt;saveCfg();setLt();render()},
  sk(){cfg.nosk=!cfg.nosk;saveCfg();render()},
  xres(){const o=exGet();if(!o||!o.it)return;const own=new Map(),items=[],sv=[];
@@ -2421,10 +2570,22 @@ const A={
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);bkMark();bm="Sauvegarde exportée : "+name;render()},
  rst(){$("fb").click()},
  rsx(){rs=null;bm="";render()},
- rsok(){if(!rs)return;const now=Date.now(),ids=new Set(rs.nodes.map(n=>n.id));
-  S.nodes.forEach(n=>{if(n.k!="log"&&!n.x&&!ids.has(n.id)){n.x=1;n.u=now;delete n.items;if(n.k=="img"){IMG.delete(n.id);idel(n.id)}}});
-  rs.nodes.forEach(b=>{if(b.k=="log")return;const c={...b,u:now};if(c.k=="img"){if(c.d){IMG.set(c.id,c.d);iput(c.id,c.d)}delete c.d}const i=S.nodes.findIndex(n=>n.id==c.id);if(i>=0)S.nodes[i]=c;else S.nodes.push(c)});
-  rs=null;cur=0;bm="Sauvegarde restaurée.";save();render()}
+ async rsok(){if(!rs||RSB)return;RSB=true;try{const R=rs,cur0=S.nodes.filter(n=>isPack(n)&&!n.x&&n.items&&n.items.length).map(p=>recPack(p));
+  if(cur0.length&&!(await recSave([recEntry("avant-restauration",cur0,"État complet de cet appareil avant la restauration")]))){bm="Restauration bloquée. "+recMsg;render();return}
+  const g=hlc(),ids=new Set(R.nodes.map(n=>n.id));
+  S.nodes.forEach(n=>{if(n.k!="log"&&!n.x&&!ids.has(n.id)){n.x=1;n.u=g;n.gn=g;n.gw=DEV;n.gc=1;delete n.items;if(n.k=="img"){IMG.delete(n.id);idel(n.id)}}});
+  R.nodes.forEach(b=>{if(b.k=="log")return;const c={...b,u:g,gn:g,gw:DEV,gc:1,hu:g,pu:g,ou:g};if(isPack(c)&&c.items)c.items=c.items.map(x=>({...x,t:g,w:DEV}));if(c.k=="img"){if(c.d){IMG.set(c.id,c.d);iput(c.id,c.d)}delete c.d}const i=S.nodes.findIndex(n=>n.id==c.id);if(i>=0)S.nodes[i]=c;else S.nodes.push(c)});
+  rs=null;cur=0;bm="Sauvegarde restaurée.";save();render()}finally{RSB=false}},
+ /* récupération locale : export, ajout explicite comme nouveaux paquets, suppression explicite */
+ rcx(k){const e=REC.find(x=>x.k===k);if(!e)return;const data={app:"mes-revisions",type:"recuperation",date:new Date(e.at).toISOString(),nature:e.kind,note:e.note,paquets:e.packs},name="recuperation-"+new Date(e.at).toISOString().slice(0,10)+".json",blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+  try{const f=new File([blob],name,{type:"application/json"});if(navigator.maxTouchPoints>0&&navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f]}).catch(()=>{});return}}catch(x){}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)},
+ rca(k){const e=REC.find(x=>x.k===k);if(!e)return;const np=e.packs.length;
+  CF=()=>{e.packs.forEach(p=>{S.nodes.push({id:uid(),p:0,k:p.k,name:"Récupération · "+p.name,items:cp(p.items),u:hlc()})});save();render();flash(np+(np>1?" paquets ajoutés":" paquet ajouté")+" à la racine")};
+  AS={k:"conf",title:"Ajouter comme nouveaux paquets ?",text:np+(np>1?" paquets (":" paquet (")+e.n+" cartes ou questions) seront ajoutés à la racine, sous le nom « Récupération · … ». Rien n'est remplacé ; la copie reste disponible tant que tu ne la supprimes pas.",ok:"Ajouter",no:"Annuler"};asRender()},
+ rcd(k){const e=REC.find(x=>x.k===k);if(!e)return;
+  CF=async()=>{const prev=REC;REC=REC.filter(x=>x.k!==k);if(!(await recPersist())){REC=prev;flash("Suppression impossible : stockage indisponible.");return}render();asRender()};
+  AS={k:"conf",title:"Supprimer cette copie ?",text:"Cette copie de récupération sera supprimée définitivement de cet appareil.",ok:"Supprimer",no:"Annuler",danger:1};asRender()}
 };
 // ---- navigation : historique du navigateur (bouton retour, geste retour) ----
 let hs=[],hpop=false,hign=0;
@@ -2528,8 +2689,8 @@ document.addEventListener("pointerup",dgEnd);document.addEventListener("pointerc
 document.addEventListener("touchmove",e=>{if(dg&&dg.on)e.preventDefault()},{passive:false});
 document.addEventListener("input",e=>{if(e.target.id=="fq"){fq=e.target.value;const l=$("lst");if(l)l.innerHTML=listHTML()}else if(e.target.id=="sq"){sq=e.target.value;const l=$("sres");if(l)l.innerHTML=searchResultsHTML()}else if(e.target.dataset&&e.target.dataset.lb!=null&&oc)oc.r[+e.target.dataset.lb].l=e.target.value});
 document.addEventListener("change",e=>{const t=e.target;
- if(t.dataset&&t.dataset.ex!=null&&view=="edit"){const n=G(ed.id),it=n.items[+t.dataset.ex],v=t.value.trim();if(v)it.e=v;else delete it.e;n.u=Date.now();save();flash("Explication enregistrée")}
- else if(t.id=="fi"){const f=t.files[0];t.value="";if(!f||!pk)return;flash("Préparation de l'image…");loadImg(f).then(src=>{const n=G(pk.id),it=n.items[pk.i];it[pk.f]=newImg(src);n.u=Date.now();gc();save();render();pk=null}).catch(()=>flash("Image illisible : essaie une photo JPEG ou PNG."))}
+ if(t.dataset&&t.dataset.ex!=null&&view=="edit"){const n=G(ed.id),it=n.items[+t.dataset.ex],v=t.value.trim();if(v)it.e=v;else delete it.e;n.u=hlc();save();flash("Explication enregistrée")}
+ else if(t.id=="fi"){const f=t.files[0];t.value="";if(!f||!pk)return;flash("Préparation de l'image…");loadImg(f).then(src=>{const n=G(pk.id),it=n.items[pk.i];it[pk.f]=newImg(src);n.u=hlc();gc();save();render();pk=null}).catch(()=>flash("Image illisible : essaie une photo JPEG ou PNG."))}
  else if(t.id=="fb"){const f=t.files[0];t.value="";if(!f)return;f.text().then(x=>{const o=JSON.parse(x);if(!o||!Array.isArray(o.nodes)||!o.nodes.every(n=>n&&n.id!=null&&n.k))throw 0;AS={k:"nxp",w:"bk"};rs={nodes:o.nodes.filter(n=>!n.x),np:o.nodes.filter(n=>!n.x&&(n.k=="fc"||n.k=="qcm")).length,date:o.date?new Date(o.date).toLocaleDateString("fr",{day:"numeric",month:"long",year:"numeric"}):"date inconnue"};bm="";render()}).catch(()=>{bm="Ce fichier n'est pas une sauvegarde de rev.";AS={k:"nxp",w:"bk"};render()})}});
 document.addEventListener("click",e=>{if(sw||dd){sw=false;dd=false;return}const t=e.target.closest("[data-a]");if(t&&A[t.dataset.a]){const sv=AS,inS=!!(sv&&t.closest("#asd"));if(inS)AS=null;A[t.dataset.a](t.dataset.v);
  /* feuilles-pages (Synchronisation, Sauvegarde, Corbeille) : une action dans la feuille la laisse ouverte ; une confirmation ouverte depuis elle y revient */
@@ -2618,7 +2779,7 @@ function cardHTML(){const n=G(AS.pid),it=n&&!n.x&&n.items?n.items[AS.i]:null;if(
  let b='<p class="cst">'+esc(pth)+'</p><div class="pn cpw"><div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'');
  if(fc)b+='<div class="a">'+fmt(it.a||"")+'</div>'+(it.ai?imgH(it.ai):'');
  else b+='<div>'+(it.o||[]).map((o,j)=>'<div class="cpr"><b>'+"ABCDEFGH"[j]+'</b><span>'+fmt(o.t)+'</span>'+(o.k?'<span class="mkr" aria-hidden="true">✓</span><span class="vh">vraie</span>':'<span class="vh">fausse</span>')+'</div>').join("")+'</div>'+exH(it);
- const st=[it.n?"Vue "+it.n+" fois, ratée "+(it.m||0)+" fois":"Jamais vue"];if(cfg.srs&&it.d!=null)st.push("prochaine révision : "+(it.d<=d0?"aujourd\'hui":it.d==d0+1?"demain":dstr(it.d)));
+ const st=[nOf(it)?"Vue "+nOf(it)+" fois, ratée "+mOf(it)+" fois":"Jamais vue"];if(cfg.srs&&it.d!=null)st.push("prochaine révision : "+(it.d<=d0?"aujourd\'hui":it.d==d0+1?"demain":dstr(it.d)));
  b+='</div><p class="cst">'+st.join(" · ")+'</p><div class="cfb"><button type="button" class="b" data-a="go" data-v="'+n.id+'">Réviser ce paquet</button><button type="button" class="b ok" data-a="cpe" data-v="'+n.id+'#'+AS.i+'">Modifier</button></div>';
  return asShell(fc?"Carte":"Question",b)}
 // ---- réglages : état du stockage local ----
@@ -2769,7 +2930,9 @@ const NXHELP={
  fh:"Tranche de la couleur du dossier sur chaque dossier, en liste, en icônes et en colonnes (grise pour un dossier sans couleur). Il suit sur tous tes appareils synchronisés.",
  ipad:"Désactivée : la version téléphone est affichée, centrée.",
  fcst:"Désactivé : le graphique est masqué dans les statistiques."};
-const bkUI=()=>(rs?'<p class="help">Sauvegarde du '+esc(rs.date)+' : '+rs.np+' paquet'+(rs.np>1?"s":"")+'. Elle remplacera toutes tes données actuelles'+(cfg.code?', y compris sur tes autres appareils synchronisés':'')+'.</p><div class="menu"><button data-a="rsx">Annuler</button><button class="dg" data-a="rsok">Remplacer mes données</button></div>':'<p class="help">Un fichier JSON avec tous tes dossiers, paquets, images et ta progression. '+bkInfo()+'</p><div class="menu"><button data-a="exp">Exporter</button><button data-a="rst">Restaurer</button></div>')+(bm?'<p class="help">'+esc(bm)+'</p>':'');
+const bkUI=()=>(rs?'<p class="help">Sauvegarde du '+esc(rs.date)+' : '+rs.np+' paquet'+(rs.np>1?"s":"")+'. Elle remplacera toutes tes données actuelles'+(cfg.code?', y compris sur tes autres appareils synchronisés':'')+'.</p><div class="menu"><button data-a="rsx">Annuler</button><button class="dg" data-a="rsok">Remplacer mes données</button></div>':'<p class="help">Un fichier JSON avec tous tes dossiers, paquets, images et ta progression. '+bkInfo()+'</p><div class="menu"><button data-a="exp">Exporter</button><button data-a="rst">Restaurer</button></div>')+(bm?'<p class="help">'+esc(bm)+'</p>':'')+(rs?'':recHTML());
+const recLbl=e=>({"avant-restauration":"Avant une restauration","avant-remise-a-zero":"Avant une remise à zéro","ancienne-generation":"Ajouts hors ligne écartés","conflit-contenu":"Modifications écartées (conflit)"})[e.kind]||e.kind;
+const recHTML=()=>!REC.length?"":'<h2 class="h2">Récupération ('+REC.length+')</h2><p class="help">Copies de sécurité gardées sur cet appareil seulement : jamais synchronisées, jamais réinjectées automatiquement.</p>'+REC.slice().reverse().map(e=>'<p class="help"><b>'+esc(recLbl(e))+'</b><br>'+esc(new Date(e.at).toLocaleDateString("fr",{day:"numeric",month:"long",year:"numeric"}))+' · '+e.packs.length+(e.packs.length>1?" paquets":" paquet")+', '+e.n+(e.n>1?" cartes":" carte")+(e.packs.length==1?' · '+esc(e.packs[0].name):'')+'</p><div class="menu"><button data-a="rcx" data-v="'+esc(e.k)+'">Exporter</button><button data-a="rca" data-v="'+esc(e.k)+'">Ajouter comme paquets</button><button class="dg" data-a="rcd" data-v="'+esc(e.k)+'">Supprimer</button></div>').join("");
 function nxSetHTML(){let sp=SETP;const C=NXC;if(sp=="sync"||sp=="bk"){AS={k:"nxp",w:sp};SETP=sp=null}
  const I=(n,c)=>'<span class="nxsi" style="--c:'+c+'" aria-hidden="true">'+ic(n,18)+'</span>';
  if(sp){const T={sync:"Synchronisation",bk:"Sauvegarde",acc:"Couleur de contraste"}[sp]||"Réglages";
@@ -2861,7 +3024,7 @@ function nxStats(logs,d0,cells,t30,k,today){const pl=(n,a,b)=>n+" "+(n>1?b:a);
  if(statsTab=="rates"){const ks=kids(cur);
   h+='<div class="nxs" role="heading" aria-level="2">'+(cur?'Par dossier, dans « '+esc(G(cur).name)+' »':'Par dossier')+'</div>';
   if(!ks.length)return h+'<p class="help nxsqh">Rien ici pour l\'instant.</p>';
-  h+='<div class="nxsg nxrl">'+ks.map(n=>{const a=packsOf(n).reduce((a,p)=>{p.items.forEach(i=>{a.n+=i.n||0;a.m+=i.m||0});return a},{n:0,m:0}),p=a.n?Math.round((a.n-a.m)/a.n*100):null,cl=p==null?"":p>=80?" g":p<50?" r":"";
+  h+='<div class="nxsg nxrl">'+ks.map(n=>{const a=packsOf(n).reduce((a,p)=>{p.items.forEach(i=>{a.n+=nOf(i);a.m+=mOf(i)});return a},{n:0,m:0}),p=a.n?Math.round((a.n-a.m)/a.n*100):null,cl=p==null?"":p>=80?" g":p<50?" r":"";
    return '<div class="nxrr"><div class="nxrt"><span class="ic">'+ic(n.k=="f"?"f":n.k,18,n.c)+'</span><b>'+esc(n.name)+'</b><span class="nxpc'+cl+'">'+(p==null?"–":p+" %")+'</span></div>'
     +(p==null?'<small>Pas encore révisé</small>':'<div class="nxrb"><i style="width:'+p+'%;background:'+(p>=80?"var(--ok)":p<50?"var(--ko)":"var(--acc)")+'"></i></div><small>'+pl(a.n,"réponse","réponses")+', '+pl(a.m,"erreur","erreurs")+solTxt(n)+'</small>')+'</div>'}).join("")+'</div>';
   if(cfg.srs)h+='<p class="help nxsqh">Solide : retenue pour au moins 3 semaines selon FSRS.</p>'}
@@ -2869,13 +3032,13 @@ function nxStats(logs,d0,cells,t30,k,today){const pl=(n,a,b)=>n+" "+(n>1?b:a);
   h+='<div class="nxs" role="heading" aria-level="2">Ce que tu rates souvent</div>';
   if(!hl.length)h+='<p class="help nxsqh">Rien pour l\'instant. Une carte ou une question apparaît ici dès que tu l\'as ratée deux fois.</p>';
   else{h+='<div class="menu">'+(nf?'<button class="b" data-a="hard" data-v="fc">Réviser ces cartes ('+nf+')</button>':'')+(nq?'<button class="b" data-a="hard" data-v="qcm">Refaire ces QCM ('+nq+')</button>':'')+'</div>';
-   h+='<div class="nxsg nxhl">'+hl.slice(0,12).map(({i,p})=>'<button type="button" class="nxsr nxhr" data-a="cpv" data-v="'+p.id+'#'+p.items.indexOf(i)+'"><span class="nxst"><b>'+fmt(lbl(i,p))+'</b><small>Ratée '+i.m+' fois sur '+i.n+', '+esc(p.name)+'</small></span><span class="nxsc" aria-hidden="true">'+ic("cr",15)+'</span></button>').join("")+'</div>';
+   h+='<div class="nxsg nxhl">'+hl.slice(0,12).map(({i,p})=>'<button type="button" class="nxsr nxhr" data-a="cpv" data-v="'+p.id+'#'+p.items.indexOf(i)+'"><span class="nxst"><b>'+fmt(lbl(i,p))+'</b><small>Ratée '+mOf(i)+' fois sur '+nOf(i)+', '+esc(p.name)+'</small></span><span class="nxsc" aria-hidden="true">'+ic("cr",15)+'</span></button>').join("")+'</div>';
    if(hl.length>12)h+='<p class="help nxsqh">Et '+(hl.length-12)+' autre'+(hl.length-12>1?"s":"")+'.</p>'}}
  return h}
 /* nouvelle apparence : dossier de la carte en haut à gauche (point de couleur + nom), catégorie à droite */
 function nxFd(c){const own=deck.virt&&deck.own?deck.own.get(c):deck,f=own&&own.p?G(own.p):null,col=f&&f.c?f.c:"";
  return '<span class="nxfd"'+(col?' style="--fc:'+esc(col)+'"':'')+'><i class="dt" aria-hidden="true"></i><span class="vh">Dossier : </span><span class="fn">'+esc(f?f.name:"Accueil")+'</span>'+(c.c?'<span class="vh">, catégorie : </span><span class="cat">'+esc(c.c)+'</span>':'')+'</span><span class="vh">. </span>'}
-function render(){RM={k:new Map(),c:new Map()};try{capAll()}catch(e){}try{render0()}finally{RM=null}
+function render(){RDAY=day();RM={k:new Map(),c:new Map()};try{capAll()}catch(e){}try{render0()}finally{RM=null}
 
  nxNew();if(cfg.nx){nxFit();requestAnimationFrame(nxFit)}else nxBbRender()}
 // nouvelle apparence : si le mot du bouton retour serait coupé (« Réglag… »), on n'affiche que le chevron (le mot reste lu par VoiceOver)
@@ -2967,9 +3130,11 @@ function render0(){
   const n=deck.items.length;
   if(!ex.done){const it=deck.items[ex.i],r=Math.max(0,Math.ceil((ex.end-Date.now())/1000));
    h='<div class="hd"><button class="b sm'+(pend=="xq"?" dg":"")+'" data-a="xq">'+(pend=="xq"?"Abandonner ?":"Arrêter")+'</button><span id="tmr" class="tmr'+(r<=60?" lo":"")+'" role="timer">'+mmss(r)+'</span><span>'+(ex.i+1)+' / '+n+'</span>'+fxH()+delX()+'</div>'+bar(ex.i+1,n)
-    +'<div class="qb">'+(cfg.nx?'<div class="nxqq">':'')+'<div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+'<p class="hint">Coche les propositions vraies.</p>'+(cfg.nx?'</div>':'')+nxOpts(optsH(it,ex.s[ex.i],false,"xo"))+'</div>'
+    +'<div class="qb">'+(cfg.nx?'<div class="nxqq">':'')+'<div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+'<p class="hint">Coche les propositions vraies.</p>'+(qNoKey(it)?'<p class="help qnk" role="status">Cette question n\'a aucune bonne réponse définie : elle sera exclue du score.</p>':'')+(cfg.nx?'</div>':'')+nxOpts(optsH(it,ex.s[ex.i],false,"xo"))+'</div>'
     +'<div class="dock"><button class="b" data-a="xpv"'+(ex.i?"":" disabled")+'>Précédent</button><button class="b ok" data-a="'+(ex.i+1<n?"xnx":"xfin")+'">'+(ex.i+1<n?"Suivant":"Terminer")+'</button></div>'}
-  else{h='<div class="hd"><button class="bk" data-a="back">'+ic("chev",22)+'<span>Retour</span></button><span class="dn">Examen</span>'+tg()+'</div><div class="done"><h1>Score : '+ex.sc+' / '+n+'</h1><p class="help">'+Math.round(ex.sc/n*100)+' % de questions justes, en '+mmss(Math.round(ex.dt/1000))+(ex.to?". Temps écoulé : les questions sans réponse comptent comme fausses.":".")+'</p>'+(ex.bad.length?'<button class="b ok" data-a="xredo">Refaire mes erreurs ('+ex.bad.length+')</button>':'')+'<button class="b" data-a="back">Retour aux paquets</button></div>';
+  else{const nv=n-(ex.inv||[]).length;
+   h='<div class="hd"><button class="bk" data-a="back">'+ic("chev",22)+'<span>Retour</span></button><span class="dn">Examen</span>'+tg()+'</div><div class="done">'+(nv?'<h1>Score : '+ex.sc+' / '+nv+'</h1><p class="help">'+Math.round(ex.sc/nv*100)+' % de questions justes, en '+mmss(Math.round(ex.dt/1000))+(ex.to?". Temps écoulé : les questions sans réponse comptent comme fausses.":".")+'</p>':'<h1>Aucune question notée</h1><p class="help">Toutes les questions de cet examen n\'ont aucune bonne réponse définie.</p>')+(ex.bad.length?'<button class="b ok" data-a="xredo">Refaire mes erreurs ('+ex.bad.length+')</button><p class="help xrn">Révision normale : tes réponses mettent à jour ton planning.</p>':'')+'<button class="b" data-a="back">Retour aux paquets</button></div>';
+   if((ex.inv||[]).length){h+='<h2 class="h2">Questions mal configurées</h2><p class="help">'+((ex.inv.length>1)?ex.inv.length+' questions n\'ont aucune bonne réponse définie : elles sont exclues du score et ne sont pas comptées.':'Une question n\'a aucune bonne réponse définie : elle est exclue du score et n\'est pas comptée.')+'</p>';ex.inv.forEach(j=>{const it=deck.items[j];h+='<div class="qb"><div class="q">'+fmt(it.q)+'</div><button type="button" class="b sm" data-a="xfx" data-v="'+j+'">'+(it.fx?"Retirer de « À corriger »":"Signaler à corriger")+'</button></div>'})}
    if(ex.bad.length){h+='<h2 class="h2">Correction de tes erreurs</h2>';ex.bad.forEach(j=>{const it=deck.items[j];h+='<div class="qb">'+(cfg.nx?'<div class="nxqq">':'')+'<div class="q">'+fmt(it.q)+'</div>'+(it.qi?imgH(it.qi):'')+(cfg.nx?'</div>':'')+nxOpts(optsH(it,ex.s[j],true,null))+exH(it)+'</div>'})}}
  }else if(nodue){
   const d0=day(),nx=Math.min(1e9,...deck.items.filter(i=>i.d!=null&&i.d>d0).map(i=>i.d)),dd=nx-d0,lim=deck.items.some(isNew)&&!newLeft(),gol=!lim&&moreAvail(),cuh=cfg.srs&&!rvLeft()&&deck.items.some(i=>isRev(i)&&i.st!=1&&i.st!=3);
@@ -2992,7 +3157,8 @@ function render0(){
    if(val)h+='<p class="res '+(bad?"r":"g")+'" role="status"><span class="state-icon" aria-hidden="true">'+(bad?"!":"✓")+'</span><span>'+(bad?bad+(bad>1?" erreurs":" erreur"):"Tout juste")+'</span>'+(!bad&&vprev?(hesd?'<span class="hz">Noté comme difficile</span>':'<button type="button" class="lnk hz" data-a="hes">J\'ai hésité</button>'):'')+'</p>';
    h+=nxOpts(optsH(it,sel,val,"opt"));
    if(val)h+=exH(it);
-   h+='</div><div class="dock"><button class="b ok'+(val&&anp?" an":"")+'" data-a="'+(val?"next":"val")+'">'+(val?(idx+1>=n?"Voir le score":"Suivant"):"Valider")+'</button></div>'}
+   if(!val&&qNoKey(it))h+='<p class="help qnk" role="status">Cette question n\'a aucune bonne réponse définie : elle ne peut pas être validée.</p><button type="button" class="lnk qnk" data-a="qfx">'+(it.fx?"Retirer de « À corriger »":"Signaler à corriger")+'</button>';
+   h+='</div><div class="dock">'+(!val&&qNoKey(it)?'<button class="b" data-a="qskip">Passer</button>':'<button class="b ok'+(val&&anp?" an":"")+'" data-a="'+(val?"next":"val")+'"'+(!val&&!qvOk()?' disabled':'')+'>'+(val?(idx+1>=n?"Voir le score":"Suivant"):"Valider")+'</button>')+'</div>'}
  }
  if(cfg.nx&&/^(col|stats)$/.test(view))h=h.replace(/<div class="dock"><button class="b" data-a="cd" data-v="[^"]*">(Annuler|Fermer)<\/button><\/div>/,"");
  const ap=$("app");if(ap.dataset)ap.dataset.view=view;document.documentElement.setAttribute("data-home",view=="browse"&&!cur?"1":"0");ap.innerHTML=h;hsync();asRender();{const sc=document.querySelector(".pvsc");if(sc){pvFit();sc.scrollTop=pvTop;pvEdges(sc)}}
@@ -3002,6 +3168,9 @@ function render0(){
 }
 let rzt;if(typeof addEventListener=="function")addEventListener("resize",()=>{clearTimeout(rzt);rzt=setTimeout(()=>{if(view=="browse"&&cfg.vw=="cols")render()},150)});
 setTh();setIp();setDens();setFs();setLt();setDesk();setNx();boot();document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync();else if(cfg.code&&tm){clearTimeout(tm);sync()}});
+/* A6 : si le jour logique a changé depuis le dernier dessin (RDAY) — app restée ouverte, retour au premier plan, changement d'heure — l'accueil et les statistiques sont redessinés ; jamais pendant une séance, un examen ou une édition (saisie en cours) */
+const dayChk=()=>{if(day()===RDAY)return;if(typeof ready!="undefined"&&ready&&(view=="browse"||view=="stats"))render()};
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)dayChk()});addEventListener("focus",dayChk);addEventListener("pageshow",dayChk);setInterval(dayChk,30000);
 /* thème automatique (aucun choix enregistré : TH vide) : suit le système en direct, sans rendu complet ni écriture (stockage, synchro) ; un choix manuel (TH) reste prioritaire */
 if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: dark)"),f=()=>{if(TH)return;const R=document.documentElement,o=R.dataset.theme;setTh();if(R.dataset.theme===o)return;const d=dark();
  document.querySelectorAll(".nxths").forEach(b=>{b.setAttribute("aria-checked",String(d));[...b.children].forEach((e,n)=>{e.classList.toggle("on",n?d:!d);if(!e.className)e.removeAttribute("class")})});
@@ -3112,7 +3281,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
    if(inUndo)return o.call(A,v);
    var s=snap();inUndo=true;
    try{o.call(A,v)}finally{inUndo=false}
-   if(s){U.push(s);if(U.length>15)U.shift()}
+   if(s){if(!s.deck.free){var L2=LG();s.lh2=L2.h[s.ld];s.lr2=L2.r&&L2.r[s.ld]?L2.r[s.ld].slice():null}U.push(s);if(U.length>15)U.shift()}
    sync();
   };
  });
@@ -3120,9 +3289,14 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   var s=U.pop();
   if(!s||s.q!==q||!isFc()){U.length=0;sync();return}
   q.length=0;Array.prototype.push.apply(q,s.qs);
+  /* 21/10/2026 (étape 3) : l'état d'avant la note est restauré, mais comme une NOUVELLE version (t, w, u du paquet et du journal par hlc()),
+     sinon l'écho de l'envoi de la note la rétablissait ; le journal ne perd que ce que cette note avait ajouté */
   Object.keys(s.it).forEach(function(k){delete s.it[k]});Object.assign(s.it,s.ic);
-  known=s.known;s.deck.last=s.dl;s.deck.u=s.du;if(s.own)s.own.u=s.ou;
-  if(!s.deck.free){var L=LG();if(s.lh==null)delete L.h[s.ld];else L.h[s.ld]=s.lh;if(L.r){if(s.lr==null)delete L.r[s.ld];else L.r[s.ld]=s.lr}L.u=s.lu;
+  known=s.known;s.deck.last=s.dl;s.deck.u=s.du;
+  if(!s.deck.free){s.it.t=hlc();s.it.w=DEV;if(s.own)s.own.u=hlc();
+   var L=LG(),dh=(s.lh2||0)-(s.lh||0),h=(L.h[s.ld]||0)-dh;if(h>0)L.h[s.ld]=h;else delete L.h[s.ld];
+   if(L.r&&L.r[s.ld]){var a=L.r[s.ld],p0=s.lr||[0,0],p1=s.lr2||p0,c0=a[0]-(p1[0]-p0[0]),c1=a[1]-(p1[1]-p0[1]);if(c0>0)L.r[s.ld]=[c0,Math.max(0,c1)];else delete L.r[s.ld]}
+   L.u=hlc();
   try{if(s.nw==null)localStorage.removeItem("revis-new");else localStorage.setItem("revis-new",s.nw)}catch(e){}}
   back=true;if(!s.deck.free)save();render();
  };
@@ -3263,14 +3437,14 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   var isNew=S2.isNew,it,wasFx=false;
   if(isNew){it=k==="fc"?{c:"",q:c.q.trim(),a:c.a.trim()}:{q:c.q.trim(),o:c.o};n.items.push(it)}
   else{it=n.items[S2.idx];it.q=c.q.trim();if(k==="fc")it.a=c.a.trim();else it.o=c.o;if(it.fx){wasFx=true;delete it.fx}}
-  n.u=Date.now();save();closeSheet();render();
+  n.u=hlc();save();closeSheet();render();
   if(isNew){var l=document.querySelectorAll("#app .er");if(l.length&&l[l.length-1].scrollIntoView)l[l.length-1].scrollIntoView({block:"center"})}
   flash(isNew?(k==="fc"?"Carte ajoutée":"Question ajoutée"):wasFx?"Corrigée, retirée de « À corriger »":"Modifications enregistrées");
  };
  A.cdel=function(){
   if(!S2)return;var n=S2.n,idx=S2.idx,it=n.items[idx];if(!it)return;
-  n.items.splice(idx,1);n.u=Date.now();save();
-  cUs={t:Date.now(),msg:n.k==="fc"?"Carte restaurée":"Question restaurée",fn:function(){if(n.items.indexOf(it)<0)n.items.splice(Math.min(idx,n.items.length),0,it);n.u=Date.now();save();render()}};
+  n.items.splice(idx,1);n.u=hlc();save();
+  cUs={t:Date.now(),msg:n.k==="fc"?"Carte restaurée":"Question restaurée",fn:function(){if(n.items.indexOf(it)<0)n.items.splice(Math.min(idx,n.items.length),0,it);n.u=hlc();save();render()}};
   clearTimeout(gct);gct=setTimeout(function(){gc();save()},8000);
   closeSheet();render();flash(n.k==="fc"?"Carte supprimée":"Question supprimée",true);
  };
@@ -3288,7 +3462,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   var it=dk.items[j];if(!it)return;
   var own=dk.virt&&dk.own?dk.own.get(it):dk;if(!own||!own.items)return;
   var oi=own.items.indexOf(it);if(oi<0)return;
-  var shared=own.items===dk.items,card=dk.k==="fc",now=Date.now(),empty=false,sn={};
+  var shared=own.items===dk.items,card=dk.k==="fc",now=hlc(),empty=false,sn={};
   own.items.splice(oi,1);if(!shared)dk.items.splice(j,1);own.u=now;
   if(inEx){
    sn={ex:ex,sv:ex.s.splice(j,1)[0]};
@@ -3306,7 +3480,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   pend=null;save();if(inEx&&!empty)exSave();
   cUs={t:Date.now(),msg:card?"Carte restaurée":"Question restaurée",fn:function(){
    if(own.items.indexOf(it)<0)own.items.splice(Math.min(oi,own.items.length),0,it);
-   own.u=Date.now();
+   own.u=hlc();
    var live=deck===dk;
    if(live&&!shared&&dk.items.indexOf(it)<0)dk.items.splice(Math.min(j,dk.items.length),0,it);
    if(live){
@@ -3395,8 +3569,8 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   items.forEach(function(i){var k=nm(i.q.trim());if(seen.has(k))dup++;else{seen.add(k);fresh.push(i)}});
   var pl=function(x,a,b){return x+" "+(x>1?b:a)};
   if(!fresh.length){bad(dup>1?"Tout existe déjà dans ce paquet ("+dup+" doublons).":"Cet élément existe déjà dans ce paquet.");return}
-  Array.prototype.push.apply(n.items,fresh);n.u=Date.now();save();
-  cUs={t:Date.now(),msg:"Ajout annulé",fn:function(){n.items=n.items.filter(function(x){return fresh.indexOf(x)<0});n.u=Date.now();save();render()}};
+  Array.prototype.push.apply(n.items,fresh);n.u=hlc();save();
+  cUs={t:Date.now(),msg:"Ajout annulé",fn:function(){n.items=n.items.filter(function(x){return fresh.indexOf(x)<0});n.u=hlc();save();render()}};
   A.cd(cur);
   flash(pl(fresh.length,n.k==="fc"?"carte ajoutée":"question ajoutée",n.k==="fc"?"cartes ajoutées":"questions ajoutées")+(dup?", "+pl(dup,"doublon ignoré","doublons ignorés"):""),true);
  };
@@ -3532,7 +3706,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   var q=nm(sq.trim()),has=q.length>=2;
   if(SF.scope!=="0"&&(!G(SF.scope)||G(SF.scope).x))SF.scope="0";
   var act=SF.due||SF.hard||SF.scope!=="0";
-  var hardN=function(n){return pks(n).some(function(p){return p.items.some(function(i){return(i.m||0)>=2})})},dueN=function(n){return cnN(n).r>0};
+  var hardN=function(n){return pks(n).some(function(p){return p.items.some(function(i){return mOf(i)>=2})})},dueN=function(n){return cnN(n).r>0};
   var F=[],P=[],C=[],Qs=[];
   if(has||act){
    desc(SF.scope==="0"?0:SF.scope).forEach(function(n){
@@ -3540,7 +3714,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
     if((n.k==="fc"||n.k==="qcm")&&n.items&&(has||SF.due||SF.hard)){
      n.items.forEach(function(it){
       if(it.im)return;
-      if(SF.due&&!isRev(it))return;if(SF.hard&&(it.m||0)<2)return;
+      if(SF.due&&!isRev(it))return;if(SF.hard&&mOf(it)<2)return;
       var fields=n.k==="fc"?[["",it.q],["Réponse",it.a]]:[["",it.q]].concat((it.o||[]).map(function(o){return["Proposition",o.t]})).concat([["Explication",it.e]]),snip="";
       if(has){var hit=fields.filter(function(f){return nm(String(f[1]||"")).includes(q)});if(!hit.length)return;if(hit[0][0])snip=hit[0][0]+" : "+cut(hit[0][1],q)}
       (n.k==="fc"?C:Qs).push({p:n,it:it,snip:snip});
@@ -4106,6 +4280,15 @@ html[data-nx="1"][data-ipad="1"]:not([data-desk="1"]) #app[data-view=study] .car
 :root[data-theme="dark"][data-nx="1"]:not([data-desk="1"]):not(.nolt) #app .dock.nxd .b.nxrv:not(.an)::after{background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgb(255 255 255/.95),transparent 62%)}
 html[data-nx="1"]:not([data-desk="1"]):not(.nolt) #app .dock.nxd .b.nxad:not(.an)::after{background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgb(255 255 255/.6),transparent 62%)}
 :root[data-theme="dark"][data-nx="1"]:not([data-desk="1"]):not(.nolt) #app .dock.nxd .b.nxad:not(.an)::after{background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgb(255 255 255/.14),transparent 62%)}
+/* Audit apple-design du 21/10/2026 */
+/* cible tactile >= 44 pt pour les segments de la recherche (38 px avant) ; souris inchangée */
+@media (pointer:coarse){html[data-nx="1"] #app .nxsg2 button{min-height:44px}}
+/* « Augmenter le contraste » (iOS/macOS) : bords marqués, surfaces pleines, plus de flou */
+@media (prefers-contrast:more){
+:root,:root[data-theme="dark"]{--line:color-mix(in srgb,var(--ink) 60%,transparent);--g-edge:color-mix(in srgb,var(--ink) 60%,transparent);--lq-rim:color-mix(in srgb,var(--ink) 55%,transparent);--lq-edge-hi:color-mix(in srgb,var(--ink) 55%,transparent);--g-fill:var(--g-sol);--g-dockfill:var(--g-sol)}
+.tgs::before,.bt::before,.dock::before{background:var(--g-sol);-webkit-backdrop-filter:none;backdrop-filter:none}
+#app :is(.pn,.item,.card,.rqcard,.nxog){border-color:color-mix(in srgb,var(--ink) 55%,transparent)}
+}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
