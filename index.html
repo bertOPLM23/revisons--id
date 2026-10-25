@@ -2432,7 +2432,7 @@ const A={
  sndq(){cfg.sndq=cfg.sndq===false;saveCfg();render();sfx("ok")},
  snb(){cfg.snb=cfg.snb===false;saveCfg();render();sfx("panel")},
  sndd(){cfg.sndd=cfg.sndd===false;saveCfg();render();sfx("drop")},
- sndv(v){cfg.sndv=Math.max(0,Math.min(100,+v));saveCfg();render();sfx("ok")},
+ sndv(v){v=+v;cfg.sndv=isFinite(v)?Math.max(0,Math.min(100,v)):60;saveCfg();render();sfx("ok")},
  rt(v){cfg.rt=+v;saveCfg();render()},
  vw(v){cfg.vw=v;colSel=null;PV=null;saveCfg();render()},
  cps(id){colSel=id;render();const c=$("cols");if(c&&c.scrollTo)c.scrollTo({left:c.scrollWidth,behavior:"smooth"})},
@@ -2698,7 +2698,7 @@ document.addEventListener("change",e=>{const t=e.target;
  if(t.dataset&&t.dataset.ex!=null&&view=="edit"){const n=G(ed.id),it=n.items[+t.dataset.ex],v=t.value.trim();if(v)it.e=v;else delete it.e;n.u=hlc();save();flash("Explication enregistrée")}
  else if(t.id=="fi"){const f=t.files[0];t.value="";if(!f||!pk)return;flash("Préparation de l'image…");loadImg(f).then(src=>{const n=G(pk.id),it=n.items[pk.i];it[pk.f]=newImg(src);n.u=hlc();gc();save();render();pk=null}).catch(()=>flash("Image illisible : essaie une photo JPEG ou PNG."))}
  else if(t.id=="fb"){const f=t.files[0];t.value="";if(!f)return;f.text().then(x=>{const o=JSON.parse(x);if(!o||!Array.isArray(o.nodes)||!o.nodes.every(n=>n&&n.id!=null&&n.k))throw 0;AS={k:"nxp",w:"bk"};rs={nodes:o.nodes.filter(n=>!n.x),np:o.nodes.filter(n=>!n.x&&(n.k=="fc"||n.k=="qcm")).length,date:o.date?new Date(o.date).toLocaleDateString("fr",{day:"numeric",month:"long",year:"numeric"}):"date inconnue"};bm="";render()}).catch(()=>{bm="Ce fichier n'est pas une sauvegarde de rev.";AS={k:"nxp",w:"bk"};render()})}});
-document.addEventListener("click",e=>{if(sw||dd){sw=false;dd=false;return}const t=e.target.closest("[data-a]");if(t&&A[t.dataset.a]){if(t.dataset.a!="val")sfx("tap");const sv=AS,inS=!!(sv&&t.closest("#asd"));if(inS)AS=null;A[t.dataset.a](t.dataset.v);
+document.addEventListener("click",e=>{if(sw||dd){sw=false;dd=false;return}const t=e.target.closest("[data-a]");if(t&&A[t.dataset.a]){if(!SFXNO[t.dataset.a])sfxTap();const sv=AS,inS=!!(sv&&t.closest("#asd"));if(inS)AS=null;A[t.dataset.a](t.dataset.v);
  /* feuilles-pages (Synchronisation, Sauvegarde, Corbeille) : une action dans la feuille la laisse ouverte ; une confirmation ouverte depuis elle y revient */
  if(inS){if(sv.k=="nxp"){if(AS==null&&t.dataset.a!="asc")AS=sv;else if(AS&&AS.k=="conf")AS.back=sv}else if(sv.k=="conf"&&sv.back&&AS==null)AS=sv.back}
  asRender()}});
@@ -2865,9 +2865,10 @@ function nxBbRender(){let d=document.getElementById("bbd");
  if(fresh)try{m.focus({preventScroll:true})}catch(e){}}
 /* 20/10/2026 (style B) : une ligne qui apparaît dans la liste monte doucement (rqnew) ; seulement si le nombre de lignes augmente sur le même écran */
 /* 25/10/2026 — effets sonores (demande d'Idriss : style « doux et discret », pas de son au retournement). Sons synthétisés avec Web Audio : aucun fichier, aucune dépendance. Désactivés par défaut (cfg.snd) ; volume cfg.sndv (0 à 100, 60 par défaut) ; trois catégories activables séparément : sndq (réponses de QCM), snb (boutons et panneaux), sndd (glisser-déposer) ; réglages synchronisés comme les autres (hors SETL). Le contexte audio n'est créé qu'après un geste de l'utilisateur (iOS). */
-let SFXC=null,SFXM=null;
+let SFXC=null,SFXM=null,SFXK=0;
+const SFXNO={val:1,flip:1,snd:1,sndq:1,snb:1,sndd:1,sndv:1};  // pas de « tic » : validation de QCM (son juste/faux), retournement de carte (choix d'Idriss), réglages des sons (ils jouent leur propre essai)
 const SFXCAT={ok:"sndq",ko:"sndq",tap:"snb",panel:"snb",pick:"sndd",drop:"sndd"};
-function sfxCtx(){try{if(!SFXC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;SFXC=new C();SFXM=SFXC.createGain();SFXM.connect(SFXC.destination)}if(SFXC.state==="suspended")SFXC.resume();SFXM.gain.value=Math.max(0,Math.min(100,cfg.sndv==null?60:cfg.sndv))/100*.9;return SFXC}catch(e){return null}}
+function sfxCtx(){try{if(!SFXC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;SFXC=new C();SFXM=SFXC.createGain();SFXM.connect(SFXC.destination)}if(SFXC.state!=="running")SFXC.resume();const v=+cfg.sndv;SFXM.gain.value=(isFinite(v)&&cfg.sndv!=null?Math.max(0,Math.min(100,v)):60)/100*.9;return SFXC}catch(e){return null}}
 function sfxTone(f,d,g,o={}){const c=SFXC,t=c.currentTime+(o.at||0),gn=c.createGain(),os=c.createOscillator();os.type=o.type||"sine";os.frequency.setValueAtTime(f,t);if(o.f2)os.frequency.exponentialRampToValueAtTime(o.f2,t+d);
  gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(g,t+.008);gn.gain.exponentialRampToValueAtTime(.0001,t+d);os.connect(gn);gn.connect(SFXM);os.start(t);os.stop(t+d+.05)}
 const SFXS={ok:()=>{sfxTone(523,.14,.14,{type:"triangle"});sfxTone(659,.22,.14,{type:"triangle",at:.09})},
@@ -2876,8 +2877,9 @@ const SFXS={ok:()=>{sfxTone(523,.14,.14,{type:"triangle"});sfxTone(659,.22,.14,{
  panel:()=>sfxTone(300,.14,.1,{f2:520}),
  pick:()=>sfxTone(392,.06,.12,{type:"triangle"}),
  drop:()=>{sfxTone(330,.08,.14,{type:"triangle"});sfxTone(262,.14,.12,{type:"triangle",at:.07})}};
-function sfx(n){try{if(!cfg.snd||cfg[SFXCAT[n]]===false||!SFXS[n])return;if(!sfxCtx())return;SFXS[n]()}catch(e){}}
-if(typeof document!="undefined")document.addEventListener("pointerdown",()=>{if(cfg.snd)sfxCtx()},{capture:true,passive:true});
+function sfxTap(){SFXK=1;queueMicrotask(()=>{if(SFXK)sfx("tap");SFXK=0})}  // le tic part après l'action : si elle joue déjà un son (panneau, juste/faux, dépôt), un seul son
+function sfx(n){if(n!="tap")SFXK=0;try{if(!cfg.snd||cfg[SFXCAT[n]]===false||!SFXS[n])return;if(!sfxCtx())return;SFXS[n]()}catch(e){}}
+if(typeof document!="undefined")["pointerdown","pointerup","touchend","keydown"].forEach(ev=>document.addEventListener(ev,()=>{if(cfg.snd)sfxCtx()},{capture:true,passive:true}));  // Safari ne débloque l'audio que sur certains gestes (fin de toucher, clic, touche)
 let RQI=null,RQK="";
 function nxNew(){const it=[...document.querySelectorAll('#app #lst .item[data-id]')],k=view+"|"+cur,ids=new Set(it.map(e=>e.dataset.id));
  if(view=="browse"&&RQI&&RQK==k&&!selm&&ids.size>RQI.size)it.forEach(e=>{if(!RQI.has(e.dataset.id))e.classList.add("rqnew")});

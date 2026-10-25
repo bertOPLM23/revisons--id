@@ -38,6 +38,9 @@ async function run(b) {
   await d1.page.evaluate(() => { A.cd(nid('f2')); const p = S.nodes.find(n => n.k == 'fc' && n.items && n.items.length); A.go(p.id) }); await got(d1);
   await d1.page.evaluate(() => A.flip && A.flip());
   t.ok(!(await got(d1)).length, 'retournement de carte : aucun son');
+  await d1.page.evaluate(() => { const c = document.querySelector('#app .card[data-a="flip"]'); c && c.click() });
+  const fr = await d1.page.evaluate(() => ({ back, s: __s.slice() })); await got(d1);
+  t.ok(fr.back === false && !fr.s.length, 'retournement par un vrai toucher sur la carte : aucun son', JSON.stringify(fr));
   await d1.page.evaluate(() => A.back()); await got(d1);
   // 6) désactivation générale : plus rien
   await d1.page.evaluate(() => { A.set(); A.snd() }); await got(d1);
