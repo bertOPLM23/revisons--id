@@ -1976,10 +1976,10 @@ function plan(i0,g){const i=fsInit({...i0}),t=day();
 function opts(i){const P=[1,2,3,4].map(g=>plan(i,g));
  if(P[1].iv!=null&&P[2].iv!=null){P[1].iv=Math.min(P[1].iv,P[2].iv);P[2].iv=Math.max(P[2].iv,P[1].iv+1)}
  if(P[3].iv!=null&&P[2].iv!=null)P[3].iv=Math.max(P[3].iv,P[2].iv+1);
- /* 21/10/2026 : plafond d'examen, les intervalles affichés et appliqués ne dépassent pas la veille de l'examen (stabilité et difficulté inchangées) */
- const c=capOf(i);if(c!=null){const lim=c-day();if(lim>=1)P.forEach(p=>{if(p.iv!=null)p.iv=Math.min(p.iv,lim)})}
+ /* 21/10/2026 puis 25/10/2026 : plafond d'examen à J-8 (dernier jour de planification = 8 jours avant l'examen) ; dans les 8 derniers jours, plus de planification : la carte reste disponible (iv 0, drapeau av). Stabilité et difficulté inchangées. */
+ const c=capOf(i);if(c){const lim=c.c-day();P.forEach(p=>{if(p.iv!=null){if(lim>=1)p.iv=Math.min(p.iv,lim);else{p.iv=0;p.av=1}}})}
  return P}
-const ivTxt=p=>p.m?p.m+" min":p.iv<30?p.iv+" j":p.iv<365?(Math.round(p.iv/3)/10).toString().replace(".",",")+" mois":(Math.round(p.iv/36.5)/10).toString().replace(".",",")+" an"+(p.iv>=730?"s":"");
+const ivTxt=p=>p.av?"Dispo.":p.m?p.m+" min":p.iv<30?p.iv+" j":p.iv<365?(Math.round(p.iv/3)/10).toString().replace(".",",")+" mois":(Math.round(p.iv/36.5)/10).toString().replace(".",",")+" an"+(p.iv>=730?"s":"");
 const applyP=(i,p)=>{const nw=i.d==null;fsInit(i);i.st=p.st;i.s=+p.s.toFixed(4);i.df=+p.df.toFixed(3);i.l=p.l;if(p.k!=null)i.k=p.k;else delete i.k;i.d=p.iv!=null?day()+fz(p.iv):day();delete i.b;if(nw)i.f=day()};
 // ===== objectifs vers une date d'examen, rattrapage étalé, comptes du jour =====
 // Données synchronisées : dossier.xd (jour de l'examen), nœud « opt » (date pour tout, plan de rattrapage cu), i.f (jour de première vue).
@@ -2006,14 +2006,22 @@ function setPull(){if(!booted||!S||!S.nodes)return;const n=G("set");
 const xdAct=x=>!!x&&!x.x&&x.xd!=null&&x.xd>=day();
 const gOwn=p=>{for(let x=p.p?G(p.p):null;x;x=x.p?G(x.p):null){if(x.k=="f"&&xdAct(x))return x.id}return xdAct(optN())?"0":null};
 const ownOf=p=>hidRel(p,0)?null:gOwn(p);
-/* 21/10/2026 — plafond d'examen (demande d'Idriss) : une carte ou un QCM en révision (st 2) n'est jamais planifié après la veille de l'examen qui le concerne (dossier le plus proche avec une date, sinon la date des Réglages : même règle que gOwn). Les cartes déjà planifiées plus tard sont ramenées à la veille. Seule la date i.d change : stabilité, difficulté, dernière révision (l) et horodatage de fusion (t) ne sont pas touchés, u du paquet non plus (chaque appareil applique le même plafond, de façon déterministe). Pas de plafond le jour de l'examen ni après, ni pour une carte déjà révisée la veille (sinon elle reviendrait sans fin). */
-let CAPP=new Map();
-const capOf=i=>{for(const p of S.nodes)if(isPack(p)&&!p.x&&p.items&&p.items.includes(i))return CAPP.has(p.id)?CAPP.get(p.id):null;return null};
-const capDay=p=>{const o=gOwn(p);if(o==null)return null;const x=o=="0"?optN():G(o);if(!xdAct(x)||x.xd<=day())return null;return x.xd-1};
-function capAll(){const m=new Map();let n=0;if(!cfg.srs||!S||!S.nodes){CAPP=m;return 0}
- for(const p of S.nodes){if(!isPack(p)||p.x||!p.items)continue;const c=capDay(p);if(c==null)continue;m.set(p.id,c);
-  for(const i of p.items)if(i.d!=null&&i.d>c&&i.st==2&&!((i.l??-1e9)>=c)){i.d=c;n++}}
- CAPP=m;if(n){TDv++;try{persist()}catch(e){}}return n}
+/* 21/10/2026 puis 25/10/2026 — plafond d'examen à J-8 (demande d'Idriss). Règle : une carte ou un QCM en révision (st 2) n'est jamais planifié après le jour J-8 de l'examen qui le concerne (dossier le plus proche avec une date, sinon la date des Réglages : même règle que gOwn). Les cartes déjà planifiées plus tard sont ramenées à J-8 ; si trop de cartes tombent un même jour (limite automatique = 1,25 × la moyenne des révisions des 14 derniers jours actifs, au moins 40), les plus faciles (difficulté la plus basse) sont avancées sur les jours précédents, jamais avant aujourd'hui. Dans les 8 derniers jours (aujourd'hui > J-8), plus rien n'est planifié : pas de plafond ni de répartition, une carte notée reste disponible (date = aujourd'hui, ivTxt « Dispo. »). Seule la date i.d change : stabilité, difficulté, dernière révision (l), horodatage de fusion (t) et u du paquet ne sont pas touchés. Une carte révisée le jour J-8 lui-même est elle aussi ramenée à aujourd'hui (disponible), jamais planifiée après J-8. Nouvelles cartes (st 0) et apprentissage (st 1/3) non concernés. */
+const CAPJ=8;
+let CAPP=new Map(),CAPK=null;
+const capInfo=p=>{const o=gOwn(p);if(o==null)return null;const x=o=="0"?optN():G(o);if(!xdAct(x))return null;return{o,c:x.xd-CAPJ}};
+const capOf=i=>{for(const p of S.nodes)if(isPack(p)&&!p.x&&p.items&&p.items.includes(i))return CAPP.get(p.id)||null;return null};
+const capLimit=()=>{const T=day(),seen=new Set();let tot=0;S.nodes.forEach(n=>{if(n.k=="log"&&n.h&&!n.x)for(let d=T-14;d<T;d++)if(n.h[d]){tot+=n.h[d];seen.add(d)}});return Math.max(40,Math.ceil((seen.size?tot/seen.size:0)*1.25))};
+function capAll(){const m=new Map(),T=day(),grp=new Map();let n=0;if(!cfg.srs||!S||!S.nodes){CAPP=m;return 0}
+ for(const p of S.nodes){if(!isPack(p)||p.x||!p.items)continue;const k=capInfo(p);if(!k)continue;m.set(p.id,k);if(k.c<T)continue;let g=grp.get(k.o);if(!g)grp.set(k.o,g={c:k.c,ps:[]});g.ps.push(p)}
+ CAPP=m;if(!grp.size)return 0;
+ const L=capLimit(),key=T+"|"+TDv+"|"+L+"|"+grp.size;if(key===CAPK)return 0;
+ grp.forEach(g=>{const c=g.c,load=new Map(),cand=[];
+  g.ps.forEach(p=>p.items.forEach(i=>{if(i.st!=2||i.d==null||i.d<T)return;if(i.d<c)load.set(i.d,(load.get(i.d)||0)+1);else cand.push(i)}));
+  cand.sort((a,b)=>(b.df||5)-(a.df||5)||(a.s||0)-(b.s||0));
+  for(const i of cand){let d=c;while(d>T&&(load.get(d)||0)>=L)d--;if((load.get(d)||0)>=L)d=c;load.set(d,(load.get(d)||0)+1);if(i.d!==d){i.d=d;n++}}});
+
+ CAPK=n?null:key;if(n){TDv++;try{persist()}catch(e){}}return n}
 function TD(){const d0=day(),k=d0+"|"+TDv;if(TDc&&TDc.k==k)return TDc;const o={k,seen:0,rev:0,due:0,odf:0,odq:0,g:new Map()};
  S.nodes.forEach(p=>{if(!isPack(p)||p.x||!p.items)return;const hid=hidRel(p,0),ow=hid?null:gOwn(p);let g=null;if(ow!=null){const gk=ow+"|"+p.k;g=o.g.get(gk);if(!g)o.g.set(gk,g={u:0,s:0})}
   p.items.forEach(i=>{const fd=i.f==d0;if(fd)o.seen++;else if(!hid&&i.l==d0)o.rev++;if(g){if(isNew(i))g.u++;else if(fd)g.s++}
