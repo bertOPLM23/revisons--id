@@ -20,7 +20,7 @@ async function run(b) {
   await setup(); await p.waitForTimeout(250);
   let F = { ...(await row('zq')), id: 1 }; await T('touchStart', [F]); await p.waitForTimeout(550); F = await mv(F, { x: F.x + 60, y: F.y + 5 });
   const gp = await p.evaluate(F => { const r = document.querySelector('body>.ghost').getBoundingClientRect(); return { r: r.right, b: r.bottom, l: r.left, x: F.x, y: F.y } }, F);
-  t.ok(gp.b <= gp.y - 10 && (gp.r <= gp.x - 10 || gp.l <= 9), 'la pile s\'affiche au-dessus et à gauche du doigt', JSON.stringify(gp));
+  t.ok(Math.abs(gp.b - gp.y) <= 8 && (Math.abs(gp.r - gp.x) <= 8 || gp.l <= 9), 'coin inférieur droit de la pile sous le doigt (bord bas à la hauteur du doigt)', JSON.stringify(gp));
   await tap2(await row('zq2'), 2, F); let s = await st(); t.ok(s.set == 'zq,zq2', '2e doigt sur un paquet : ajouté', s.set);
   await tap2(await box('#app .bk'), 3, F); s = await st(); t.ok(s.cur === 0 && s.on && s.set == 'zq,zq2', '2e doigt sur ‹ : remonte, la pile est gardée', JSON.stringify(s));
   await tap2(await row('zA'), 4, F); s = await st(); t.ok(s.cur == 'zA' && s.set == 'zq,zq2', '2e doigt sur un dossier : il s\'ouvre', JSON.stringify(s));
