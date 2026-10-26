@@ -1,5 +1,6 @@
 // Glisser-déposer et deuxième doigt (25/10/2026, bug signalé par Idriss sur iPhone et iPad) : pendant un appui long, un 2e doigt posé sur un autre élément
 // figeait le fantôme du premier (il restait affiché même en changeant d'écran) et ouvrait l'élément touché. Gestes tactiles réels envoyés par CDP.
+// 26/10/2026 : pile à plusieurs doigts : le 2e doigt ajoute/retire des éléments, le dépôt déplace toute la pile.
 const H = require('./lib/h'), D = require('./lib/data');
 
 async function run(b) {
@@ -11,7 +12,7 @@ async function run(b) {
     S.nodes.push({ id: 'zf1', p: 0, k: 'f', name: 'Cible', u: hlc() }, { id: 'zf2', p: 0, k: 'f', name: 'Source', u: hlc() }, { id: 'zq', p: 0, k: 'qcm', name: 'Autre QCM', u: hlc(), items: [{ q: 'Q', o: [{ t: 'a', k: 1 }, { t: 'b' }, { t: 'c' }, { t: 'd' }, { t: 'e' }] }] });
     cfg.vw = 'list'; view = 'browse'; A.cd(0) });
   const box = id => p.evaluate(id => { const e = document.querySelector(`#app .item[data-id="${id}"] .main`) || document.querySelector(`#app .item[data-id="${id}"]`); if (!e) return null; e.scrollIntoView({ block: 'center' }); const r = e.getBoundingClientRect(); return { x: r.x + 40, y: r.y + r.height / 2 } }, id);
-  const st = () => p.evaluate(() => ({ view, on: !!(dg && dg.on), g: document.querySelectorAll('body>.ghost').length, drag: document.querySelectorAll('.dragging').length, p: G('zf2') && G('zf2').p }));
+  const st = () => p.evaluate(() => ({ view, on: !!(dg && dg.on), set: dg && dg.set ? dg.set.join() : '', bd: (document.querySelector('body>.ghost .rqbd') || {}).textContent || '', g: document.querySelectorAll('body>.ghost').length, drag: document.querySelectorAll('.dragging').length, ck: document.querySelectorAll('#app .rqck').length, p: G('zf2') && G('zf2').p, pq: G('zq') && G('zq').p }));
   const path = async (a, z) => { for (let k = 1; k <= 6; k++) { await T('touchMove', [{ x: a.x + (z.x - a.x) * k / 6, y: a.y + (z.y - a.y) * k / 6, id: 1 }]); await p.waitForTimeout(25) } };
   const clickOn = id => p.evaluate(id => { const e = document.querySelector(`#app .item[data-id="${id}"] .main`); e && e.click(); return view }, id);
   // 1) un doigt : inchangé
@@ -23,14 +24,20 @@ async function run(b) {
   await T('touchStart', [{ ...a, id: 1 }]); await p.waitForTimeout(550); await T('touchStart', [{ ...a, id: 1 }, { ...q, id: 2 }]); await p.waitForTimeout(80);
   await T('touchEnd', [{ ...q, id: 2 }]); const v1 = await clickOn('zq');
   await path(a, z); const mid = await st(); await T('touchEnd', [{ ...z, id: 1 }]); await p.waitForTimeout(300); s = await st();
-  t.ok(mid.on && mid.g == 1, 'le glisser continue avec le premier doigt (le fantôme le suit)', JSON.stringify(mid));
+  t.ok(mid.on && mid.g == 1 && mid.set == 'zf2,zq' && mid.bd == '2', 'le 2e doigt ajoute le paquet touché à la pile (compteur 2), le glisser continue', JSON.stringify(mid));
   t.ok(v1 == 'browse', 'le toucher du 2e doigt n\'ouvre pas le paquet touché', v1);
-  t.ok(s.p == 'zf1' && !s.g && !s.drag, 'dépôt fait, aucun fantôme restant', JSON.stringify(s));
+  t.ok(s.p == 'zf1' && s.pq == 'zf1' && !s.g && !s.drag && !s.ck, 'dépôt : toute la pile est déplacée, aucun fantôme ni case restants', JSON.stringify(s));
+  // retoucher un élément de la pile le retire
+  await setup(); await p.waitForTimeout(200); a = await box('zf2'); z = await box('zf1'); q = await box('zq');
+  await T('touchStart', [{ ...a, id: 1 }]); await p.waitForTimeout(550);
+  for (const pid of [5, 6]) { await T('touchStart', [{ ...a, id: 1 }, { ...q, id: pid }]); await p.waitForTimeout(60); await T('touchEnd', [{ ...q, id: pid }]); await p.waitForTimeout(80) }
+  const rm = await st(); await path(a, z); await T('touchEnd', [{ ...z, id: 1 }]); await p.waitForTimeout(300); s = await st();
+  t.ok(rm.set == 'zf2' && s.p == 'zf1' && s.pq == 0, 'retoucher un élément le retire de la pile : seul l\'élément tenu est déplacé', JSON.stringify({ rm, s }));
   // 3) 2e doigt levé après le 1er
   await setup(); await p.waitForTimeout(200); a = await box('zf2'); z = await box('zf1'); q = await box('zq');
   await T('touchStart', [{ ...a, id: 1 }]); await p.waitForTimeout(550); await T('touchStart', [{ ...a, id: 1 }, { ...q, id: 2 }]); await path(a, z);
   await T('touchEnd', [{ ...z, id: 1 }]); await p.waitForTimeout(120); await T('touchEnd', [{ ...q, id: 2 }]); const v2 = await clickOn('zq'); await p.waitForTimeout(300); s = await st();
-  t.ok(v2 == 'browse' && s.p == 'zf1' && !s.g && !s.drag, '2e doigt levé après le premier : dépôt fait, rien d\'ouvert, aucun fantôme', JSON.stringify({ v2, s }));
+  t.ok(v2 == 'browse' && s.p == 'zf1' && !s.g && !s.drag, '2e doigt levé après le premier : dépôt de l\'élément tenu, rien d\'ouvert, aucun fantôme', JSON.stringify({ v2, s }));
   // 4) 2e doigt avant la fin de l'appui long : pas de glisser
   await setup(); await p.waitForTimeout(200); a = await box('zf2'); q = await box('zq');
   await T('touchStart', [{ ...a, id: 1 }]); await p.waitForTimeout(150); await T('touchStart', [{ ...a, id: 1 }, { ...q, id: 2 }]); await p.waitForTimeout(450); const s4 = await st();

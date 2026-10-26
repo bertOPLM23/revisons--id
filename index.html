@@ -2330,7 +2330,7 @@ function dupAsk(name,what,go,ren){CF=go;AS={k:"conf",title:"Ce nom existe déjà
 const unflash=()=>{document.querySelectorAll&&document.querySelectorAll(".ts").forEach(x=>x.remove())};
 const flash=(m,u)=>{if(!document.createElement||!document.body)return;unflash();const d=document.createElement("div");d.className="ts";d.setAttribute&&d.setAttribute("role","status");d.innerHTML="<span>"+esc(m)+"</span>"+(u?'<button data-a="undo">Annuler</button>':"");document.body.appendChild(d);setTimeout(()=>d.remove(),u?5500:2200)};
 const moveIds=(ids,to)=>{const mv=[];ids.forEach(i=>{const n=G(i);if(!n||n.p==to||i==to||(to&&(!G(to)||G(to).x))||desc(i).some(x=>x.id==to))return;mv.push(n)});
- if(mv.length){const snap=snapF(mv,["p"]);mv.forEach(n=>{n.p=to;n.u=hlc()});save();undoP(snap,mv.length+(mv.length>1?" éléments déplacés":" élément déplacé"),true)}
+ if(mv.length){const snap=snapF(mv,["p"]);mv.forEach(n=>{n.p=to;n.u=hlc()});save();undoP(snap,mv.length+(mv.length>1?" éléments déplacés":" élément déplacé")+" dans « "+(to?(G(to)||{}).name||"":"Accueil")+" »",true)}
  selm=false;selset.clear();render()};
 const killIds=ids=>{const b=uid(),now=hlc(),ds=new Map(ids.map(i=>[i,new Set(desc(i).map(n=>n.id))])),a=new Set([...ids,...[...ds.values()].flatMap(x=>[...x])]);
  S.nodes.forEach(n=>{if(a.has(n.id)&&!n.x){n.x=1;n.xt=now;n.xb=b;n.u=now;if(ids.includes(n.id)&&!ids.some(j=>j!=n.id&&ds.get(j).has(n.id)))n.xr=1}});
@@ -2673,31 +2673,43 @@ const swEnd=e=>{
  }
 };
 document.addEventListener("pointerup",swEnd);document.addEventListener("pointercancel",swEnd);
-let dg=null,dd=false,dgIg=new Set(),dgIgT=0;
+let dg=null,dd=false,dgIg=new Map(),dgIgT=0;
 /* 25/10/2026 — glisser-déposer à plusieurs doigts (retour d'Idriss, capture iPhone ; aussi sur iPad). Cause : le glisser-déposer ne suivait qu'UN objet dg, sans regarder quel doigt
    bougeait. Un 2e doigt posé sur un autre élément pendant un appui long créait un nouveau dg qui écrasait le premier : le fantôme (posé sur <body>, hors de #app) perdait sa
    référence, n'était plus jamais retiré ni déplacé, et restait figé à l'écran même en changeant d'écran ; le lever du 2e doigt terminait le glisser sans déposer.
    Maintenant : chaque geste est lié à son doigt (pointerId) ; un autre doigt est ignoré pendant un glisser (et son toucher n'ouvre pas l'élément touché), il annule un appui long
    pas encore déclenché ; tout fantôme orphelin est retiré. */
-const dgClean=()=>{document.querySelectorAll("body>.ghost").forEach(g=>{if(!dg||g!==dg.g)g.remove()});if(!dg||!dg.on)document.querySelectorAll("#app .dragging").forEach(e=>e.classList.remove("dragging"))};
-const dgStart=(x,y)=>{if(!dg||dg.on)return;dg.on=true;sfx("pick");const g=dg.it.cloneNode(true);g.className+=" ghost";g.style.width=dg.it.offsetWidth+"px";document.body.appendChild(g);dg.g=g;dg.it.classList.add("dragging");dgMove(x,y)};
+const dgClean=()=>{document.querySelectorAll("body>.ghost").forEach(g=>{if(!dg||g!==dg.g)g.remove()});if(!dg||!dg.on){document.querySelectorAll("#app .dragging").forEach(e=>e.classList.remove("dragging"));document.documentElement.classList.remove("rqdg");document.querySelectorAll("#app .rqck").forEach(e=>e.remove());document.querySelectorAll("#app .rqin").forEach(e=>e.classList.remove("rqin"))}};
+/* 26/10/2026 — pile à plusieurs doigts (maquette « rev. — pile et sons » validée par Idriss le 25/10) : pendant un glisser, toucher une autre ligne avec un 2e doigt
+   l'ajoute à la pile (dossiers et paquets mélangés), la retoucher la retire ; l'élément tenu reste toujours dans la pile. Le fantôme devient une pile de 3 cartes au plus
+   avec un compteur rouge ; des cases rondes apparaissent sur les lignes ; le dépôt sur un dossier déplace toute la pile (toast « Annuler » existant de moveIds). */
+function dgMark(){try{if(!dg||!dg.on)return;const st=new Set(dg.set);document.documentElement.classList.add("rqdg");
+ document.querySelectorAll("#app .item[data-id]").forEach(r=>{const id=r.dataset.id;if(!r.querySelector(":scope>.rqck"))r.insertAdjacentHTML("beforeend",'<span class="rqck" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>');r.classList.toggle("rqin",st.has(id));r.classList.toggle("dragging",id==dg.id)})}catch(e){}}
+function dgStack(){const d=dg;if(!d||!d.on||!d.g)return;const g=document.createElement("div");g.className="ghost rqstk";g.style.width=d.g.style.width;g.style.left=d.g.style.left;g.style.top=d.g.style.top;
+ d.set.slice(0,3).forEach((id,k)=>{const r=document.querySelector('#app .item[data-id="'+CSS.escape(id)+'"]')||(id==d.id?d.it:null);if(!r)return;const c=r.cloneNode(true);c.classList.remove("dragging","rqin","rqnew");c.querySelectorAll(".rqck").forEach(x=>x.remove());c.removeAttribute("data-id");c.removeAttribute("data-drop");c.classList.add("rqsc");c.style.transform="translate("+k*7+"px,"+k*7+"px) rotate("+(k*1.5)+"deg)";c.style.zIndex=3-k;c.style.opacity=1-k*.12;g.appendChild(c)});
+ if(d.set.length>1)g.insertAdjacentHTML("beforeend",'<b class="rqbd">'+d.set.length+'</b>');d.g.replaceWith(g);d.g=g;
+ const b=g.querySelector(".rqbd");if(b&&b.animate&&!matchMedia("(prefers-reduced-motion:reduce)").matches)b.animate([{transform:"scale(1)"},{transform:"scale(1.35)"},{transform:"scale(1)"}],{duration:320,easing:"cubic-bezier(.34,1.8,.5,1)"})}
+function dgToggle(id){if(!dg||!dg.on||!id||id==dg.id||!G(id))return;const i=dg.set.indexOf(id);if(i>=0)dg.set.splice(i,1);else{dg.set.push(id);sfx("pick")}if(dg.tg&&dg.set.includes(dg.tg.dataset.drop)){dg.tg.classList.remove("over");dg.tg=null}dgMark();dgStack()}
+
+const dgStart=(x,y)=>{if(!dg||dg.on)return;dg.on=true;dg.set=[dg.id];sfx("pick");const g=dg.it.cloneNode(true);g.className+=" ghost";g.style.width=dg.it.offsetWidth+"px";document.body.appendChild(g);dg.g=g;dg.it.classList.add("dragging");dgMark();dgMove(x,y)};
 const dgMove=(x,y)=>{dg.g.style.left=(x-dg.g.offsetWidth/2)+"px";dg.g.style.top=(y-26)+"px";
  const el=document.elementFromPoint(x,y);let tg=el&&el.closest("[data-drop]"),ro=null,rp=null;
- if(sortMode()=="manual"){const row=el&&el.closest(".item[data-id]");
+ if(tg&&dg.set&&dg.set.some(i=>i==tg.dataset.drop||desc(i).some(x=>x.id==tg.dataset.drop)))tg=null;
+ if(sortMode()=="manual"&&!(dg.set&&dg.set.length>1)){const row=el&&el.closest(".item[data-id]");
   if(row&&row.dataset.id!=dg.id){const me=G(dg.id),ot=G(row.dataset.id);
    if(me&&ot&&me.p==ot.p&&(me.k=="f")==(ot.k=="f")){const r=row.getBoundingClientRect(),tl=row.classList.contains("tile"),f=tl?(x-r.left)/r.width:(y-r.top)/r.height;
     if(!(row.hasAttribute("data-drop")&&f>.28&&f<.72)){ro=row;rp=f<.5?"b":"a";tg=null}}}}
  if(dg.tg!==tg){dg.tg&&dg.tg.classList.remove("over");dg.tg=tg;tg&&tg.classList.add("over")}
  if(dg.ro!==ro||dg.rp!==rp){if(dg.ro)dg.ro.classList.remove("ins-b","ins-a");dg.ro=ro;dg.rp=rp;if(ro)ro.classList.add(rp=="b"?"ins-b":"ins-a")}};
-document.addEventListener("pointerdown",e=>{if(dg&&dg.pid!==e.pointerId){dgIg.add(e.pointerId);if(!dg.on){clearTimeout(dg.tm);dg=null}return}if(!dg)dgClean();
+document.addEventListener("pointerdown",e=>{if(dg&&dg.pid!==e.pointerId){const r=dg.on&&e.target.closest&&!e.target.closest(".dots")&&e.target.closest("#app .item[data-id]");dgIg.set(e.pointerId,{x:e.clientX,y:e.clientY,id:r?r.dataset.id:null});if(!dg.on){clearTimeout(dg.tm);dg=null}return}if(!dg)dgClean();
  const it=e.target.closest&&e.target.closest(".item[data-id]");if(!it||view!="browse"||e.button>0||e.target.closest(".dots"))return;
  dg={it,id:it.dataset.id,x:e.clientX,y:e.clientY,t:e.pointerType,on:false,pid:e.pointerId};
  if(e.pointerType!="mouse"){const x=e.clientX,y=e.clientY;dg.tm=setTimeout(()=>dgStart(x,y),380)}});
 document.addEventListener("pointermove",e=>{if(!dg||e.pointerId!==dg.pid)return;
  if(!dg.on){const m=Math.hypot(e.clientX-dg.x,e.clientY-dg.y);if(dg.t=="mouse"){if(m>6)dgStart(e.clientX,e.clientY)}else if(m>10){clearTimeout(dg.tm);dg=null}return}
  dgMove(e.clientX,e.clientY)});
-const dgEnd=e=>{if(e&&dgIg.delete(e.pointerId)){dgIgT=Date.now();return}if(!dg||(e&&e.pointerId!==dg.pid))return;clearTimeout(dg.tm);const d=dg;dg=null;if(!d.on)return;dd=true;setTimeout(()=>{dd=false},80);d.g.remove();dgClean();d.it.classList.remove("dragging");if(d.tg)d.tg.classList.remove("over");if(d.ro)d.ro.classList.remove("ins-b","ins-a");
- if(d.ro||d.tg)sfx("drop");if(d.ro)reorderTo(d.id,d.ro.dataset.id,d.rp);else if(d.tg)moveIds(selm&&selset.has(d.id)?[...selset]:[d.id],nid(d.tg.dataset.drop))};
+const dgEnd=e=>{if(e&&dgIg.has(e.pointerId)){const o=dgIg.get(e.pointerId);dgIg.delete(e.pointerId);dgIgT=Date.now();if(e.type=="pointerup"&&o.id&&Math.hypot(e.clientX-o.x,e.clientY-o.y)<14)dgToggle(o.id);return}if(!dg||(e&&e.pointerId!==dg.pid))return;clearTimeout(dg.tm);const d=dg;dg=null;if(!d.on)return;dd=true;setTimeout(()=>{dd=false},80);d.g.remove();dgClean();d.it.classList.remove("dragging");if(d.tg)d.tg.classList.remove("over");if(d.ro)d.ro.classList.remove("ins-b","ins-a");
+ if(d.ro||d.tg)sfx("drop");if(d.ro)reorderTo(d.id,d.ro.dataset.id,d.rp);else if(d.tg)moveIds(d.set&&d.set.length>1?d.set:selm&&selset.has(d.id)?[...selset]:[d.id],nid(d.tg.dataset.drop))};
 document.addEventListener("pointerup",dgEnd);document.addEventListener("pointercancel",dgEnd);
 // le toucher d'un 2e doigt pendant un glisser ne doit pas ouvrir l'élément touché (capture : passe avant l'écouteur de clic des actions)
 document.addEventListener("click",e=>{if((dg&&dg.on)||Date.now()-dgIgT<450){e.stopImmediatePropagation();e.preventDefault()}},true);
@@ -3078,7 +3090,7 @@ function nxFd(c){const own=deck.virt&&deck.own?deck.own.get(c):deck,f=own&&own.p
  return '<span class="nxfd"'+(col?' style="--fc:'+esc(col)+'"':'')+'><i class="dt" aria-hidden="true"></i><span class="vh">Dossier : </span><span class="fn">'+esc(f?f.name:"Accueil")+'</span>'+(c.c?'<span class="vh">, catégorie : </span><span class="cat">'+esc(c.c)+'</span>':'')+'</span><span class="vh">. </span>'}
 function render(){RDAY=day();RM={k:new Map(),c:new Map()};try{capAll()}catch(e){}try{render0()}finally{RM=null}
 
- nxNew();if(cfg.nx){nxFit();requestAnimationFrame(nxFit)}else nxBbRender()}
+ nxNew();dgMark();if(cfg.nx){nxFit();requestAnimationFrame(nxFit)}else nxBbRender()}
 // nouvelle apparence : si le mot du bouton retour serait coupé (« Réglag… »), on n'affiche que le chevron (le mot reste lu par VoiceOver)
 function nxBk(){const b=document.querySelector("#app .tb .crw .bk"),t=b&&b.querySelector(":scope>span");if(!t)return;b.classList.remove("ico");if(!cfg.nx)return;const r=document.createRange();r.selectNodeContents(t);const w=b.closest(".crw");const br=b.getBoundingClientRect();if(r.getBoundingClientRect().right>br.right-(parseFloat(getComputedStyle(b).paddingRight)||0)+.5||b.scrollWidth>b.clientWidth||t.scrollWidth>t.clientWidth+1||r.getBoundingClientRect().width>t.getBoundingClientRect().width+.5||b.getBoundingClientRect().right>(w?w.getBoundingClientRect().right:innerWidth)+.5)b.classList.add("ico")}
 if(typeof addEventListener=="function"){addEventListener("resize",()=>requestAnimationFrame(nxFit));if(document.fonts&&document.fonts.ready)document.fonts.ready.then(nxFit)}
@@ -4327,6 +4339,23 @@ html[data-nx="1"]:not([data-desk="1"]):not(.nolt) #app .dock.nxd .b.nxad:not(.an
 .tgs::before,.bt::before,.dock::before{background:var(--g-sol);-webkit-backdrop-filter:none;backdrop-filter:none}
 #app :is(.pn,.item,.card,.rqcard,.nxog){border-color:color-mix(in srgb,var(--ink) 55%,transparent)}
 }
+
+/* 26/10/2026 — pile à plusieurs doigts : cases rondes sur les lignes pendant un glisser, lignes de la pile teintées, fantôme en pile avec compteur */
+html.rqdg #app .item[data-id]{position:relative}
+html.rqdg #app .item[data-id]>.dots{visibility:hidden}
+#app .rqck{position:absolute;right:14px;top:50%;width:26px;height:26px;margin-top:-13px;border-radius:50%;border:1.5px solid var(--mut);display:grid;place-items:center;pointer-events:none;z-index:2;animation:rqckin .35s var(--spring-pop,ease) both}
+#app .item.tile .rqck{top:8px;right:8px;margin-top:0}
+#app .rqck svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+#app .item.rqin .rqck{background:var(--acc);border-color:var(--acc);color:var(--onp,#fff)}
+#app .item.rqin .rqck svg{opacity:1}
+html[data-nx="1"] #app #lst .item.rqin:not(.dragging){background-color:color-mix(in srgb,var(--acc) 12%,transparent)}
+@keyframes rqckin{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+.ghost.rqstk{box-shadow:none;transform:none;opacity:1;background:none;border:0;padding:0}
+.ghost.rqstk>.rqsc{box-shadow:0 12px 28px -12px rgba(0,0,0,.45);transition:transform .45s var(--spring-pop,ease);background:var(--g-sol,var(--card))!important;background-image:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:1px solid var(--line)!important;border-radius:18px!important;opacity:1}
+.ghost.rqstk>.rqsc+.rqsc>*{visibility:hidden}
+.ghost.rqstk>.rqsc+.rqsc{position:absolute;inset:0}
+.ghost.rqstk>.rqbd{position:absolute;right:-10px;top:-12px;min-width:30px;height:30px;border-radius:15px;background:#c0392b;color:#fff;font:700 15px/30px var(--sf,system-ui);text-align:center;padding:0 8px;z-index:5}
+@media (prefers-reduced-motion:reduce){#app .rqck{animation:none}}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
