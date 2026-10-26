@@ -2673,26 +2673,48 @@ const swEnd=e=>{
  }
 };
 document.addEventListener("pointerup",swEnd);document.addEventListener("pointercancel",swEnd);
-let dg=null,dd=false,dgIg=new Map(),dgIgT=0;
+let dg=null,dd=false,dgIg=new Map(),dgIgT=0,dgHv=null,DGPK=null;
+/* 26/10/2026 — naviguer en glissant (maquette « rev. — naviguer en glissant » validée par Idriss) : pendant qu'un doigt tient la pile, un toucher d'un autre doigt sur un dossier
+   l'ouvre (sur un paquet : l'ajoute/le retire ; doigt gardé 0,5 s sur un dossier : l'ajoute), un toucher sur ‹, le menu du chemin ou le panneau latéral y va, glisser ce doigt
+   fait défiler ; la pile gardée 1 s au-dessus d'un dossier, de ‹, d'un niveau du chemin ou du panneau l'ouvre ; lâcher hors d'un dossier dépose dans le dossier ouvert.
+   La pile s'affiche au-dessus et à gauche du doigt (pouce droit : il cachait la pile) ; le dépôt se fait toujours sous le doigt.
+   Parade « geste figé » : sur écran tactile, les événements d'un doigt restent adressés à l'élément touché au départ ; si render() le retire de la page (navigation, synchro),
+   le geste n'est plus suivi. On capte donc le doigt sur <html> (setPointerCapture) et on garde l'élément touché dans la page, hors de la vue (DGPK), jusqu'au lever du doigt. */
+function dgPark(){try{const els=[];if(dg&&dg.on&&dg.it)els.push(dg.it);dgIg.forEach(o=>{if(o.el)els.push(o.el)});if(!els.length)return;const app=document.getElementById("app");if(!app)return;
+ if(!DGPK){DGPK=document.createElement("div");DGPK.id="dgpk";DGPK.setAttribute("aria-hidden","true");DGPK.style.cssText="position:fixed;left:-10000px;top:0;width:320px;visibility:hidden;pointer-events:none";document.body.appendChild(DGPK)}
+ els.forEach(el=>{if(el.isConnected&&app.contains(el))DGPK.appendChild(el)})}catch(e){}}
+function dgUnpark(){if(DGPK&&!dg&&!dgIg.size)DGPK.textContent=""}
+function dgPos(x,y){const g=dg&&dg.g;if(!g)return;const W=g.offsetWidth,H=g.offsetHeight;let lx=x-W-26,ly=y-H-26;if(ly<8){ly=Math.max(8,y-H/2);lx=x-W-40}
+ lx=Math.max(8,Math.min(lx,innerWidth-W-8));g.style.left=lx+"px";g.style.top=ly+"px"}
+function dgHover(h){if(dgHv&&h&&dgHv.el===h.el)return;if(dgHv){clearTimeout(dgHv.tm);dgHv.el.classList.remove("rqhot");const r=dgHv.el.querySelector(":scope>.rqhv");r&&r.remove();dgHv=null}if(!h)return;
+ const el=h.el,b=el.getBoundingClientRect(),rx=Math.min(b.height/2,18);if(getComputedStyle(el).position=="static")el.classList.add("rqhp");el.classList.add("rqhot");
+ el.insertAdjacentHTML("beforeend",'<span class="rqhv" aria-hidden="true"><svg viewBox="0 0 '+b.width+' '+b.height+'"><rect x="1.5" y="1.5" width="'+Math.max(0,b.width-3)+'" height="'+Math.max(0,b.height-3)+'" rx="'+rx+'" pathLength="100"/></svg></span>');
+ dgHv={el,id:h.id,tm:setTimeout(()=>{if(dg&&dg.on&&dgHv&&dgHv.el===el)dgNav(h.id)},1000)}}
+function dgNav(v){if(!dg||!dg.on)return;dgHover(null);if(dg.tg)dg.tg.classList.remove("over");if(dg.ro)dg.ro.classList.remove("ins-b","ins-a");dg.tg=dg.ro=null;
+ A.cd(v);dg.hl={x:dg.lx,y:dg.ly};dgMove(dg.lx,dg.ly)}
+function dgScrollEl(t){let e=t&&t.nodeType==1?t:null;while(e&&e!==document.body&&e!==document.documentElement){const s=getComputedStyle(e).overflowY;if((s=="auto"||s=="scroll")&&e.scrollHeight>e.clientHeight+1)return e;e=e.parentElement}return document.scrollingElement||document.documentElement}
 /* 25/10/2026 — glisser-déposer à plusieurs doigts (retour d'Idriss, capture iPhone ; aussi sur iPad). Cause : le glisser-déposer ne suivait qu'UN objet dg, sans regarder quel doigt
    bougeait. Un 2e doigt posé sur un autre élément pendant un appui long créait un nouveau dg qui écrasait le premier : le fantôme (posé sur <body>, hors de #app) perdait sa
    référence, n'était plus jamais retiré ni déplacé, et restait figé à l'écran même en changeant d'écran ; le lever du 2e doigt terminait le glisser sans déposer.
    Maintenant : chaque geste est lié à son doigt (pointerId) ; un autre doigt est ignoré pendant un glisser (et son toucher n'ouvre pas l'élément touché), il annule un appui long
    pas encore déclenché ; tout fantôme orphelin est retiré. */
-const dgClean=()=>{document.querySelectorAll("body>.ghost").forEach(g=>{if(!dg||g!==dg.g)g.remove()});if(!dg||!dg.on){document.querySelectorAll("#app .dragging").forEach(e=>e.classList.remove("dragging"));document.documentElement.classList.remove("rqdg");document.querySelectorAll("#app .rqck").forEach(e=>e.remove());document.querySelectorAll("#app .rqin").forEach(e=>e.classList.remove("rqin"))}};
+const dgClean=()=>{document.querySelectorAll("body>.ghost").forEach(g=>{if(!dg||g!==dg.g)g.remove()});if(!dg||!dg.on){dgHover(null);dgUnpark();document.querySelectorAll("#app .dragging").forEach(e=>e.classList.remove("dragging"));document.documentElement.classList.remove("rqdg");document.querySelectorAll("#app .rqck").forEach(e=>e.remove());document.querySelectorAll("#app .rqin").forEach(e=>e.classList.remove("rqin"))}};
 /* 26/10/2026 — pile à plusieurs doigts (maquette « rev. — pile et sons » validée par Idriss le 25/10) : pendant un glisser, toucher une autre ligne avec un 2e doigt
    l'ajoute à la pile (dossiers et paquets mélangés), la retoucher la retire ; l'élément tenu reste toujours dans la pile. Le fantôme devient une pile de 3 cartes au plus
    avec un compteur rouge ; des cases rondes apparaissent sur les lignes ; le dépôt sur un dossier déplace toute la pile (toast « Annuler » existant de moveIds). */
 function dgMark(){try{if(!dg||!dg.on)return;const st=new Set(dg.set);document.documentElement.classList.add("rqdg");
  document.querySelectorAll("#app .item[data-id]").forEach(r=>{const id=r.dataset.id;if(!r.querySelector(":scope>.rqck"))r.insertAdjacentHTML("beforeend",'<span class="rqck" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>');r.classList.toggle("rqin",st.has(id));r.classList.toggle("dragging",id==dg.id)})}catch(e){}}
 function dgStack(){const d=dg;if(!d||!d.on||!d.g)return;const g=document.createElement("div");g.className="ghost rqstk";g.style.width=d.g.style.width;g.style.left=d.g.style.left;g.style.top=d.g.style.top;
- d.set.slice(0,3).forEach((id,k)=>{const r=document.querySelector('#app .item[data-id="'+CSS.escape(id)+'"]')||(id==d.id?d.it:null);if(!r)return;const c=r.cloneNode(true);c.classList.remove("dragging","rqin","rqnew");c.querySelectorAll(".rqck").forEach(x=>x.remove());c.removeAttribute("data-id");c.removeAttribute("data-drop");c.classList.add("rqsc");c.style.transform="translate("+k*7+"px,"+k*7+"px) rotate("+(k*1.5)+"deg)";c.style.zIndex=3-k;c.style.opacity=1-k*.12;g.appendChild(c)});
+ d.set.slice(0,3).forEach((id,k)=>{const r=(d.cl&&d.cl.get(id))||document.querySelector('#app .item[data-id="'+CSS.escape(id)+'"]')||(id==d.id?d.it:null);if(!r)return;const c=r.cloneNode(true);c.classList.remove("dragging","rqin","rqnew");c.querySelectorAll(".rqck").forEach(x=>x.remove());c.removeAttribute("data-id");c.removeAttribute("data-drop");c.classList.add("rqsc");c.style.transform="translate("+k*7+"px,"+k*7+"px) rotate("+(k*1.5)+"deg)";c.style.zIndex=3-k;c.style.opacity=1-k*.12;g.appendChild(c)});
  if(d.set.length>1)g.insertAdjacentHTML("beforeend",'<b class="rqbd">'+d.set.length+'</b>');d.g.replaceWith(g);d.g=g;
  const b=g.querySelector(".rqbd");if(b&&b.animate&&!matchMedia("(prefers-reduced-motion:reduce)").matches)b.animate([{transform:"scale(1)"},{transform:"scale(1.35)"},{transform:"scale(1)"}],{duration:320,easing:"cubic-bezier(.34,1.8,.5,1)"})}
-function dgToggle(id){if(!dg||!dg.on||!id||id==dg.id||!G(id))return;const i=dg.set.indexOf(id);if(i>=0)dg.set.splice(i,1);else{dg.set.push(id);sfx("pick")}if(dg.tg&&dg.set.includes(dg.tg.dataset.drop)){dg.tg.classList.remove("over");dg.tg=null}dgMark();dgStack()}
+function dgKeep(id){if(!dg.cl)dg.cl=new Map();const r=document.querySelector('#app .item[data-id="'+CSS.escape(id)+'"]');if(r&&!dg.cl.has(id)){const c=r.cloneNode(true);c.classList.remove("dragging","rqin","rqnew","rqhot","rqhp","over","sel");c.querySelectorAll(".rqck,.rqhv").forEach(x=>x.remove());dg.cl.set(id,c)}}
+function dgToggle(id){if(!dg||!dg.on||!id||id==dg.id||!G(id))return;const i=dg.set.indexOf(id);if(i>=0)dg.set.splice(i,1);else{dg.set.push(id);dgKeep(id);sfx("pick")}if(dg.tg&&dg.set.includes(dg.tg.dataset.drop)){dg.tg.classList.remove("over");dg.tg=null}dgMark();dgStack()}
 
-const dgStart=(x,y)=>{if(!dg||dg.on)return;dg.on=true;dg.set=[dg.id];sfx("pick");const g=dg.it.cloneNode(true);g.className+=" ghost";g.style.width=dg.it.offsetWidth+"px";document.body.appendChild(g);dg.g=g;dg.it.classList.add("dragging");dgMark();dgMove(x,y)};
-const dgMove=(x,y)=>{dg.g.style.left=(x-dg.g.offsetWidth/2)+"px";dg.g.style.top=(y-26)+"px";
+const dgStart=(x,y)=>{if(!dg||dg.on)return;dg.on=true;dg.set=[dg.id];dgKeep(dg.id);if(selm&&selset.has(dg.id))[...selset].forEach(i=>{if(i!=dg.id&&G(i)){dg.set.push(i);dgKeep(i)}});sfx("pick");
+ try{document.documentElement.setPointerCapture(dg.pid)}catch(e){}
+ const g=dg.it.cloneNode(true);g.className+=" ghost";g.style.width=(dg.it.classList.contains("tile")?dg.it.offsetWidth:Math.min(dg.it.offsetWidth,260))+"px";document.body.appendChild(g);dg.g=g;dg.it.classList.add("dragging");dgMark();if(dg.set.length>1)dgStack();dgMove(x,y)};
+const dgMove=(x,y)=>{dg.lx=x;dg.ly=y;dgPos(x,y);
  const el=document.elementFromPoint(x,y);let tg=el&&el.closest("[data-drop]"),ro=null,rp=null;
  if(tg&&dg.set&&dg.set.some(i=>i==tg.dataset.drop||desc(i).some(x=>x.id==tg.dataset.drop)))tg=null;
  if(sortMode()=="manual"&&!(dg.set&&dg.set.length>1)){const row=el&&el.closest(".item[data-id]");
@@ -2700,16 +2722,30 @@ const dgMove=(x,y)=>{dg.g.style.left=(x-dg.g.offsetWidth/2)+"px";dg.g.style.top=
    if(me&&ot&&me.p==ot.p&&(me.k=="f")==(ot.k=="f")){const r=row.getBoundingClientRect(),tl=row.classList.contains("tile"),f=tl?(x-r.left)/r.width:(y-r.top)/r.height;
     if(!(row.hasAttribute("data-drop")&&f>.28&&f<.72)){ro=row;rp=f<.5?"b":"a";tg=null}}}}
  if(dg.tg!==tg){dg.tg&&dg.tg.classList.remove("over");dg.tg=tg;tg&&tg.classList.add("over")}
- if(dg.ro!==ro||dg.rp!==rp){if(dg.ro)dg.ro.classList.remove("ins-b","ins-a");dg.ro=ro;dg.rp=rp;if(ro)ro.classList.add(rp=="b"?"ins-b":"ins-a")}};
-document.addEventListener("pointerdown",e=>{if(dg&&dg.pid!==e.pointerId){const r=dg.on&&e.target.closest&&!e.target.closest(".dots")&&e.target.closest("#app .item[data-id]");dgIg.set(e.pointerId,{x:e.clientX,y:e.clientY,id:r?r.dataset.id:null});if(!dg.on){clearTimeout(dg.tm);dg=null}return}if(!dg)dgClean();
+ if(dg.ro!==ro||dg.rp!==rp){if(dg.ro)dg.ro.classList.remove("ins-b","ins-a");dg.ro=ro;dg.rp=rp;if(ro)ro.classList.add(rp=="b"?"ins-b":"ins-a")}
+ // survol 1 s : dossier (zone de dépôt, hors pile), ‹, niveau du menu du chemin ou du panneau latéral ; après une ouverture, il faut bouger de 12 px pour en relancer un
+ let hv=null;if(dg.hl&&Math.hypot(x-dg.hl.x,y-dg.hl.y)<=12){}else{dg.hl=null;const row=el&&el.closest("#app .item[data-id]");
+  if(row){const n=G(row.dataset.id);if(n&&n.k=="f"&&tg===row&&!dg.set.includes(n.id))hv={el:row,id:n.id}}
+  else{const nv=el&&el.closest('#app [data-a="cd"]');if(nv&&nv.dataset.v!=null&&nid(nv.dataset.v)!=cur&&!dg.set.includes(nv.dataset.v))hv={el:nv,id:nv.dataset.v}}}
+ dgHover(hv)};
+document.addEventListener("pointerdown",e=>{if(dg&&dg.pid!==e.pointerId){const on=dg.on,t=e.target.closest?e.target:null,r=on&&t&&!t.closest(".dots")&&t.closest("#app .item[data-id]"),nv=on&&!r&&t&&t.closest('#app [data-a="cd"],#app [data-a="cro"]');
+  const o={x:e.clientX,y:e.clientY,ly:e.clientY,id:r?r.dataset.id:null,nav:nv||null,el:(r||nv||t)&&(r||nv||t).closest?(r||nv||t):null,moved:false,long:false,sc:on?dgScrollEl(t):null};
+  if(on){try{document.documentElement.setPointerCapture(e.pointerId)}catch(x){}const n=r&&G(r.dataset.id);if(n&&n.k=="f")o.tm=setTimeout(()=>{o.long=true;dgToggle(n.id)},500)}
+  dgIg.set(e.pointerId,o);if(!on){clearTimeout(dg.tm);dg=null}return}if(!dg)dgClean();
  const it=e.target.closest&&e.target.closest(".item[data-id]");if(!it||view!="browse"||e.button>0||e.target.closest(".dots"))return;
  dg={it,id:it.dataset.id,x:e.clientX,y:e.clientY,t:e.pointerType,on:false,pid:e.pointerId};
  if(e.pointerType!="mouse"){const x=e.clientX,y=e.clientY;dg.tm=setTimeout(()=>dgStart(x,y),380)}});
-document.addEventListener("pointermove",e=>{if(!dg||e.pointerId!==dg.pid)return;
+document.addEventListener("pointermove",e=>{const o=dgIg.get(e.pointerId);if(o){if(!o.moved&&Math.hypot(e.clientX-o.x,e.clientY-o.y)>12){o.moved=true;clearTimeout(o.tm)}if(o.moved&&o.sc&&dg&&dg.on){o.sc.scrollTop-=e.clientY-o.ly;dgMove(dg.lx,dg.ly)}o.ly=e.clientY;return}
+ if(!dg||e.pointerId!==dg.pid)return;
  if(!dg.on){const m=Math.hypot(e.clientX-dg.x,e.clientY-dg.y);if(dg.t=="mouse"){if(m>6)dgStart(e.clientX,e.clientY)}else if(m>10){clearTimeout(dg.tm);dg=null}return}
  dgMove(e.clientX,e.clientY)});
-const dgEnd=e=>{if(e&&dgIg.has(e.pointerId)){const o=dgIg.get(e.pointerId);dgIg.delete(e.pointerId);dgIgT=Date.now();if(e.type=="pointerup"&&o.id&&Math.hypot(e.clientX-o.x,e.clientY-o.y)<14)dgToggle(o.id);return}if(!dg||(e&&e.pointerId!==dg.pid))return;clearTimeout(dg.tm);const d=dg;dg=null;if(!d.on)return;dd=true;setTimeout(()=>{dd=false},80);d.g.remove();dgClean();d.it.classList.remove("dragging");if(d.tg)d.tg.classList.remove("over");if(d.ro)d.ro.classList.remove("ins-b","ins-a");
- if(d.ro||d.tg)sfx("drop");if(d.ro)reorderTo(d.id,d.ro.dataset.id,d.rp);else if(d.tg)moveIds(d.set&&d.set.length>1?d.set:selm&&selset.has(d.id)?[...selset]:[d.id],nid(d.tg.dataset.drop))};
+const dgEnd=e=>{if(e&&dgIg.has(e.pointerId)){const o=dgIg.get(e.pointerId);dgIg.delete(e.pointerId);dgIgT=Date.now();clearTimeout(o.tm);
+  if(e.type=="pointerup"&&!o.moved&&!o.long&&dg&&dg.on){if(o.id){const n=G(o.id);if(n&&n.k=="f")dgNav(n.id);else dgToggle(o.id)}else if(o.nav){if(o.nav.dataset.a=="cd")dgNav(o.nav.dataset.v);else{A.cro();dgMove(dg.lx,dg.ly)}}}
+  dgUnpark();return}if(!dg||(e&&e.pointerId!==dg.pid))return;clearTimeout(dg.tm);const d=dg;dg=null;if(!d.on)return;dd=true;setTimeout(()=>{dd=false},80);d.g.remove();dgClean();d.it.classList.remove("dragging");if(d.tg)d.tg.classList.remove("over");if(d.ro)d.ro.classList.remove("ins-b","ins-a");
+ const ids=d.set&&d.set.length>1?d.set:selm&&selset.has(d.id)?[...selset]:[d.id];
+ if(d.ro||d.tg)sfx("drop");if(d.ro)reorderTo(d.id,d.ro.dataset.id,d.rp);else if(d.tg)moveIds(ids,nid(d.tg.dataset.drop));
+ else if(e&&e.type=="pointerup"&&view=="browse"){const to=cur,todo=ids.filter(i=>G(i)&&G(i).p!=to);  // lâché hors d'un dossier : dans le dossier ouvert (rien ne bouge si tout y est déjà)
+  if(todo.length){if(todo.some(i=>i!=to&&!desc(i).some(z=>z.id==to))){sfx("drop");moveIds(ids,to)}else flash("Impossible : un dossier ne peut pas aller dans lui-même")}}};
 document.addEventListener("pointerup",dgEnd);document.addEventListener("pointercancel",dgEnd);
 // le toucher d'un 2e doigt pendant un glisser ne doit pas ouvrir l'élément touché (capture : passe avant l'écouteur de clic des actions)
 document.addEventListener("click",e=>{if((dg&&dg.on)||Date.now()-dgIgT<450){e.stopImmediatePropagation();e.preventDefault()}},true);
@@ -3088,7 +3124,7 @@ function nxStats(logs,d0,cells,t30,k,today){const pl=(n,a,b)=>n+" "+(n>1?b:a);
 /* nouvelle apparence : dossier de la carte en haut à gauche (point de couleur + nom), catégorie à droite */
 function nxFd(c){const own=deck.virt&&deck.own?deck.own.get(c):deck,f=own&&own.p?G(own.p):null,col=f&&f.c?f.c:"";
  return '<span class="nxfd"'+(col?' style="--fc:'+esc(col)+'"':'')+'><i class="dt" aria-hidden="true"></i><span class="vh">Dossier : </span><span class="fn">'+esc(f?f.name:"Accueil")+'</span>'+(c.c?'<span class="vh">, catégorie : </span><span class="cat">'+esc(c.c)+'</span>':'')+'</span><span class="vh">. </span>'}
-function render(){RDAY=day();RM={k:new Map(),c:new Map()};try{capAll()}catch(e){}try{render0()}finally{RM=null}
+function render(){dgPark();RDAY=day();RM={k:new Map(),c:new Map()};try{capAll()}catch(e){}try{render0()}finally{RM=null}
 
  nxNew();dgMark();if(cfg.nx){nxFit();requestAnimationFrame(nxFit)}else nxBbRender()}
 // nouvelle apparence : si le mot du bouton retour serait coupé (« Réglag… »), on n'affiche que le chevron (le mot reste lu par VoiceOver)
@@ -4356,6 +4392,14 @@ html[data-nx="1"] #app #lst .item.rqin:not(.dragging){background-color:color-mix
 .ghost.rqstk>.rqsc+.rqsc{position:absolute;inset:0}
 .ghost.rqstk>.rqbd{position:absolute;right:-10px;top:-12px;min-width:30px;height:30px;border-radius:15px;background:#c0392b;color:#fff;font:700 15px/30px var(--sf,system-ui);text-align:center;padding:0 8px;z-index:5}
 @media (prefers-reduced-motion:reduce){#app .rqck{animation:none}}
+
+/* 26/10/2026 — naviguer en glissant : anneau qui se remplit en 1 s sur ce que la pile survole (dossier, ‹, chemin, panneau) avant de l'ouvrir */
+#app .rqhp{position:relative}
+#app .rqhv{position:absolute;inset:0;pointer-events:none;z-index:3}
+#app .rqhv svg{width:100%;height:100%;display:block;overflow:visible}
+#app .rqhv rect{fill:none;stroke:var(--acc);stroke-width:3;stroke-dasharray:100;stroke-dashoffset:100;animation:rqhvf 1s linear forwards}
+@keyframes rqhvf{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){#app .rqhv rect{stroke-dashoffset:0;animation:none;opacity:.8}}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
