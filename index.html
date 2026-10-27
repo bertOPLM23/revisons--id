@@ -3297,7 +3297,7 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   var tb=document.querySelector(".tb"),h=app.querySelector("h1");
   R.classList.toggle("hastb",!!(tb||document.querySelector(".hd")));
   if(tb&&h&&!tb.querySelector(".tbt")){var t=document.createElement("span");t.className="tbt";t.setAttribute("aria-hidden","true");t.textContent=h.textContent;var g=tb.querySelector('.tgs');g?tb.insertBefore(t,g):tb.appendChild(t)}
-  bar();refract();
+  bar();refract();if((window.scrollY||0)<40)R.classList.remove("rqmin");
  }
  /* 3. réfraction des bords de la barre du bas (Chromium/Brave uniquement) */
  var ud=navigator.userAgentData,chromium=!!(ud&&ud.brands&&ud.brands.some(function(b){return/Chromium/i.test(b.brand)})),
@@ -3320,7 +3320,9 @@ if(typeof matchMedia=="function"){const mq=matchMedia("(prefers-color-scheme: da
   R.classList.add("lgr");
  }
  if(app&&window.MutationObserver)new MutationObserver(function(){requestAnimationFrame(sync)}).observe(app,{childList:true});
- addEventListener("scroll",function(){requestAnimationFrame(bar)},{passive:true});
+ /* 27/10/2026 : barre du bas réduite à « Réviser » quand on descend, de retour quand on remonte (html.rqmin ; jamais pendant un glisser-déposer) */
+ var RQY=0;function rqmin(){var y=window.scrollY||0,d=y-RQY;if(y<40){R.classList.remove("rqmin");RQY=y;return}if(Math.abs(d)<8)return;RQY=y;if(typeof dg!="undefined"&&dg&&dg.on)return;R.classList.toggle("rqmin",d>0)}
+ addEventListener("scroll",function(){requestAnimationFrame(function(){bar();rqmin()})},{passive:true});
  addEventListener("resize",function(){requestAnimationFrame(sync)});
  sync();
 })();
@@ -4415,6 +4417,47 @@ html[data-theme="dark"] .ghost.rqstk>.rqbd{background:#1d3a30;color:#a9dcc0;bord
 #app #cols .cw.ins-b{box-shadow:inset 0 3px 0 -1px var(--acc)}
 #app #cols .cw.ins-a{box-shadow:inset 0 -3px 0 -1px var(--acc)}
 #app #cols .col.over{outline:2px solid var(--acc);outline-offset:-2px;background:color-mix(in srgb,var(--acc) 6%,transparent)}
+
+/* 27/10/2026 — verre léger (choix C d'Idriss sur maquette « Verre léger · où l'appliquer ») : vrai flou de Safari, volume (ombre intérieure en bas), reflet en haut à gauche, fin liseré irisé ; sur les barres du haut et du bas, les menus ⋯, les feuilles et la bulle. Pas de réfraction (impossible sans recopier l'écran dans Safari). La barre du bas devient une seule capsule (Réviser + « + ») ; les barres gonflent à l'appui (le reste s'écrase toujours) ; la barre du bas se réduit à « Réviser » quand on descend (classe html.rqmin, posée par le script Liquid Glass). Mac (data-desk) et « réduire la transparence » : surfaces opaques, reflet et liseré gardés. */
+:root{--vl-f:rgb(255 253 248/.6);--vl-fp:rgb(255 253 248/.78);--vl-bf:blur(10px) saturate(2) brightness(1.04);--vl-bfp:blur(26px) saturate(1.9);--vl-ra:.6;
+ --vl-hi:inset 1.5px 1.5px 1px -.5px rgb(255 255 255/.95),inset -1.5px -1.5px 1px -.5px rgb(255 255 255/.5),inset 0 0 0 .5px rgb(255 255 255/.45),inset 0 0 18px -6px rgb(255 255 255/.5),inset 0 -8px 14px -12px rgb(0 0 0/.28);
+ --vl-sh:0 8px 22px -10px rgb(0 0 0/.32),0 0 0 .5px rgb(0 0 0/.07);--vl-shp:0 18px 44px -16px rgb(0 0 0/.4),0 0 0 .5px rgb(0 0 0/.07)}
+:root[data-theme="dark"]{--vl-f:rgb(13 25 21/.46);--vl-fp:rgb(13 25 21/.74);--vl-bf:blur(10px) saturate(1.8) brightness(1.06);--vl-ra:.42;
+ --vl-hi:inset 1.5px 1.5px 1px -.5px rgb(255 255 255/.5),inset -1.5px -1.5px 1px -.5px rgb(255 255 255/.2),inset 0 0 0 .5px rgb(255 255 255/.22),inset 0 0 18px -6px rgb(255 255 255/.22),inset 0 -8px 14px -12px rgb(0 0 0/.5);
+ --vl-sh:0 8px 22px -10px rgb(0 0 0/.6),0 0 0 .5px rgb(0 0 0/.4);--vl-shp:0 18px 44px -16px rgb(0 0 0/.65),0 0 0 .5px rgb(0 0 0/.45)}
+/* matière : petites barres (sur l'élément ; capsule du haut et barre du bas : sur ::before, pour que le menu ⋯ placé dans la capsule floute bien la page) */
+html[data-nx="1"] body #app .tb .tg:not(.nxtg .tg),html[data-nx="1"] body #app .tb .bk,html[data-nx="1"] body #app .nxrh .nxrbk,html[data-nx="1"] body #app .nxrh>.tg{background:var(--vl-f)!important;-webkit-backdrop-filter:var(--vl-bf)!important;backdrop-filter:var(--vl-bf)!important;border-color:transparent!important;box-shadow:var(--vl-hi),var(--vl-sh)!important}
+html[data-nx="1"] body #app .tb .nxtg{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-color:transparent!important;box-shadow:none!important}
+html[data-nx="1"] body #app .tb .nxtg::before,html[data-nx="1"] body #app .dock.nxd::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--vl-f)!important;-webkit-backdrop-filter:var(--vl-bf)!important;backdrop-filter:var(--vl-bf)!important;box-shadow:var(--vl-hi),var(--vl-sh)!important;opacity:1;pointer-events:none}
+html[data-nx="1"] body #app .dock.nxd{border-radius:999px;padding:5px;gap:6px;margin-bottom:12px}
+html[data-nx="1"] body #app .dock.nxd .nxad{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-color:transparent!important;box-shadow:none!important}
+html[data-nx="1"] body #app .dock.nxd .nxrv{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+/* matière : panneaux (menus ⋯, feuilles, bulle) */
+html[data-nx="1"] .pvm,html[data-nx="1"] #asd .sh,html[data-nx="1"] #bbd .bbm{background:var(--vl-fp)!important;-webkit-backdrop-filter:var(--vl-bfp)!important;backdrop-filter:var(--vl-bfp)!important;box-shadow:var(--vl-hi),var(--vl-shp)!important}
+html[data-nx="1"] .pvm::before,html[data-nx="1"] #asd .sh::before{opacity:.5}
+/* sur le verre, plus transparent qu'avant, le gris secondaire est un peu foncé pour que le contraste ne baisse pas (mesuré) */
+html[data-nx="1"] body #app .tb .nxtg,html[data-nx="1"] .pvm,html[data-nx="1"] #asd .sh,html[data-nx="1"] #bbd .bbm{--mut:color-mix(in srgb,var(--mut) 72%,var(--ink))}
+/* liseré irisé (anneau d'1,2 px découpé par un masque : ne teinte pas l'intérieur) */
+html[data-nx="1"] body #app .tb .tg:not(.nxtg .tg)::after,html[data-nx="1"] body #app .tb .nxtg::after,html[data-nx="1"] body #app .dock.nxd::after,html[data-nx="1"] .pvm::after,html[data-nx="1"] #asd .sh::after,html[data-nx="1"] #bbd .bbm::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.2px;pointer-events:none;z-index:3;
+ background:conic-gradient(from 210deg,rgb(255 150 150/0) 0deg,rgb(255 170 130/var(--vl-ra)) 30deg,rgb(255 235 160/0) 80deg,rgb(255 255 255/0) 160deg,rgb(120 215 255/var(--vl-ra)) 205deg,rgb(185 145 255/calc(var(--vl-ra)*.8)) 245deg,rgb(255 150 150/0) 300deg);
+ -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+html[data-nx="1"] body #app .tb .tg:not(.nxtg .tg)::after{inset:-1px}
+/* Mac mini et « réduire la transparence » : pas de flou, surfaces opaques */
+html[data-desk="1"][data-nx="1"] body #app .tb .tg:not(.nxtg .tg),html[data-desk="1"][data-nx="1"] body #app .tb .bk,html[data-desk="1"][data-nx="1"] body #app .nxrh .nxrbk,html[data-desk="1"][data-nx="1"] body #app .nxrh>.tg,html[data-desk="1"][data-nx="1"] body #app .tb .nxtg::before,html[data-desk="1"][data-nx="1"] body #app .dock.nxd::before,html[data-desk="1"][data-nx="1"] .pvm,html[data-desk="1"][data-nx="1"] #asd .sh,html[data-desk="1"][data-nx="1"] #bbd .bbm{background:var(--g-sol)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+@media (prefers-reduced-transparency:reduce){html[data-nx="1"] body #app .tb .tg:not(.nxtg .tg),html[data-nx="1"] body #app .tb .bk,html[data-nx="1"] body #app .nxrh .nxrbk,html[data-nx="1"] body #app .nxrh>.tg,html[data-nx="1"] body #app .tb .nxtg::before,html[data-nx="1"] body #app .dock.nxd::before,html[data-nx="1"] .pvm,html[data-nx="1"] #asd .sh,html[data-nx="1"] #bbd .bbm{background:var(--g-sol)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
+@media (prefers-contrast:more){html[data-nx="1"] body #app .tb .tg:not(.nxtg .tg),html[data-nx="1"] body #app .tb .bk,html[data-nx="1"] body #app .nxrh .nxrbk,html[data-nx="1"] body #app .nxrh>.tg,html[data-nx="1"] body #app .tb .nxtg::before,html[data-nx="1"] body #app .dock.nxd::before,html[data-nx="1"] .pvm,html[data-nx="1"] #asd .sh,html[data-nx="1"] #bbd .bbm{background:var(--g-sol)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:1px solid var(--line)!important}}
+/* les barres en verre gonflent à l'appui ; les boutons qu'elles contiennent ne s'écrasent plus (tout le reste s'écrase comme avant) */
+html[data-nx="1"] body #app .tb .nxtg,html[data-nx="1"] body #app .dock.nxd{transition:scale var(--pr-out),max-width .5s var(--spring)}
+html[data-nx="1"] body #app .tb .nxtg:has(>.tg:active,>.nxths:active){scale:1.06;transition:scale .12s var(--snap)}
+html[data-nx="1"] body #app .dock.nxd:has(>.b:active){scale:1.035;transition:scale .12s var(--snap),max-width .5s var(--spring)}
+html[data-nx="1"] body #app .tb .nxtg>:is(.tg,.nxths):active,html[data-nx="1"] body #app .dock.nxd>.b:active{scale:1!important}
+html[data-nx="1"] body #app .tb .tg:not(.nxtg .tg):active,html[data-nx="1"] body #app .tb .bk:active,html[data-nx="1"] body #app .nxrh .nxrbk:active,html[data-nx="1"] body #app .nxrh>.tg:active{scale:1.1!important;transition:scale .12s var(--snap)!important}
+/* barre du bas réduite à « Réviser » quand on descend (revient en remontant) */
+html[data-nx="1"] body #app .dock.nxd .nxad{transition:scale var(--pr-out),width .45s var(--spring),opacity .2s,margin .45s var(--spring)}
+html[data-nx="1"] body #app .dock.nxd .nxrv{transition:scale var(--pr-out),min-height .45s var(--spring),height .45s var(--spring),font-size .45s var(--spring)}
+html.rqmin[data-nx="1"] body #app .dock.nxd:has(>.nxrv){max-width:210px}
+html.rqmin[data-nx="1"] body #app .dock.nxd:has(>.nxrv)>.nxad{width:0!important;min-width:0!important;padding:0!important;margin-left:-6px;opacity:0;pointer-events:none}
+html.rqmin[data-nx="1"] body #app .dock.nxd:has(>.nxrv)>.nxrv{min-height:42px;height:42px;font-size:15px}
 </style>
 <script>/* service worker vide (aucun cache) : voir sw.js */if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body></html>
